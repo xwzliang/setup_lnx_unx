@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+git config --global user.name "xwzliang"
+git config --global user.email "18706703437@163.com"
+
 # git credential settings
 git_config_local_file=$HOME/.gitconfig.local
 if [ ! -f "$git_config_local_file" ]; then
