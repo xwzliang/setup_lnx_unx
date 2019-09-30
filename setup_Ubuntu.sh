@@ -18,6 +18,7 @@ apps_to_install=(
 	git
 	curl
 	net-tools
+	openssh-server	# A powerful collection of tools for remote control
 	dconf-tools		# A low-level configuration system
 	vim
 	python3
