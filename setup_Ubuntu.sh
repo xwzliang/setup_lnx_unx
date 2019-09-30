@@ -94,13 +94,13 @@ declare -A repos_git_clone
 
 repos_git_clone=(
 	["$HOME/.tmux/plugins/tpm"]="https://github.com/tmux-plugins/tpm"
-	["$HOME/bitcoin"]="https://github.com/bitcoin/bitcoin.git"
+	# ["$HOME/bitcoin"]="https://github.com/bitcoin/bitcoin.git"
 )
 
 for directory_git_local in "${!repos_git_clone[@]}"; do
 	if [ ! -d $directory_git_local ]; then
 		echo -e "${directory_git_local} not exists, will clone it using git\n"
-		proxychains git clone ${repos_git_clone[$directory_git_local]} $directory_git_local
+		git clone ${repos_git_clone[$directory_git_local]} $directory_git_local
 	else
 		echo -e "${directory_git_local} already exists, will skip it"
 	fi
