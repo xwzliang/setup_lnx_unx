@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 git_path=$HOME/git
 mkdir -p $git_path
 cd $git_path
