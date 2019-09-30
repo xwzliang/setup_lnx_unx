@@ -1,7 +1,25 @@
 #!/usr/bin/env bash
 
-git config --global user.name "xwzliang"
-git config --global user.email "18706703437@163.com"
+# Add git config
+cat <<- _EOF_ >$HOME/.gitconfig
+[user]
+	name = broliang
+	email = 18706703437@163.com
+[core]
+	editor = vim
+[alias]
+	co = checkout
+	ci = commit
+	br = branch
+	st = status
+	unstage = reset HEAD
+	last = log -1
+	lg = log --color --graph --pretty=format:'%C(cyan)%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+[color]
+	status = always
+[include]
+	path = ./.gitconfig.local
+_EOF_
 
 # git credential settings
 git_config_local_file=$HOME/.gitconfig.local
