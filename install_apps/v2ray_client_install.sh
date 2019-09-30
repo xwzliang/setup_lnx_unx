@@ -50,3 +50,6 @@ _EOF_
 
 # To run v2ray: v2ray --config=<full path>
 # $HOME/proxy/v2ray/v2ray --config=$HOME/proxy/v2ray/config_me.json
+
+# To test if v2ray is doing its job properly, run:
+# curl -4sSkL -x socks5h://127.0.0.1:1080 https://www.google.com
