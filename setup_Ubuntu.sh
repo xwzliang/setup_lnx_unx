@@ -114,3 +114,6 @@ $dir/git_setup.sh
 
 # vim settings
 $dir/vim_setup.sh
+
+# proxychains settings
+$dir/proxychains_setup.sh
