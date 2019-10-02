@@ -22,6 +22,7 @@ apps_to_install=(
 	dconf-tools		# A low-level configuration system
 	vim
 	python3
+	python3-pip
 	tmux
 	calibre
 	aria2
