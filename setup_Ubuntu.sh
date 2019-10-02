@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 
 # Add ppa repos
-ppa_to_add=(
-	bitcoin/bitcoin
-)
-for app in "${ppa_to_add[@]}"; do
-	if ! grep -q "^deb .*${app}" /etc/apt/sources.list /etc/apt/sources.list.d/*; then
-		# commands to add the ppa ...
-		add-apt-repository ppa:${app} -y
-	fi
-done
+# ppa_to_add=(
+# )
+# for app in "${ppa_to_add[@]}"; do
+	# if ! grep -q "^deb .*${app}" /etc/apt/sources.list /etc/apt/sources.list.d/*; then
+		# # commands to add the ppa ...
+		# add-apt-repository ppa:${app} -y
+	# fi
+# done
 
-apt-get update
+# apt-get update
 
 # Install apps using apt
 apps_to_install=(
@@ -38,10 +37,6 @@ apps_to_install=(
 	rename
 	elinks	# Full-Featured Text web Browser, advanced and well-established feature-rich text mode web browser
 	python3-lxml
-	build-essential libtool autotools-dev automake pkg-config bsdmainutils	# Bitcoin Core Build Required
-	libssl-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev	# Bitcoin Core dependencies
-	libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler libqrencode-dev	# Bitcoin Core qt5
-	libdb4.8-dev libdb4.8++-dev		# libdb_cxx via ppa: required by Bitcoin Core build
 	proxychains
 	shadowsocks-libev
 	privoxy
@@ -96,7 +91,6 @@ declare -A repos_git_clone
 
 repos_git_clone=(
 	["$HOME/.tmux/plugins/tpm"]="https://github.com/tmux-plugins/tpm"
-	# ["$HOME/bitcoin"]="https://github.com/bitcoin/bitcoin.git"
 )
 
 for directory_git_local in "${!repos_git_clone[@]}"; do
