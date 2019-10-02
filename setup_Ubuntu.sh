@@ -44,6 +44,7 @@ apps_to_install=(
 	libdb4.8-dev libdb4.8++-dev		# libdb_cxx via ppa: required by Bitcoin Core build
 	proxychains
 	shadowsocks-libev
+	privoxy
 	expect	# a language that talks with your interactive programs or scripts that require user interaction
 	bats	# Bash Automated Testing System
 	virtualbox		# A general-purpose full virtualizer
@@ -118,3 +119,6 @@ $dir/vim_setup.sh
 
 # proxychains settings
 $dir/proxychains_setup.sh
+
+# privoxy settings
+$dir/privoxy_setup.sh
