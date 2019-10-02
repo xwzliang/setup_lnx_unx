@@ -2,6 +2,8 @@
 
 # Important!! This script must not be run by root
 
+user_me=$(echo $HOME | cut -d / -f 3)
+
 download_bin_dir=$HOME/Downloads/bin
 mkdir -p $download_bin_dir
 cd $download_bin_dir
@@ -43,7 +45,9 @@ sudo wget 'https://github.com/jlegewie/zotfile/releases/download/v5.0.10/zotfile
 sudo cp zotfile*.xpi $extension_folder/zotfile@columbia.edu.xpi
 
 # Create books dir for books and use as zotfile source folder
-mkdir -p $HOME/Downloads/books
+books_path=$HOME/Downloads/books
+mkdir -p $books_path
+chown $user_me $books_path
 
 # Download Zutilo to find all attachments files moved by zotfiles
 sudo wget 'https://github.com/willsALMANJ/Zutilo/releases/download/v3.2.1/zutilo.xpi'
@@ -55,9 +59,11 @@ user_pref("extensions.zotero.downloadAssociatedFiles", false);
 user_pref("extensions.zotero.sync.fulltext.enabled", false);
 user_pref("extensions.zotero.sync.server.username", "broliang");
 user_pref("extensions.zotero.sync.storage.enabled", false);
+user_pref("extensions.zoteroOpenOfficeIntegration.skipInstallation", true);
+user_pref("extensions.zotfile.confirmation", false);
 user_pref("extensions.zotfile.dest_dir", "$HOME/Dropbox/ZoteroStorage");
 user_pref("extensions.zotfile.import", false);
-user_pref("extensions.zotfile.source_dir", "$HOME/Downloads/books");
+user_pref("extensions.zotfile.source_dir", "$books_path");
 user_pref("extensions.zotfile.source_dir_ff", false);
 user_pref("extensions.zotfile.tablet", true);
 user_pref("extensions.zotfile.tablet.dest_dir", "$HOME/Dropbox/Zotfile_tablet");
