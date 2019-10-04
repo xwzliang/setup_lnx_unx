@@ -9,3 +9,13 @@ tar xzf dropbox.tar.gz
 
 # to run the dropbox daemon
 # .dropbox-dist/dropboxd
+timeout 10 .dropbox-dist/dropboxd
+
+# Use the dropbox package python script
+dropbox_script=/usr/local/bin/dropboxd
+proxychains wget -O $dropbox_script "https://linux.dropbox.com/packages/dropbox.py"
+chmod +x $dropbox_script
+
+# Autostart at login
+dropboxd autostart y
+dropboxd start
