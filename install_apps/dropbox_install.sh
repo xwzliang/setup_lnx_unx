@@ -16,6 +16,9 @@ dropbox_script=/usr/local/bin/dropboxd
 proxychains wget -O $dropbox_script "https://linux.dropbox.com/packages/dropbox.py"
 chmod +x $dropbox_script
 
+# proxy settings
+dropboxd proxy "manual" "socks5" '127.0.0.1' 1080
+
 # Autostart at login
 dropboxd autostart y
 dropboxd start
