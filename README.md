@@ -1,2 +1,2 @@
-# setup_unix
-My Unix setup
+# setup_lnx_unx
+My Linux and Unix setup
