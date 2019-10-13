@@ -3,7 +3,9 @@
 proxychains_conf=/etc/proxychains.conf
 proxychains_conf_bak=/etc/proxychains.conf.bak
 
-cp $proxychains_conf $proxychains_conf_bak
+if [ ! -e $proxychains_conf_bak ]; then
+	cp $proxychains_conf $proxychains_conf_bak
+fi
 
 if [[ "`tail -2 $proxychains_conf`" =~ ^socks4.* ]]; then
 	# change the second last line using tac and sed
