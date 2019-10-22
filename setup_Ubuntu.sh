@@ -20,6 +20,7 @@ apps_to_install=(
 	openssh-server	# A powerful collection of tools for remote control
 	dconf-tools		# A low-level configuration system
 	vim
+	emacs
 	python3
 	python3-pip
 	tmux
