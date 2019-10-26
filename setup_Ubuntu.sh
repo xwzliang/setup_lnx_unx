@@ -93,6 +93,7 @@ declare -A repos_git_clone
 
 repos_git_clone=(
 	["$HOME/.tmux/plugins/tpm"]="https://github.com/tmux-plugins/tpm"
+	["$HOME/.emacs.d/evil"]="https://github.com/emacs-evil/evil"
 )
 
 for directory_git_local in "${!repos_git_clone[@]}"; do
