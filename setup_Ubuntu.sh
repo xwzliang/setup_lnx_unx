@@ -19,6 +19,7 @@ apps_to_install=(
 	net-tools
 	openssh-server	# A powerful collection of tools for remote control
 	dconf-tools		# A low-level configuration system
+	bcmwl-kernel-source		# Wifi adapter for laptop
 	vim
 	emacs
 	python3
