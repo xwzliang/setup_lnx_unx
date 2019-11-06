@@ -120,3 +120,6 @@ $dir/proxychains_setup.sh
 
 # privoxy settings
 $dir/privoxy_setup.sh
+
+# Python3 settings
+$dir/python3_setup.sh
