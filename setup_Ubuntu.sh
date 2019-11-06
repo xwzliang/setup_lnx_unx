@@ -123,3 +123,6 @@ $dir/privoxy_setup.sh
 
 # Python3 settings
 $dir/python3_setup.sh
+
+# systemd settings
+$dir/systemd_setup.sh
