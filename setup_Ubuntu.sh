@@ -115,6 +115,9 @@ $dir/git_setup.sh
 # vim settings
 $dir/vim_setup.sh
 
+# emacs settings
+$dir/emacs_setup.sh
+
 # proxychains settings
 $dir/proxychains_setup.sh
 
