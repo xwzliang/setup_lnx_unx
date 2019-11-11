@@ -19,6 +19,7 @@ cat << _EOF_ >$install_package_script
 	  smartparens	; Minor mode for Emacs that deals with parens pairs and tries to be smart about it.
 	  magit		; Magit is an interface to the version control system Git, implemented as an Emacs package. Magit aspires to be a complete Git porcelain.
 	  evil-surround		; This package emulates surround.vim
+	  evil-nerd-commenter	; Comment/uncomment lines efficiently. Like Nerd Commenter in Vim
 	  ))
 
 ; activate all the packages
