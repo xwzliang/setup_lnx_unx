@@ -9,8 +9,7 @@ cat << _EOF_ >$install_package_script
 
 ; find package information from following archives
 (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-						 ("marmalade" . "http://marmalade-repo.org/packages/")
-						 ("melpa-stable" . "http://stable.melpa.org/packages/")))
+						 ("melpa" . "https://melpa.org/packages/")))
 
 ; list of packages
 (setq package-list
