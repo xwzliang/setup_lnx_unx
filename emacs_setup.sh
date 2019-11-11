@@ -21,6 +21,7 @@ cat << _EOF_ >$install_package_script
 	  git-gutter	; Emacs port of GitGutter
 	  evil-surround		; This package emulates surround.vim
 	  evil-nerd-commenter	; Comment/uncomment lines efficiently. Like Nerd Commenter in Vim
+	  neotree	; A Emacs tree plugin like NerdTree for Vim.
 	  ))
 
 ; activate all the packages
