@@ -32,10 +32,14 @@ cat << _EOF_ >$install_package_script
 (unless package-archive-contents
   (package-refresh-contents))
 
+; do package-refresh-contents according to the value of argument 0
+(if (string= "refresh" (elt argv 0))
+  (package-refresh-contents))
+
 ; install the missing packages
 (dolist (package package-list)
   (unless (package-installed-p package)
     (package-install package)))
 _EOF_
 
-emacs --script $install_package_script
+emacs --script $install_package_script || emacs --script $install_package_script refresh
