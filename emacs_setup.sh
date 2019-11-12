@@ -22,6 +22,7 @@ cat << _EOF_ >$install_package_script
 	  evil-surround		; This package emulates surround.vim
 	  evil-nerd-commenter	; Comment/uncomment lines efficiently. Like Nerd Commenter in Vim
 	  neotree	; A Emacs tree plugin like NerdTree for Vim.
+	  helm		; Helm is an Emacs framework for incremental completions and narrowing selections.
 	  ))
 
 ; activate all the packages
