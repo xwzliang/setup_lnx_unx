@@ -26,6 +26,7 @@ cat << _EOF_ >$install_package_script
 	  helm		; Helm is an Emacs framework for incremental completions and narrowing selections.
 	  insert-shebang	; Insert shebang line automatically for Emacs.
 	  w3m	; An Emacs interface to w3m
+	  restart-emacs		; This is a simple package to restart Emacs for within Emacs.
 	  ))
 
 ; activate all the packages
