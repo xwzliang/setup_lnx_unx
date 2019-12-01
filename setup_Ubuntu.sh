@@ -32,6 +32,7 @@ apps_to_install=(
 	xterm
 	imagemagick
 	ffmpeg
+	mpv
 	mosh
 	djvulibre-bin	# djvulibre including ddjvu
 	ocrmypdf
@@ -95,6 +96,7 @@ declare -A repos_git_clone
 repos_git_clone=(
 	["$HOME/.tmux/plugins/tpm"]="https://github.com/tmux-plugins/tpm"
 	["$HOME/.emacs.d/evil"]="https://github.com/emacs-evil/evil"
+	["$HOME/.emacs.d/emms"]="git://git.sv.gnu.org/emms.git"
 )
 
 for directory_git_local in "${!repos_git_clone[@]}"; do
