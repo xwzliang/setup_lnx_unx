@@ -52,6 +52,7 @@ apps_to_install=(
 	glimpse		# A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
 	jq		# jq is like sed for JSON data - you can use it to slice and filter and map and transform structured data
 	unrar	# For extracting rar archive files
+	valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
 )
 
 for app in "${apps_to_install[@]}"; do
