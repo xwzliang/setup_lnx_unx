@@ -42,7 +42,15 @@ if [ "$(uname)" == "Darwin" ]; then
 	apps_to_install+=( 
 		bash
 		coreutils
+		grep
 		gnu-sed
+		gawk
+		findutils
+		gnu-tar
+		autoconf
+		automake
+		docker
+		youtube-dl
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew info ${app} > /dev/null 2>&1 ; then
