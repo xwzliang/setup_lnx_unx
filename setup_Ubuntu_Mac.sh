@@ -12,7 +12,6 @@
 
 # apt-get update
 
-# Install apps using apt
 apps_to_install=(
 	git
 	curl
