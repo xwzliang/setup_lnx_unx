@@ -16,47 +16,35 @@
 apps_to_install=(
 	git
 	curl
-	net-tools
-	openssh-server	# A powerful collection of tools for remote control
-	dconf-tools		# A low-level configuration system
-	bcmwl-kernel-source		# Wifi adapter for laptop
 	vim
 	emacs
 	python3
-	python3-pip
 	tmux
-	calibre
 	aria2
 	pandoc
 	w3m
-	xterm
 	imagemagick
 	ffmpeg
-	mpv
 	mosh
-	djvulibre-bin	# djvulibre including ddjvu
 	ocrmypdf
-	hfsprogs
 	rename
 	elinks	# Full-Featured Text web Browser, advanced and well-established feature-rich text mode web browser
-	python3-lxml
-	proxychains
 	shadowsocks-libev
 	privoxy
 	expect	# a language that talks with your interactive programs or scripts that require user interaction
 	bats	# Bash Automated Testing System
-	virtualbox		# A general-purpose full virtualizer
-	vagrant		# A tool for building and managing virtual machine environments in a single workflow
 	check		# A unit testing framework for C
-	ruby-full
-	glimpse		# A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
 	jq		# jq is like sed for JSON data - you can use it to slice and filter and map and transform structured data
 	unrar	# For extracting rar archive files
-	valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
 )
 
 if [ "$(uname)" == "Darwin" ]; then
 	# MacOS
+	apps_to_install+=( 
+		bash
+		coreutils
+		gnu-sed
+	)
 	for app in "${apps_to_install[@]}"; do
 		if brew info ${app} > /dev/null 2>&1 ; then
 			if brew ls --versions ${app} > /dev/null; then
@@ -71,6 +59,25 @@ if [ "$(uname)" == "Darwin" ]; then
 	done
 else
 	# Ubuntu
+	apps_to_install+=( 
+		openssh-server	# A powerful collection of tools for remote control
+		net-tools
+		dconf-tools		# A low-level configuration system
+		bcmwl-kernel-source		# Wifi adapter for laptop
+		python3-pip
+		djvulibre-bin	# djvulibre including ddjvu
+		calibre
+		xterm
+		mpv
+		hfsprogs
+		python3-lxml
+		proxychains
+		virtualbox		# A general-purpose full virtualizer
+		vagrant		# A tool for building and managing virtual machine environments in a single workflow
+		ruby-full
+		glimpse		# A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
+		valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
+	)
 	for app in "${apps_to_install[@]}"; do
 		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
 		if [ "" == "$PKG_OK" ]; then
