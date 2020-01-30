@@ -55,16 +55,32 @@ apps_to_install=(
 	valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
 )
 
-for app in "${apps_to_install[@]}"; do
-	PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
-	if [ "" == "$PKG_OK" ]; then
-		echo -e "${app} not installed, will install it\n"
-		apt install -y ${app}
-	else
-		echo -e "${app} already installed, will skip it"
-	fi
-done
-
+if [ "$(uname)" == "Darwin" ]; then
+	# MacOS
+	for app in "${apps_to_install[@]}"; do
+		if brew info ${app} > /dev/null 2>&1 ; then
+			if brew ls --versions ${app} > /dev/null; then
+				echo -e "${app} already installed, will skip it"
+			else
+				echo -e "${app} not installed, will install it\n"
+				HOMEBREW_NO_AUTO_UPDATE=1 brew install ${app}
+			fi
+		else
+			echo "${app} is not available in homebrew."
+		fi
+	done
+else
+	# Ubuntu
+	for app in "${apps_to_install[@]}"; do
+		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
+		if [ "" == "$PKG_OK" ]; then
+			echo -e "${app} not installed, will install it\n"
+			apt install -y ${app}
+		else
+			echo -e "${app} already installed, will skip it"
+		fi
+	done
+fi
 
 # Install apps using other methods
 
