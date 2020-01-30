@@ -143,14 +143,19 @@ $dir/vim_setup.sh
 # emacs settings
 $dir/emacs_setup.sh
 
-# proxychains settings
-$dir/proxychains_setup.sh
-
 # privoxy settings
 $dir/privoxy_setup.sh
 
 # Python3 settings
 $dir/python3_setup.sh
 
-# systemd settings
-$dir/systemd_setup.sh
+if [ "$(uname)" == "Darwin" ]; then
+	# MacOS settings
+	$dir/macos_setup.sh
+else
+	# proxychains settings
+	$dir/proxychains_setup.sh
+
+	# systemd settings
+	$dir/systemd_setup.sh
+fi
