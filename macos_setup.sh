@@ -8,7 +8,7 @@ if [[ ! "$SHELL" =~ zsh ]]; then
 fi
 
 # Fix git: error: unable to locate xcodebuild
-if [ "$(xcode-select -p)" != /Library/Developer/CommandLineTools/ ]; then
+if [ "$(xcode-select -p)" != /Library/Developer/CommandLineTools ]; then
 	sudo xcode-select --switch /Library/Developer/CommandLineTools/
 fi
 
