@@ -53,15 +53,15 @@ if [ "$(uname)" == "Darwin" ]; then
 		youtube-dl
 	)
 	for app in "${apps_to_install[@]}"; do
-		if brew info ${app} > /dev/null 2>&1 ; then
-			if brew ls --versions ${app} > /dev/null; then
-				echo -e "${app} already installed, will skip it"
-			else
+		if brew ls --versions ${app} > /dev/null; then
+			echo -e "${app} already installed, will skip it"
+		else
+			if brew info ${app} > /dev/null 2>&1 ; then
 				echo -e "${app} not installed, will install it\n"
 				HOMEBREW_NO_AUTO_UPDATE=1 brew install ${app}
+			else
+				echo "${app} is not available in homebrew."
 			fi
-		else
-			echo "${app} is not available in homebrew."
 		fi
 	done
 else
