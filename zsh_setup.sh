@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-if ! grep -h zsh_aliases $HOME/.zshrc; then
-	echo "source $HOME/.zsh_aliases" >> $HOME/.zshrc
+if ! grep -h bash_aliases $HOME/.zshrc; then
+	echo "source $HOME/.bash_aliases" >> $HOME/.zshrc
 fi
