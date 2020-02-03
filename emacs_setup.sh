@@ -28,6 +28,8 @@ cat << _EOF_ >$install_package_script
 	  w3m	; An Emacs interface to w3m
 	  restart-emacs		; This is a simple package to restart Emacs for within Emacs.
 	  helm-descbinds	; Helm Descbinds provides an interface to emacs’ describe-bindings making the currently active key bindings interactively searchable with helm.
+      projectile		; a project interaction library for Emacs
+      helm-projectile		; Helm integration for Projectile
 	  ))
 
 ; activate all the packages
