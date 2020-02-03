@@ -51,6 +51,7 @@ if [ "$(uname)" == "Darwin" ]; then
 		automake
 		docker
 		youtube-dl
+		ack		# Search tool like grep, but optimized for programmers
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew ls --versions ${app} > /dev/null; then
@@ -84,6 +85,7 @@ else
 		ruby-full
 		glimpse		# A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
 		valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
+		ack-grep		# Search tool like grep, but optimized for programmers
 	)
 	for app in "${apps_to_install[@]}"; do
 		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
