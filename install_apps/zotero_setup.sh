@@ -13,14 +13,17 @@ ln -sf $HOME/Dropbox/storage ../../Zotero/storage
 if [ "$(uname)" == "Darwin" ]; then
 	# MacOS
 	preference_path_prefix="$HOME/Library/Application Support/Zotero/Profiles"
+	listen_port=1086
 else
 	# Ubuntu
 	preference_path_prefix=$HOME/.zotero/zotero
+	listen_port=1080
 fi
 # grep its folder name
 preference_folder_name=$(ls "$preference_path_prefix" | grep default)
 preference_folder_path="$preference_path_prefix"/$preference_folder_name
 preference_file="$preference_folder_path/prefs.js"
+echo "zotero preference file path is $preference_file"
 # Create extension folder
 extension_folder="$preference_folder_path/extensions"
 mkdir -p "$extension_folder"
@@ -49,6 +52,10 @@ user_pref("extensions.zotfile.tablet", true);
 user_pref("extensions.zotfile.tablet.dest_dir", "$HOME/Dropbox/Zotfile_tablet");
 user_pref("extensions.zutilo.itemmenu.modifyAttachments", "Zutilo");
 user_pref("extensions.zutilo.itemmenu.showAttachments", "Zutilo");
+user_pref("network.proxy.socks", "127.0.0.1");
+user_pref("network.proxy.socks_port", "$listen_port");
+user_pref("network.proxy.type", 1);
+user_pref("extensions.zotero.baseAttachmentPath", "$HOME/Dropbox/ZoteroStorage");
 _EOF_
 )
 
