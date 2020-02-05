@@ -4,11 +4,17 @@ ip="$1"
 port="$2"
 id="$3"
 
-bash <(curl -L -s https://install.direct/go.sh)
-
-systemctl start v2ray
-
-mv /etc/v2ray/config.json /etc/v2ray/config.json.bak
+if [ "$(uname)" == "Darwin" ]; then
+	# MacOS
+	HOMEBREW_NO_AUTO_UPDATE=1 brew tap v2ray/v2ray
+	HOMEBREW_NO_AUTO_UPDATE=1 brew reinstall v2ray-core
+	mv /usr/local/etc/v2ray/config.json /usr/local/etc/v2ray/config.json.bak
+else
+	# Ubuntu
+	bash <(curl -L -s https://install.direct/go.sh)
+	systemctl start v2ray
+	mv /etc/v2ray/config.json /etc/v2ray/config.json.bak
+fi
 
 dir="$(dirname "$0")"
 
