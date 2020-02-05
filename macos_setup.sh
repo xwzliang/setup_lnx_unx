@@ -22,3 +22,6 @@ dir="$(dirname "$0")"
 
 # setup zsh
 $dir/zsh_setup.sh
+
+# setup bash
+$dir/bash_setup.sh
