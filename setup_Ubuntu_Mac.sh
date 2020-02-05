@@ -51,6 +51,7 @@ if [ "$(uname)" == "Darwin" ]; then
 		automake
 		docker
 		youtube-dl
+		proxychains-ng
 		ack		# Search tool like grep, but optimized for programmers
 	)
 	for app in "${apps_to_install[@]}"; do
