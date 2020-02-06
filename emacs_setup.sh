@@ -30,6 +30,7 @@ cat << _EOF_ >$install_package_script
 	  helm-descbinds	; Helm Descbinds provides an interface to emacs’ describe-bindings making the currently active key bindings interactively searchable with helm.
       projectile		; a project interaction library for Emacs
       helm-projectile		; Helm integration for Projectile
+      bm				; This package provides visible, buffer local, bookmarks and the ability to jump forward and backward to the next bookmark.
 	  ))
 
 ; activate all the packages
@@ -47,6 +48,20 @@ cat << _EOF_ >$install_package_script
 (dolist (package package-list)
   (unless (package-installed-p package)
     (package-install package)))
+
+; Install Bookmark+ from the EmacsWiki
+(let ((bookmarkplus-dir "~/.emacs.d/custom/bookmark-plus/")
+	(emacswiki-base "https://www.emacswiki.org/emacs/download/")
+	(bookmark-files '("bookmark+.el" "bookmark+-mac.el" "bookmark+-bmu.el" "bookmark+-key.el" "bookmark+-lit.el" "bookmark+-1.el")))
+	(require 'url)
+	(add-to-list 'load-path bookmarkplus-dir)
+	(make-directory bookmarkplus-dir t)
+	(mapcar (lambda (arg)
+			(let ((local-file (concat bookmarkplus-dir arg)))
+				(unless (file-exists-p local-file)
+				(url-copy-file (concat emacswiki-base arg) local-file t))))
+			bookmark-files)
+	(byte-recompile-directory bookmarkplus-dir 0))
 _EOF_
 
 emacs --script $install_package_script || emacs --script $install_package_script refresh
