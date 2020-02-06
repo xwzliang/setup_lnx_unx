@@ -31,6 +31,7 @@ cat << _EOF_ >$install_package_script
       projectile		; a project interaction library for Emacs
       helm-projectile		; Helm integration for Projectile
       bm				; This package provides visible, buffer local, bookmarks and the ability to jump forward and backward to the next bookmark.
+      hydra				; This is a package for GNU Emacs that can be used to tie related commands into a family of short bindings with a common prefix - a Hydra.
 	  ))
 
 ; activate all the packages
