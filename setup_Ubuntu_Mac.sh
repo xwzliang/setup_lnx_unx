@@ -35,6 +35,7 @@ apps_to_install=(
 	check		# A unit testing framework for C
 	jq		# jq is like sed for JSON data - you can use it to slice and filter and map and transform structured data
 	unrar	# For extracting rar archive files
+	global	# Source code tag system
 )
 
 if [ "$(uname)" == "Darwin" ]; then
