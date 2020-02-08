@@ -34,6 +34,8 @@ cat << _EOF_ >$install_package_script
       hydra				; This is a package for GNU Emacs that can be used to tie related commands into a family of short bindings with a common prefix - a Hydra.
       iedit				; Edit multiple regions simultaneously in a buffer or a region 
       evil-iedit-state	; Slick Evil states for iedit.
+      ggtags			; Emacs frontend to GNU Global source code tagging system. 
+      helm-gtags		; GNU GLOBAL helm interface
 	  ))
 
 ; activate all the packages
