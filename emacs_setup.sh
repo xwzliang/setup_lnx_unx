@@ -36,6 +36,7 @@ cat << _EOF_ >$install_package_script
       evil-iedit-state	; Slick Evil states for iedit.
       ggtags			; Emacs frontend to GNU Global source code tagging system. 
       helm-gtags		; GNU GLOBAL helm interface
+      persp-mode		; named perspectives(set of buffers/window configs) for emacs
 	  ))
 
 ; activate all the packages
