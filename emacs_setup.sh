@@ -37,6 +37,10 @@ cat << _EOF_ >$install_package_script
       ggtags			; Emacs frontend to GNU Global source code tagging system. 
       helm-gtags		; GNU GLOBAL helm interface
       persp-mode		; named perspectives(set of buffers/window configs) for emacs
+      yasnippet			; A template system for Emacs, It allows you to type an abbreviation and automatically expand it into function templates.
+      yasnippet-snippets	; a collection of yasnippet snippets for many languages
+      helm-c-yasnippet	; Helm source for yasnippet
+      auto-yasnippet	; quickly create disposable yasnippets
 	  ))
 
 ; activate all the packages
