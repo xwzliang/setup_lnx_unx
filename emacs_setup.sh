@@ -41,6 +41,8 @@ cat << _EOF_ >$install_package_script
       yasnippet-snippets	; a collection of yasnippet snippets for many languages
       helm-c-yasnippet	; Helm source for yasnippet
       auto-yasnippet	; quickly create disposable yasnippets
+      company			; Modular in-buffer completion framework for Emacs
+      helm-company		; Helm interface for company-mode
 	  ))
 
 ; activate all the packages
