@@ -44,6 +44,7 @@ cat << _EOF_ >$install_package_script
       company			; Modular in-buffer completion framework for Emacs
       helm-company		; Helm interface for company-mode
       expand-region		; Emacs extension to increase selected region by semantic units.
+      ibuffer-vc		; Group buffers in ibuffer list by VC project
 	  ))
 
 ; activate all the packages
