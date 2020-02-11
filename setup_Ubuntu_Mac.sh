@@ -54,6 +54,7 @@ if [ "$(uname)" == "Darwin" ]; then
 		youtube-dl
 		proxychains-ng
 		ack		# Search tool like grep, but optimized for programmers
+		aspell
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew ls --versions ${app} > /dev/null; then
