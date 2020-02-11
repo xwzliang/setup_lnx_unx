@@ -43,6 +43,7 @@ cat << _EOF_ >$install_package_script
       auto-yasnippet	; quickly create disposable yasnippets
       company			; Modular in-buffer completion framework for Emacs
       helm-company		; Helm interface for company-mode
+      expand-region		; Emacs extension to increase selected region by semantic units.
 	  ))
 
 ; activate all the packages
