@@ -3,6 +3,8 @@
 ip="$1"
 port="$2"
 id="$3"
+# alterId default 64 if not specified.
+alterId="${4:-64}"
 
 if [ "$(uname)" == "Darwin" ]; then
 	# MacOS
@@ -22,6 +24,7 @@ if [ ! -f $config_path ]; then
 	fi
 else
 	is_system_install=true
+	mv $config_path $config_path.bak
 fi
 
 cat << _EOF_ > $config_path
@@ -50,7 +53,7 @@ cat << _EOF_ > $config_path
             "users": [
               {
                 "id": "$id",  // server ID, should be the same with server, change this
-                "alterId": 64 // same with server, change this
+                "alterId": $alterId // same with server, change this
               }
             ]
           }
