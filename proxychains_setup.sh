@@ -3,14 +3,13 @@
 if [ "$(uname)" == "Darwin" ]; then
 	# MacOS
 	proxychains_conf=/usr/local/etc/proxychains.conf
-	listen_port=1086
 else
 	# Ubuntu
 	proxychains_conf=/etc/proxychains.conf
-	listen_port=1080
 fi
 
 proxychains_conf_bak=$proxychains_conf.bak
+listen_port=1080
 
 if [ ! -e $proxychains_conf_bak ]; then
 	cp $proxychains_conf $proxychains_conf_bak

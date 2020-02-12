@@ -7,12 +7,12 @@ id="$3"
 if [ "$(uname)" == "Darwin" ]; then
 	# MacOS
 	config_path=/usr/local/etc/v2ray/config.json
-	listen_port=1086
 else
 	# Ubuntu
 	config_path=/etc/v2ray/config.json
-	listen_port=1080
 fi
+
+listen_port=1080
 
 if [ ! -f $config_path ]; then
 	config_path=$PWD/config.json

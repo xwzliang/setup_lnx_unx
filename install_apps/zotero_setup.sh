@@ -8,16 +8,15 @@ cd $download_bin_dir
 # Make symlink between Zotero storage and Dropbox
 ln -sf $HOME/Dropbox/storage ../../Zotero/storage
 
+listen_port=1080
 
 # Find zotero preference file path
 if [ "$(uname)" == "Darwin" ]; then
 	# MacOS
 	preference_path_prefix="$HOME/Library/Application Support/Zotero/Profiles"
-	listen_port=1086
 else
 	# Ubuntu
 	preference_path_prefix=$HOME/.zotero/zotero
-	listen_port=1080
 fi
 # grep its folder name
 preference_folder_name=$(ls "$preference_path_prefix" | grep default)
