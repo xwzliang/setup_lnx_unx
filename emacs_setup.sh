@@ -46,6 +46,7 @@ cat << _EOF_ >$install_package_script
       helm-company		; Helm interface for company-mode
       expand-region		; Emacs extension to increase selected region by semantic units.
       ibuffer-vc		; Group buffers in ibuffer list by VC project
+      flycheck			; On the fly syntax checking for GNU Emacs
 	  ))
 
 ; activate all the packages
