@@ -47,6 +47,7 @@ cat << _EOF_ >$install_package_script
       expand-region		; Emacs extension to increase selected region by semantic units.
       ibuffer-vc		; Group buffers in ibuffer list by VC project
       flycheck			; On the fly syntax checking for GNU Emacs
+      golden-ratio		; Automatic resizing of Emacs windows to the golden ratio
 	  ))
 
 ; activate all the packages
