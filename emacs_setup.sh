@@ -15,6 +15,7 @@ cat << _EOF_ >$install_package_script
 (setq package-list
     '(
 	  clues-theme
+	  evil			; The extensible vi layer for Emacs.
 	  use-package	; The use-package macro allows you to isolate package configuration in your .emacs file in a way that is both performance-oriented and, well, tidy. Also can auto-install package and warn instead of give error when certain package is lacking.
 	  smartparens	; Minor mode for Emacs that deals with parens pairs and tries to be smart about it.
 	  magit		; Magit is an interface to the version control system Git, implemented as an Emacs package. Magit aspires to be a complete Git porcelain.
