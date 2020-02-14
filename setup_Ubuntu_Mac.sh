@@ -55,6 +55,7 @@ if [ "$(uname)" == "Darwin" ]; then
 		proxychains-ng
 		ack		# Search tool like grep, but optimized for programmers
 		aspell
+		poppler		# PDF rendering library
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew ls --versions ${app} > /dev/null; then
