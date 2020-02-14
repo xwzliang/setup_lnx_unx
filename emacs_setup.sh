@@ -49,6 +49,7 @@ cat << _EOF_ >$install_package_script
       flycheck			; On the fly syntax checking for GNU Emacs
       golden-ratio		; Automatic resizing of Emacs windows to the golden ratio
       company-c-headers		; Auto-completion for C/C++ headers using Company
+      pdf-tools			; Emacs support library for PDF files.
 	  ))
 
 ; activate all the packages
