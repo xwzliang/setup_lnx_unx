@@ -36,6 +36,7 @@ apps_to_install=(
 	jq		# jq is like sed for JSON data - you can use it to slice and filter and map and transform structured data
 	unrar	# For extracting rar archive files
 	global	# Source code tag system
+	graphviz	# open source graph visualization software. Graph visualization is a way of representing structural information as diagrams of abstract graphs and networks
 )
 
 if [ "$(uname)" == "Darwin" ]; then
