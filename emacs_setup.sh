@@ -53,6 +53,7 @@ cat << _EOF_ >$install_package_script
       pdf-tools			; Emacs support library for PDF files.
       calfw-org			; A calendar framework for Emacs org-mode
       evil-org			; Supplemental evil-mode keybindings to emacs org-mode
+      org-brain			; Org-mode wiki + concept-mapping
 	  ))
 
 ; activate all the packages
