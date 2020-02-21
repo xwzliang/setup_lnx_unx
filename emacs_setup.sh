@@ -52,6 +52,7 @@ cat << _EOF_ >$install_package_script
       company-c-headers		; Auto-completion for C/C++ headers using Company
       pdf-tools			; Emacs support library for PDF files.
       calfw-org			; A calendar framework for Emacs org-mode
+      evil-org			; Supplemental evil-mode keybindings to emacs org-mode
 	  ))
 
 ; activate all the packages
