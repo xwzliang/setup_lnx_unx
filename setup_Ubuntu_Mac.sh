@@ -57,6 +57,7 @@ if [ "$(uname)" == "Darwin" ]; then
 		ack		# Search tool like grep, but optimized for programmers
 		aspell
 		poppler		# PDF rendering library
+		gdb				# GNU debugger
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew ls --versions ${app} > /dev/null; then
