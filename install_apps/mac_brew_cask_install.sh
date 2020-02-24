@@ -2,6 +2,9 @@
 
 apps_to_install_brew_cask=(
 	basictex
+	anki				# Need to install ankiconnect addon manually in anki to use remote api
+	firefox
+	google-chrome		# google-chrome cannot be downloaded when using a proxy.
 )
 
 for app in "${apps_to_install_brew_cask[@]}"; do
