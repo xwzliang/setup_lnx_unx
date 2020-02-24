@@ -55,6 +55,7 @@ cat << _EOF_ >$install_package_script
       evil-org			; Supplemental evil-mode keybindings to emacs org-mode
       org-brain			; Org-mode wiki + concept-mapping
       org-ref			; org-mode modules for citations, cross-references, bibliographies in org-mode and useful bibtex tools to go with it.
+      anki-editor		; Emacs minor mode for making Anki cards with Org
 	  ))
 
 ; activate all the packages
