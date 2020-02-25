@@ -10,6 +10,7 @@ cat << _EOF_ >$install_package_script
 ; find package information from following archives
 (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
 						 ("melpa" . "https://melpa.org/packages/")))
+(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
 
 ; list of packages
 (setq package-list
@@ -56,6 +57,7 @@ cat << _EOF_ >$install_package_script
       org-brain			; Org-mode wiki + concept-mapping
       org-ref			; org-mode modules for citations, cross-references, bibliographies in org-mode and useful bibtex tools to go with it.
       anki-editor		; Emacs minor mode for making Anki cards with Org
+      org-plus-contrib		; Org-mode Contributed Packages (https://orgmode.org/worg/org-contrib/)
 	  ))
 
 ; activate all the packages
