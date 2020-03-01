@@ -3,10 +3,11 @@
 modules_to_install=(
 	numpy
 	pandas
+	pyzotero
 )
 
 for module in "${modules_to_install[@]}"; do
-	if pip3 list --format=columns | grep "$module" > /dev/null; then
+	if python3 -c "import $module" > /dev/null; then
 		echo "$module already installed."
 	else
 		pip3 install $module
