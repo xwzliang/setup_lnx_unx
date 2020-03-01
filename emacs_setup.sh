@@ -89,6 +89,12 @@ cat << _EOF_ >$install_package_script
 				(url-copy-file (concat emacswiki-base arg) local-file t))))
 			bookmark-files)
 	(byte-recompile-directory bookmarkplus-dir 0))
+
+;; Delete anki-editor elc file if existed, this file will cause note id cannot be added.
+(let ((filename (concat (concat (expand-file-name "~/.emacs.d/elpa/") (car (directory-files (expand-file-name "~/.emacs.d/elpa/") nil "^anki-editor"))) "/anki-editor.elc")))
+	(if (file-exists-p filename)
+		(delete-file filename)))
+
 _EOF_
 
 emacs --script $install_package_script || emacs --script $install_package_script refresh
