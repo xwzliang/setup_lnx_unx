@@ -58,6 +58,7 @@ if [ "$(uname)" == "Darwin" ]; then
 		aspell
 		poppler		# PDF rendering library
 		gdb				# GNU debugger
+		gcc			# GNU compiler collection
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew ls --versions ${app} > /dev/null; then
