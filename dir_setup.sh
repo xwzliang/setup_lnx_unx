@@ -5,6 +5,7 @@ my_dirs=(
 	~/tmp
 	~/git/Downloads
 	~/pipes/zotero
+	~/pipes/pdf_img
 	~/Downloads/books
 	~/Downloads/bin
 	~/Downloads/tutorials
