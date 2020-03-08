@@ -93,6 +93,7 @@ else
 		glimpse		# A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
 		valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
 		ack-grep		# Search tool like grep, but optimized for programmers
+		poppler-utils		# PDF rendering library
 	)
 	for app in "${apps_to_install[@]}"; do
 		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
