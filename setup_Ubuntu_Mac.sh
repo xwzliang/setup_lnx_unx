@@ -37,6 +37,7 @@ apps_to_install=(
 	unrar	# For extracting rar archive files
 	global	# Source code tag system
 	graphviz	# open source graph visualization software. Graph visualization is a way of representing structural information as diagrams of abstract graphs and networks
+	fzf			# fzf is a general-purpose command-line fuzzy finder.
 )
 
 if [ "$(uname)" == "Darwin" ]; then
