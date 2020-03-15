@@ -52,6 +52,7 @@ cat << _EOF_ >$install_package_script
       golden-ratio		; Automatic resizing of Emacs windows to the golden ratio
       company-c-headers		; Auto-completion for C/C++ headers using Company
       pdf-tools			; Emacs support library for PDF files.
+      calfw				; A calendar framework for Emacs
       calfw-org			; A calendar framework for Emacs org-mode
       evil-org			; Supplemental evil-mode keybindings to emacs org-mode
       org-brain			; Org-mode wiki + concept-mapping
