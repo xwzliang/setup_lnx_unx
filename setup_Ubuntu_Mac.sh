@@ -100,7 +100,7 @@ else
 		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
 		if [ "" == "$PKG_OK" ]; then
 			echo -e "${app} not installed, will install it\n"
-			apt install -y ${app}
+			sudo apt install -y ${app}
 		else
 			echo -e "${app} already installed, will skip it"
 		fi
