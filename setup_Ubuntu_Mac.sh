@@ -100,7 +100,7 @@ else
 		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
 		if [ "" == "$PKG_OK" ]; then
 			echo -e "${app} not installed, will install it\n"
-			sudo apt install -y ${app}
+			sudo apt --fix-broken install -y ${app}
 		else
 			echo -e "${app} already installed, will skip it"
 		fi
@@ -177,5 +177,6 @@ if [ "$(uname)" == "Darwin" ]; then
 	$dir/macos_setup.sh
 else
 	# systemd settings
-	$dir/systemd_setup.sh
+	# $dir/systemd_setup.sh
+	echo ubuntu
 fi
