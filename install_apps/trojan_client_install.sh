@@ -6,5 +6,7 @@ if [ "$(uname)" == "Darwin" ]; then
 	HOMEBREW_NO_AUTO_UPDATE=1 brew install trojan
 else
 	# Ubuntu
-	sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/trojan-gfw/trojan-quickstart/master/trojan-quickstart.sh)"
+	# sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/trojan-gfw/trojan-quickstart/master/trojan-quickstart.sh)"
+	# Ubuntu >= 19.04
+	sudo apt-get install trojan
 fi
