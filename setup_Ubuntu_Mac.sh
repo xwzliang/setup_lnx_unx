@@ -38,6 +38,7 @@ apps_to_install=(
 	global	# Source code tag system
 	graphviz	# open source graph visualization software. Graph visualization is a way of representing structural information as diagrams of abstract graphs and networks
 	fzf			# fzf is a general-purpose command-line fuzzy finder.
+	ack			# Search tool like grep, but optimized for programmers
 )
 
 if [ "$(uname)" == "Darwin" ]; then
@@ -55,7 +56,6 @@ if [ "$(uname)" == "Darwin" ]; then
 		docker
 		youtube-dl
 		proxychains-ng
-		ack		# Search tool like grep, but optimized for programmers
 		aspell
 		poppler		# PDF rendering library
 		gdb				# GNU debugger
@@ -78,7 +78,6 @@ else
 	apps_to_install+=( 
 		openssh-server	# A powerful collection of tools for remote control
 		net-tools
-		dconf-tools		# A low-level configuration system
 		bcmwl-kernel-source		# Wifi adapter for laptop
 		python3-pip
 		djvulibre-bin	# djvulibre including ddjvu
@@ -93,7 +92,6 @@ else
 		ruby-full
 		glimpse		# A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
 		valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
-		ack-grep		# Search tool like grep, but optimized for programmers
 		poppler-utils		# PDF rendering library
 	)
 	for app in "${apps_to_install[@]}"; do
