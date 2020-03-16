@@ -3,9 +3,9 @@
 my_dirs=(
 	~/bin
 	~/tmp
-	~/git/Downloads
 	~/pipes/zotero
 	~/pipes/pdf_img
+	~/Downloads/git
 	~/Downloads/books
 	~/Downloads/bin
 	~/Downloads/tutorials
