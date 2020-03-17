@@ -93,6 +93,7 @@ else
 		glimpse		# A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
 		valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
 		poppler-utils		# PDF rendering library
+		anki				# Anki is a program designed to help you remember facts as easily, quickly and efficiently as possible
 	)
 	for app in "${apps_to_install[@]}"; do
 		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
