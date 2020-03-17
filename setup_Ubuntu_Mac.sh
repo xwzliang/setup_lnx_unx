@@ -60,6 +60,7 @@ if [ "$(uname)" == "Darwin" ]; then
 		poppler		# PDF rendering library
 		gdb				# GNU debugger
 		gcc			# GNU compiler collection
+		ncurses		# The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew ls --versions ${app} > /dev/null; then
@@ -94,6 +95,8 @@ else
 		valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
 		poppler-utils		# PDF rendering library
 		anki				# Anki is a program designed to help you remember facts as easily, quickly and efficiently as possible
+		apt-file			# apt-file is a command line tool for searching files contained in packages for the APT packaging system. You can search in which package a file is included or list the contents of a package without installing or fetching it.
+		libncurses-dev		# The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
 	)
 	for app in "${apps_to_install[@]}"; do
 		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
