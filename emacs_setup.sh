@@ -59,6 +59,7 @@ cat << _EOF_ >$install_package_script
       org-ref			; org-mode modules for citations, cross-references, bibliographies in org-mode and useful bibtex tools to go with it.
       anki-editor		; Emacs minor mode for making Anki cards with Org
       org-plus-contrib		; Org-mode Contributed Packages (https://orgmode.org/worg/org-contrib/)
+      general				; Convenience wrappers for keybindings
 	  ))
 
 ; activate all the packages
