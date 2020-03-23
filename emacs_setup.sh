@@ -60,6 +60,8 @@ cat << _EOF_ >$install_package_script
       anki-editor		; Emacs minor mode for making Anki cards with Org
       org-plus-contrib		; Org-mode Contributed Packages (https://orgmode.org/worg/org-contrib/)
       general				; Convenience wrappers for keybindings
+      auto-package-update	; Automatically update Emacs packages. 
+      forge					; Work with Git forges from the comfort of Magit
 	  ))
 
 ; activate all the packages
