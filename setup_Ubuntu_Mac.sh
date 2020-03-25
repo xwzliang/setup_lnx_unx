@@ -61,6 +61,7 @@ if [ "$(uname)" == "Darwin" ]; then
 		gdb				# GNU debugger
 		gcc			# GNU compiler collection
 		ncurses		# The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
+		the_silver_searcher		# A code-searching tool similar to ack, but faster
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew ls --versions ${app} > /dev/null; then
@@ -97,6 +98,7 @@ else
 		anki				# Anki is a program designed to help you remember facts as easily, quickly and efficiently as possible
 		apt-file			# apt-file is a command line tool for searching files contained in packages for the APT packaging system. You can search in which package a file is included or list the contents of a package without installing or fetching it.
 		libncurses-dev		# The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
+		silversearcher-ag		# A code-searching tool similar to ack, but faster
 	)
 	for app in "${apps_to_install[@]}"; do
 		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
