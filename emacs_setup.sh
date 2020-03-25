@@ -63,6 +63,8 @@ cat << _EOF_ >$install_package_script
       auto-package-update	; Automatically update Emacs packages. 
       forge					; Work with Git forges from the comfort of Magit
       helm-swoop			; helm-swoop allows to show interactively lines (in one or multiple buffers) that match a pattern in another (helm) buffer
+      helm-ag				; The silver searcher with helm interface
+      macrostep				; interactive macro-expander for Emacs
 	  ))
 
 ; activate all the packages
