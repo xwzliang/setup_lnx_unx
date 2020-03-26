@@ -27,15 +27,15 @@ apps_to_install=(
 	mosh
 	ocrmypdf
 	rename
-	elinks	# Full-Featured Text web Browser, advanced and well-established feature-rich text mode web browser
+	elinks      # Full-Featured Text web Browser, advanced and well-established feature-rich text mode web browser
 	shadowsocks-libev
 	privoxy
-	expect	# a language that talks with your interactive programs or scripts that require user interaction
-	bats	# Bash Automated Testing System
+	expect      # a language that talks with your interactive programs or scripts that require user interaction
+	bats        # Bash Automated Testing System
 	check		# A unit testing framework for C
-	jq		# jq is like sed for JSON data - you can use it to slice and filter and map and transform structured data
-	unrar	# For extracting rar archive files
-	global	# Source code tag system
+	jq          # jq is like sed for JSON data - you can use it to slice and filter and map and transform structured data
+	unrar       # For extracting rar archive files
+	global      # Source code tag system
 	graphviz	# open source graph visualization software. Graph visualization is a way of representing structural information as diagrams of abstract graphs and networks
 	fzf			# fzf is a general-purpose command-line fuzzy finder.
 	ack			# Search tool like grep, but optimized for programmers
@@ -57,10 +57,10 @@ if [ "$(uname)" == "Darwin" ]; then
 		youtube-dl
 		proxychains-ng
 		aspell
-		poppler		# PDF rendering library
-		gdb				# GNU debugger
-		gcc			# GNU compiler collection
-		ncurses		# The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
+		poppler                 # PDF rendering library
+		gdb                     # GNU debugger
+		gcc                     # GNU compiler collection
+		ncurses                 # The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
 		the_silver_searcher		# A code-searching tool similar to ack, but faster
 	)
 	for app in "${apps_to_install[@]}"; do
@@ -78,26 +78,26 @@ if [ "$(uname)" == "Darwin" ]; then
 else
 	# Ubuntu
 	apps_to_install+=( 
-		openssh-server	# A powerful collection of tools for remote control
+		openssh-server          # A powerful collection of tools for remote control
 		net-tools
 		bcmwl-kernel-source		# Wifi adapter for laptop
 		python3-pip
-		djvulibre-bin	# djvulibre including ddjvu
+		djvulibre-bin           # djvulibre including ddjvu
 		calibre
 		xterm
 		mpv
 		hfsprogs
 		python3-lxml
 		proxychains
-		virtualbox		# A general-purpose full virtualizer
-		vagrant		# A tool for building and managing virtual machine environments in a single workflow
+		virtualbox              # A general-purpose full virtualizer
+		vagrant                 # A tool for building and managing virtual machine environments in a single workflow
 		ruby-full
-		glimpse		# A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
-		valgrind	# A tool for finding memory access errors to heap memory in C and C++ programs
-		poppler-utils		# PDF rendering library
-		anki				# Anki is a program designed to help you remember facts as easily, quickly and efficiently as possible
-		apt-file			# apt-file is a command line tool for searching files contained in packages for the APT packaging system. You can search in which package a file is included or list the contents of a package without installing or fetching it.
-		libncurses-dev		# The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
+		glimpse                 # A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
+		valgrind                # A tool for finding memory access errors to heap memory in C and C++ programs
+		poppler-utils           # PDF rendering library
+		anki                    # Anki is a program designed to help you remember facts as easily, quickly and efficiently as possible
+		apt-file                # apt-file is a command line tool for searching files contained in packages for the APT packaging system. You can search in which package a file is included or list the contents of a package without installing or fetching it.
+		libncurses-dev          # The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
 		silversearcher-ag		# A code-searching tool similar to ack, but faster
 	)
 	for app in "${apps_to_install[@]}"; do
