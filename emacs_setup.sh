@@ -65,6 +65,11 @@ cat << _EOF_ >$install_package_script
       helm-swoop			; helm-swoop allows to show interactively lines (in one or multiple buffers) that match a pattern in another (helm) buffer
       helm-ag				; The silver searcher with helm interface
       macrostep				; interactive macro-expander for Emacs
+      evil-exchange			; Port of vim-exchange
+      evil-replace-with-register			; Port of vim ReplaceWithRegister
+      evil-visualstar		; Port of one of the many visual-star plugins for Vim. Start a * or # search from the visual selection
+      evil-lion				; Evil align operator
+      evil-numbers			; Increment and decrement numbers in Emacs
 	  ))
 
 ; activate all the packages
