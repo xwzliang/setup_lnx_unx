@@ -70,6 +70,12 @@ cat << _EOF_ >$install_package_script
       evil-visualstar                       ; Port of one of the many visual-star plugins for Vim. Start a * or # search from the visual selection
       evil-lion                             ; Evil align operator
       evil-numbers                          ; Increment and decrement numbers in Emacs
+      evil-args                             ; Motions and text objects for delimited arguments in Evil
+      evil-indent-plus                      ; Better indent textobjects for evil
+      evil-visual-mark-mode                 ; Display evil marks on buffer
+      anzu                                  ; Emacs port of anzu.vim. anzu.el provides a minor mode which displays current match and total matches information in the mode-line 
+      evil-anzu                             ; anzu for Evil
+      evil-mc                               ; Multiple cursors implementation for evil-mode
 	  ))
 
 ; activate all the packages
