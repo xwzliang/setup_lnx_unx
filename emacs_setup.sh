@@ -76,6 +76,7 @@ cat << _EOF_ >$install_package_script
       anzu                                  ; Emacs port of anzu.vim. anzu.el provides a minor mode which displays current match and total matches information in the mode-line 
       evil-anzu                             ; anzu for Evil
       evil-mc                               ; Multiple cursors implementation for evil-mode
+      avy                                   ; Jump to things in Emacs tree-style
 	  ))
 
 ; activate all the packages
