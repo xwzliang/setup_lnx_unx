@@ -33,3 +33,14 @@ if [ ! -f "$git_config_local_file" ]; then
 		echo -e "\nWill cache credentails for two hours"
 	fi
 fi
+
+# git flow set up 
+if [ "$(uname)" == "Darwin" ]; then
+	# MacOS
+	gitflow_path=/usr/local/etc/bash_completion.d/git-flow-completion.bash
+else
+	# Ubuntu
+	gitflow_path=/etc/bash_completion.d/git-flow-completion.bash
+fi
+
+sudo wget -O $gitflow_path https://raw.githubusercontent.com/bobthecow/git-flow-completion/master/git-flow-completion.bash
