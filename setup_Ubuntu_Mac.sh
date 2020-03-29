@@ -39,6 +39,8 @@ apps_to_install=(
 	graphviz	# open source graph visualization software. Graph visualization is a way of representing structural information as diagrams of abstract graphs and networks
 	fzf			# fzf is a general-purpose command-line fuzzy finder.
 	ack			# Search tool like grep, but optimized for programmers
+	git-flow			# Git extensions to provide high-level repository operations for Vincent Driessen's branching model
+	bash-completion			# Programmable completion functions for bash
 )
 
 if [ "$(uname)" == "Darwin" ]; then
