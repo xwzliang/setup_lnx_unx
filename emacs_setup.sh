@@ -77,6 +77,15 @@ cat << _EOF_ >$install_package_script
       evil-anzu                             ; anzu for Evil
       evil-mc                               ; Multiple cursors implementation for evil-mode
       avy                                   ; Jump to things in Emacs tree-style
+      delight                               ; Enables you to customise the mode names displayed in the mode line.
+      helm-make                             ; Select a Makefile target with helm
+      git-timemachine                       ; Git time machine
+      gitignore-mode                        ; Emacs major modes for Git ignore files
+      gitconfig-mode                        ; Emacs major modes for Git config files
+      gitattributes-mode                    ; Emacs major modes for Git attributes files
+      define-word                           ; Lets you see the definition of a word or a phrase at point, without having to switch to a browser
+      magit-gitflow                         ; GitFlow plugin for magit
+      linum-relative                        ; Display relative line number in the left margin in emacs
 	  ))
 
 ; activate all the packages
