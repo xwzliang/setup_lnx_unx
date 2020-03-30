@@ -86,10 +86,10 @@ cat << _EOF_ >$install_package_script
       define-word                           ; Lets you see the definition of a word or a phrase at point, without having to switch to a browser
       magit-gitflow                         ; GitFlow plugin for magit
       linum-relative                        ; Display relative line number in the left margin in emacs
-      evil-textobj-line                        ; Evil Line text object
-      exato                        ; This package provides the x text object to manipulate html/xml tag attributes
-      evil-textobj-syntax                        ; This package is a port of vim-textobj-syntax for emacs. It provides evil text objects for consecutive items with same syntax highlight.
-      evil-cleverparens                        ; Evil normal-state minor-mode for editing lisp-like languages
+      evil-textobj-line                     ; Evil Line text object
+      exato                                 ; This package provides the x text object to manipulate html/xml tag attributes
+      evil-textobj-syntax                   ; This package is a port of vim-textobj-syntax for emacs. It provides evil text objects for consecutive items with same syntax highlight.
+      evil-cleverparens                     ; Evil normal-state minor-mode for editing lisp-like languages
 	  ))
 
 ; activate all the packages
