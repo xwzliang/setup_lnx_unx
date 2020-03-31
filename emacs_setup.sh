@@ -90,6 +90,8 @@ cat << _EOF_ >$install_package_script
       exato                                 ; This package provides the x text object to manipulate html/xml tag attributes
       evil-textobj-syntax                   ; This package is a port of vim-textobj-syntax for emacs. It provides evil text objects for consecutive items with same syntax highlight.
       evil-cleverparens                     ; Evil normal-state minor-mode for editing lisp-like languages
+      emamux                                ; tmux manipulation from Emacs
+      which-key                             ; Emacs package that displays available keybindings in popup
 	  ))
 
 ; activate all the packages
