@@ -92,6 +92,10 @@ cat << _EOF_ >$install_package_script
       evil-cleverparens                     ; Evil normal-state minor-mode for editing lisp-like languages
       emamux                                ; tmux manipulation from Emacs
       which-key                             ; Emacs package that displays available keybindings in popup
+      helpful                               ; A better Emacs *help* buffer
+      deft                                  ; Deft is an Emacs mode for quickly browsing, filtering, and editing directories of plain text notes
+      howm                                  ; a note-taking tool on Emacs. It is similar to emacs-wiki.el 
+      undo-propose                          ; Navigate the emacs undo history by staging undo's in a temporary buffer
 	  ))
 
 ; activate all the packages
