@@ -96,6 +96,10 @@ cat << _EOF_ >$install_package_script
       deft                                  ; Deft is an Emacs mode for quickly browsing, filtering, and editing directories of plain text notes
       howm                                  ; a note-taking tool on Emacs. It is similar to emacs-wiki.el 
       undo-propose                          ; Navigate the emacs undo history by staging undo's in a temporary buffer
+      org-projectile                        ; Manage org-mode TODOs for your projectile projects
+      f                                     ; Modern API for working with files and directories in Emacs
+      hl-todo                               ; Highlight TODO keywords
+      magit-todos                           ; Show source files' TODOs (and FIXMEs, etc) in Magit status buffer
 	  ))
 
 ; activate all the packages
