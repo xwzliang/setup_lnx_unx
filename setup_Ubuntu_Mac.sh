@@ -41,6 +41,7 @@ apps_to_install=(
 	ack			# Search tool like grep, but optimized for programmers
 	git-flow			# Git extensions to provide high-level repository operations for Vincent Driessen's branching model
 	bash-completion			# Programmable completion functions for bash
+	ripgrep			# ripgrep recursively searches directories for a regex pattern (faster than ag)
 )
 
 if [ "$(uname)" == "Darwin" ]; then
