@@ -100,6 +100,8 @@ cat << _EOF_ >$install_package_script
       f                                     ; Modern API for working with files and directories in Emacs
       hl-todo                               ; Highlight TODO keywords
       magit-todos                           ; Show source files' TODOs (and FIXMEs, etc) in Magit status buffer
+      rg                                    ; Emacs search tool based on ripgrep 
+      helm-rg                               ; Search massive codebases extremely fast, using ripgrep and helm
 	  ))
 
 ; activate all the packages
