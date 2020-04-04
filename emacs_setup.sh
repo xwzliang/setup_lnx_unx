@@ -102,6 +102,9 @@ cat << _EOF_ >$install_package_script
       magit-todos                           ; Show source files' TODOs (and FIXMEs, etc) in Magit status buffer
       rg                                    ; Emacs search tool based on ripgrep 
       helm-rg                               ; Search massive codebases extremely fast, using ripgrep and helm
+      helm-firefox                          ; Display firefox bookmarks with emacs helm interface
+      org-pomodoro                          ; pomodoro technique for org-mode
+      org-present                           ; Ultra-minimalist presentation minor-mode for Emacs org-mode
 	  ))
 
 ; activate all the packages
