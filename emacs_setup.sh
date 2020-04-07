@@ -105,6 +105,13 @@ cat << _EOF_ >$install_package_script
       helm-firefox                          ; Display firefox bookmarks with emacs helm interface
       org-pomodoro                          ; pomodoro technique for org-mode
       org-present                           ; Ultra-minimalist presentation minor-mode for Emacs org-mode
+      doom-modeline                         ; A fancy and fast mode-line inspired by minimalism design 
+      hide-mode-line                        ; An Emacs plugin that hides (or masks) the current buffer's mode-line
+      eshell-z                              ; cd to frequent directory in eshell, Emacs port of z
+      org-web-tools                         ; View, capture, and archive Web pages in Org-mode
+      transpose-frame                       ; Transpose windows arrangement in a frame
+      helm-org-rifle                        ; searches rapidly through org files
+      org-ql                                ; An Org-mode query language, including search commands and saved views
 	  ))
 
 ; activate all the packages
