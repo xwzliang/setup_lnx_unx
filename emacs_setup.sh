@@ -112,6 +112,11 @@ cat << _EOF_ >$install_package_script
       transpose-frame                       ; Transpose windows arrangement in a frame
       helm-org-rifle                        ; searches rapidly through org files
       org-ql                                ; An Org-mode query language, including search commands and saved views
+      org-board                             ; Org mode's web archiver 
+      org-timeline                          ; Add graphical view of agenda timeline to agenda buffer
+      org-super-agenda                      ; Supercharge your Org daily/weekly agenda by grouping items
+      origami                               ; A folding minor mode for Emacs (works with org agenda)
+      nov                                   ; Major mode for reading EPUBs in Emacs 
 	  ))
 
 ; activate all the packages
