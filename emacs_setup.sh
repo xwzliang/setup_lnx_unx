@@ -149,12 +149,23 @@ cat << _EOF_ >$install_package_script
 	 )
  )
 
+(defun my-download-file-github-func (my-download-github-repo my-download-files)
+	(let ((my-download-github-full-path (concat "https://raw.githubusercontent.com/" my-download-github-repo "/master/"))
+		;; Use the repo name as dir name
+		(my-download-package-dir-name (car (last (split-string my-download-github-repo "/")))))
+		(my-download-file-func my-download-github-full-path my-download-package-dir-name my-download-files)
+	 )
+ )
+
 ; Install Bookmark+ from the EmacsWiki
 (let ((bookmarkplus-dir-name "bookmark-plus")
 	(emacswiki-base "https://www.emacswiki.org/emacs/download/")
 	(bookmark-files '("bookmark+.el" "bookmark+-mac.el" "bookmark+-bmu.el" "bookmark+-key.el" "bookmark+-lit.el" "bookmark+-1.el")))
 	(my-download-file-func emacswiki-base bookmarkplus-dir-name bookmark-files)
 )
+
+;; Install from github
+;; (my-download-file-github-func "hekinami/justify-kp" '("justify-kp.el"))
 
 ;; Delete anki-editor elc file if existed, this file will cause note id cannot be added.
 (let ((filename (concat (concat (expand-file-name "~/.emacs.d/elpa/") (car (directory-files (expand-file-name "~/.emacs.d/elpa/") nil "^anki-editor"))) "/anki-editor.elc")))
