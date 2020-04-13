@@ -11,6 +11,7 @@ my_dirs=(
 	~/Downloads/tutorials
 	~/Downloads/videos
 	~/Downloads/audios
+	~/Downloads/tmp
 )
 
 for my_dir in "${my_dirs[@]}"; do
