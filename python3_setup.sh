@@ -6,6 +6,9 @@ modules_to_install=(
 	pyzotero
 	isbnlib		# isbnlib is a (pure) python library that provides several useful methods and functions to validate, clean, transform, hyphenate and get metadata for ISBN strings.
 	beautifulsoup4		# Beautiful Soup is a library that makes it easy to scrape information from web pages.
+	virtualenv			# a tool to create isolated Python environments
+	jedi				# Jedi is a static analysis tool for Python that is typically used in IDEs/editors plugins. Jedi has a focus on autocompletion and goto functionality.
+	rope				# a python refactoring library
 )
 
 for module in "${modules_to_install[@]}"; do
