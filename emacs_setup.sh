@@ -117,6 +117,18 @@ cat << _EOF_ >$install_package_script
       org-super-agenda                      ; Supercharge your Org daily/weekly agenda by grouping items
       origami                               ; A folding minor mode for Emacs (works with org agenda)
       nov                                   ; Major mode for reading EPUBs in Emacs 
+      org-noter                             ; Emacs document annotator, using Org-mode
+      org-roam                              ; Rudimentary Roam replica with Org-mode
+      org-journal                           ; A simple org-mode based journaling mode
+      org-download                          ; Drag and drop images to Emacs org-mode
+      el-patch                              ; el-patch provides a way to customize the behavior of Emacs Lisp functions
+      fzf                                   ; A front-end for fzf
+      company-quickhelp                     ; Documentation popup for Company
+      company-quickhelp-terminal            ; Terminal support for company-quickhelp
+      popup                                 ; Visual Popup Interface Library for Emacs 
+      elpy                                  ; Emacs Python Development Environment
+      highlight-indentation                 ; Minor modes to highlight indentation guides in emacs
+      realgud                               ; The Grand "Cathedral" Debugger rewrite 
 	  ))
 
 ; activate all the packages
