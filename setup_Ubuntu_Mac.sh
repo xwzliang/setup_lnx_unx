@@ -42,6 +42,7 @@ apps_to_install=(
 	git-flow			# Git extensions to provide high-level repository operations for Vincent Driessen's branching model
 	bash-completion			# Programmable completion functions for bash
 	ripgrep			# ripgrep recursively searches directories for a regex pattern (faster than ag)
+	zsh			# Zsh is a shell designed for interactive use, although it is also a powerful scripting language
 )
 
 if [ "$(uname)" == "Darwin" ]; then
