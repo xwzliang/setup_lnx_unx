@@ -9,6 +9,7 @@ modules_to_install=(
 	virtualenv			# a tool to create isolated Python environments
 	jedi				# Jedi is a static analysis tool for Python that is typically used in IDEs/editors plugins. Jedi has a focus on autocompletion and goto functionality.
 	rope				# a python refactoring library
+	trepan3k			# A gdb-like Python3 Debugger in the Trepan family
 )
 
 for module in "${modules_to_install[@]}"; do
