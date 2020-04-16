@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# Install ohmyzsh if not already installed
+if [ ! -d ~/.oh-my-zsh ]; then
+	# sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+	# Using socks proxy
+	. set_proxy
+	sh -c "$(curl_socks -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+
 if ! grep -h bash_aliases $HOME/.zshrc; then
 	echo "source $HOME/.bash_aliases" >> $HOME/.zshrc
 fi
