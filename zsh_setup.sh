@@ -8,12 +8,12 @@ if [ ! -d ~/.oh-my-zsh ]; then
 	sh -c "$(curl_socks -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
-if ! grep -h bash_aliases $HOME/.zshrc; then
-	echo "source $HOME/.bash_aliases" >> $HOME/.zshrc
-fi
-
 if ! grep -h zsh_aliases $HOME/.zshrc; then
 	echo "source $HOME/.zsh_aliases" >> $HOME/.zshrc
+fi
+
+if ! grep -h all_sh_aliases $HOME/.zshrc; then
+	echo "source $HOME/.all_sh_aliases" >> $HOME/.zshrc
 fi
 
 if ! grep -h all_sh_env $HOME/.zshenv; then

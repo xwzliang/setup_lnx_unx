@@ -4,6 +4,10 @@ if ! grep -h bash_aliases $HOME/.bashrc; then
 	echo "source $HOME/.bash_aliases" >> $HOME/.bashrc
 fi
 
+if ! grep -h all_sh_aliases $HOME/.bashrc; then
+	echo "source $HOME/.all_sh_aliases" >> $HOME/.bashrc
+fi
+
 # z set up: jump around easily
 if [ "$(uname)" == "Darwin" ]; then
 	# MacOS
