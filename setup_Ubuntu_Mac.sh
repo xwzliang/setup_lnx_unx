@@ -162,6 +162,12 @@ dir="$(dirname "$0")"
 # directory setup
 $dir/dir_setup.sh
 
+# bash setup
+$dir/bash_setup.sh
+
+# zsh setup
+$dir/zsh_setup.sh
+
 # git credential settings, import setting_git_credential.sh
 $dir/git_setup.sh
 

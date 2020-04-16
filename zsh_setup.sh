@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Use zsh as default shell
+if [[ ! "$SHELL" =~ zsh ]]; then
+	zsh_path="$( command -v zsh )"
+	sudo chsh -s "$zsh_path" $USER
+	echo "default shell changed to $zsh_path"
+fi
+
 # Install ohmyzsh if not already installed
 if [ ! -d ~/.oh-my-zsh ]; then
 	# sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
