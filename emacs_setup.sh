@@ -129,6 +129,13 @@ cat << _EOF_ >$install_package_script
       elpy                                  ; Emacs Python Development Environment
       highlight-indentation                 ; Minor modes to highlight indentation guides in emacs
       realgud                               ; The Grand "Cathedral" Debugger rewrite 
+      company-statistics                    ; Sort completion candidates by previous completion choices
+      company-web                           ; Emacs company backend for html, jade, slim
+      blacken                               ; Use the python black package to reformat your python buffers
+      py-isort                              ; py-isort.el integrates isort into Emacs
+      proxy-mode                            ; A minor mode to toggle proxy for Emacs. Supports HTTP proxy and socks v4, v5 proxy with Emacs built-in functions
+      python-docstring                      ; Emacs minor-mode for editing Python docstrings 
+      sphinx-doc                            ; Generate Sphinx friendly docstrings for Python functions in Emacs
 	  ))
 
 ; activate all the packages
