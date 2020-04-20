@@ -66,6 +66,8 @@ if [ "$(uname)" == "Darwin" ]; then
 		gcc                     # GNU compiler collection
 		ncurses                 # The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
 		the_silver_searcher		# A code-searching tool similar to ack, but faster
+		readline				# GNU readline and history libraries
+		pyenv					# Simple Python version management
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew ls --versions ${app} > /dev/null; then
@@ -103,6 +105,9 @@ else
 		apt-file                # apt-file is a command line tool for searching files contained in packages for the APT packaging system. You can search in which package a file is included or list the contents of a package without installing or fetching it.
 		libncurses-dev          # The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization. 
 		silversearcher-ag		# A code-searching tool similar to ack, but faster
+		libbz2-dev              # bzip2 compressor library
+		libreadline-dev         # GNU readline and history libraries
+		libsqlite3-dev          # SQLite 3 development files
 	)
 	for app in "${apps_to_install[@]}"; do
 		PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
@@ -127,6 +132,7 @@ apps_other_methods=(
 	["docker"]="wget -qO- https://get.docker.com/ | sh"
 	["youtube-dl"]="curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl && chmod a+rx /usr/local/bin/youtube-dl"
 	["ceedling"]="gem install ceedling"		# Ceedling is an automated testing framework for C applications. 
+	["pyenv"]="curl_socks -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash"		# Simple Python version management
 )
 
 for app_other in "${!apps_other_methods[@]}"; do
