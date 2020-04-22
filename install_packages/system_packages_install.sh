@@ -43,6 +43,7 @@ apps_to_install=(
 	bash-completion			# Programmable completion functions for bash
 	ripgrep			# ripgrep recursively searches directories for a regex pattern (faster than ag)
 	zsh			# Zsh is a shell designed for interactive use, although it is also a powerful scripting language
+	clang-format			# Tool to format C/C++/Obj-C code
 )
 
 if [ "$(uname)" == "Darwin" ]; then
@@ -68,6 +69,8 @@ if [ "$(uname)" == "Darwin" ]; then
 		the_silver_searcher		# A code-searching tool similar to ack, but faster
 		readline				# GNU readline and history libraries
 		pyenv					# Simple Python version management
+		go						# An open source programming language that makes it easy to build simple, reliable, and efficient software
+		shfmt					# A shell parser, formatter and interpreter (POSIX/Bash/mksh)
 	)
 	for app in "${apps_to_install[@]}"; do
 		if brew ls --versions ${app} > /dev/null; then
@@ -138,6 +141,8 @@ apps_other_methods=(
 	["zshdb"]="$dir/others/zshdb_install.sh"
 	["bashdb"]="$dir/others/bashdb_install.sh"
 	["tiv"]="$dir/others/tiv_install.sh"
+	["go"]="sudo snap install --classic go"
+	["shfmt"]="sudo snap install shfmt"
 )
 
 for app_other in "${!apps_other_methods[@]}"; do
