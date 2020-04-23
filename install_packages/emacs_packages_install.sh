@@ -9,35 +9,35 @@ cat << _EOF_ >$install_package_script
 
 ; find package information from following archives
 (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-						 ("melpa" . "https://melpa.org/packages/")))
+                         ("melpa" . "https://melpa.org/packages/")))
 (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
 
 ; list of packages
 (setq package-list
     '(
-	  clues-theme                           ; An Emacs theme, which is approaching awesomeness
-	  evil                                  ; The extensible vi layer for Emacs.
-	  evil-collection                       ; A set of keybindings for evil-mode
-	  use-package                           ; The use-package macro allows you to isolate package configuration in your .emacs file in a way that is both performance-oriented and, well, tidy. Also can auto-install package and warn instead of give error when certain package is lacking.
-	  smartparens                           ; Minor mode for Emacs that deals with parens pairs and tries to be smart about it.
-	  magit                                 ; Magit is an interface to the version control system Git, implemented as an Emacs package. Magit aspires to be a complete Git porcelain.
-	  evil-magit                            ; This library configures Magit and Evil to play well with each other.
-	  git-gutter                            ; Emacs port of GitGutter
-	  evil-surround                         ; This package emulates surround.vim
-	  evil-nerd-commenter                   ; Comment/uncomment lines efficiently. Like Nerd Commenter in Vim
-	  neotree                               ; A Emacs tree plugin like NerdTree for Vim.
-	  helm                                  ; Helm is an Emacs framework for incremental completions and narrowing selections.
-	  insert-shebang                        ; Insert shebang line automatically for Emacs.
-	  w3m                                   ; An Emacs interface to w3m
-	  restart-emacs                         ; This is a simple package to restart Emacs for within Emacs.
-	  helm-descbinds                        ; Helm Descbinds provides an interface to emacs’ describe-bindings making the currently active key bindings interactively searchable with helm.
+      clues-theme                           ; An Emacs theme, which is approaching awesomeness
+      evil                                  ; The extensible vi layer for Emacs.
+      evil-collection                       ; A set of keybindings for evil-mode
+      use-package                           ; The use-package macro allows you to isolate package configuration in your .emacs file in a way that is both performance-oriented and, well, tidy. Also can auto-install package and warn instead of give error when certain package is lacking.
+      smartparens                           ; Minor mode for Emacs that deals with parens pairs and tries to be smart about it.
+      magit                                 ; Magit is an interface to the version control system Git, implemented as an Emacs package. Magit aspires to be a complete Git porcelain.
+      evil-magit                            ; This library configures Magit and Evil to play well with each other.
+      git-gutter                            ; Emacs port of GitGutter
+      evil-surround                         ; This package emulates surround.vim
+      evil-nerd-commenter                   ; Comment/uncomment lines efficiently. Like Nerd Commenter in Vim
+      neotree                               ; A Emacs tree plugin like NerdTree for Vim.
+      helm                                  ; Helm is an Emacs framework for incremental completions and narrowing selections.
+      insert-shebang                        ; Insert shebang line automatically for Emacs.
+      w3m                                   ; An Emacs interface to w3m
+      restart-emacs                         ; This is a simple package to restart Emacs for within Emacs.
+      helm-descbinds                        ; Helm Descbinds provides an interface to emacs’ describe-bindings making the currently active key bindings interactively searchable with helm.
       projectile                            ; a project interaction library for Emacs
       helm-projectile                       ; Helm integration for Projectile
       bm                                    ; This package provides visible, buffer local, bookmarks and the ability to jump forward and backward to the next bookmark.
       hydra                                 ; This is a package for GNU Emacs that can be used to tie related commands into a family of short bindings with a common prefix - a Hydra.
-      iedit                                 ; Edit multiple regions simultaneously in a buffer or a region 
+      iedit                                 ; Edit multiple regions simultaneously in a buffer or a region
       evil-iedit-state                      ; Slick Evil states for iedit.
-      ggtags                                ; Emacs frontend to GNU Global source code tagging system. 
+      ggtags                                ; Emacs frontend to GNU Global source code tagging system.
       helm-gtags                            ; GNU GLOBAL helm interface
       persp-mode                            ; named perspectives(set of buffers/window configs) for emacs
       yasnippet                             ; A template system for Emacs, It allows you to type an abbreviation and automatically expand it into function templates.
@@ -60,7 +60,7 @@ cat << _EOF_ >$install_package_script
       anki-editor                           ; Emacs minor mode for making Anki cards with Org
       org-plus-contrib                      ; Org-mode Contributed Packages (https://orgmode.org/worg/org-contrib/)
       general                               ; Convenience wrappers for keybindings
-      auto-package-update                   ; Automatically update Emacs packages. 
+      auto-package-update                   ; Automatically update Emacs packages.
       forge                                 ; Work with Git forges from the comfort of Magit
       helm-swoop                            ; helm-swoop allows to show interactively lines (in one or multiple buffers) that match a pattern in another (helm) buffer
       helm-ag                               ; The silver searcher with helm interface
@@ -73,7 +73,7 @@ cat << _EOF_ >$install_package_script
       evil-args                             ; Motions and text objects for delimited arguments in Evil
       evil-indent-plus                      ; Better indent textobjects for evil
       evil-visual-mark-mode                 ; Display evil marks on buffer
-      anzu                                  ; Emacs port of anzu.vim. anzu.el provides a minor mode which displays current match and total matches information in the mode-line 
+      anzu                                  ; Emacs port of anzu.vim. anzu.el provides a minor mode which displays current match and total matches information in the mode-line
       evil-anzu                             ; anzu for Evil
       evil-mc                               ; Multiple cursors implementation for evil-mode
       avy                                   ; Jump to things in Emacs tree-style
@@ -94,29 +94,29 @@ cat << _EOF_ >$install_package_script
       which-key                             ; Emacs package that displays available keybindings in popup
       helpful                               ; A better Emacs *help* buffer
       deft                                  ; Deft is an Emacs mode for quickly browsing, filtering, and editing directories of plain text notes
-      howm                                  ; a note-taking tool on Emacs. It is similar to emacs-wiki.el 
+      howm                                  ; a note-taking tool on Emacs. It is similar to emacs-wiki.el
       undo-propose                          ; Navigate the emacs undo history by staging undo's in a temporary buffer
       org-projectile                        ; Manage org-mode TODOs for your projectile projects
       f                                     ; Modern API for working with files and directories in Emacs
       hl-todo                               ; Highlight TODO keywords
       magit-todos                           ; Show source files' TODOs (and FIXMEs, etc) in Magit status buffer
-      rg                                    ; Emacs search tool based on ripgrep 
+      rg                                    ; Emacs search tool based on ripgrep
       helm-rg                               ; Search massive codebases extremely fast, using ripgrep and helm
       helm-firefox                          ; Display firefox bookmarks with emacs helm interface
       org-pomodoro                          ; pomodoro technique for org-mode
       org-present                           ; Ultra-minimalist presentation minor-mode for Emacs org-mode
-      doom-modeline                         ; A fancy and fast mode-line inspired by minimalism design 
+      doom-modeline                         ; A fancy and fast mode-line inspired by minimalism design
       hide-mode-line                        ; An Emacs plugin that hides (or masks) the current buffer's mode-line
       eshell-z                              ; cd to frequent directory in eshell, Emacs port of z
       org-web-tools                         ; View, capture, and archive Web pages in Org-mode
       transpose-frame                       ; Transpose windows arrangement in a frame
       helm-org-rifle                        ; searches rapidly through org files
       org-ql                                ; An Org-mode query language, including search commands and saved views
-      org-board                             ; Org mode's web archiver 
+      org-board                             ; Org mode's web archiver
       org-timeline                          ; Add graphical view of agenda timeline to agenda buffer
       org-super-agenda                      ; Supercharge your Org daily/weekly agenda by grouping items
       origami                               ; A folding minor mode for Emacs (works with org agenda)
-      nov                                   ; Major mode for reading EPUBs in Emacs 
+      nov                                   ; Major mode for reading EPUBs in Emacs
       org-noter                             ; Emacs document annotator, using Org-mode
       org-roam                              ; Rudimentary Roam replica with Org-mode
       org-journal                           ; A simple org-mode based journaling mode
@@ -125,23 +125,23 @@ cat << _EOF_ >$install_package_script
       fzf                                   ; A front-end for fzf
       company-quickhelp                     ; Documentation popup for Company
       company-quickhelp-terminal            ; Terminal support for company-quickhelp
-      popup                                 ; Visual Popup Interface Library for Emacs 
+      popup                                 ; Visual Popup Interface Library for Emacs
       elpy                                  ; Emacs Python Development Environment
       highlight-indentation                 ; Minor modes to highlight indentation guides in emacs
-      realgud                               ; The Grand "Cathedral" Debugger rewrite 
+      realgud                               ; The Grand "Cathedral" Debugger rewrite
       company-statistics                    ; Sort completion candidates by previous completion choices
       company-web                           ; Emacs company backend for html, jade, slim
       blacken                               ; Use the python black package to reformat your python buffers
       py-isort                              ; py-isort.el integrates isort into Emacs
       proxy-mode                            ; A minor mode to toggle proxy for Emacs. Supports HTTP proxy and socks v4, v5 proxy with Emacs built-in functions
-      python-docstring                      ; Emacs minor-mode for editing Python docstrings 
+      python-docstring                      ; Emacs minor-mode for editing Python docstrings
       sphinx-doc                            ; Generate Sphinx friendly docstrings for Python functions in Emacs
       pyenv-mode                            ; Integrate pyenv with python-mode
-      list-environment                      ; A tabulated process environment editor 
+      list-environment                      ; A tabulated process environment editor
       format-all                            ; Auto-format source code in many languages with one command
       pippel                                ; Emacs frontend to python package manager pip
       elisp-slime-nav                       ; Slime-style navigation of Emacs Lisp source with M-. & M-,
-	  ))
+  ))
 
 ; activate all the packages
 (package-initialize)
@@ -160,32 +160,32 @@ cat << _EOF_ >$install_package_script
     (package-install package)))
 
 (defun my-download-file-func (my-url-path my-download-package-dir-name my-download-files)
-	(require 'url)
-	(let ((my-download-dir (concat "~/.emacs.d/custom/" my-download-package-dir-name "/")))
-		(add-to-list 'load-path my-download-dir)
-		(make-directory my-download-dir t)
-		(mapcar (lambda (arg)
-				(let ((local-file (concat my-download-dir arg)))
-					(unless (file-exists-p local-file)
-					(url-copy-file (concat my-url-path arg) local-file t))))
-				my-download-files)
-		(byte-recompile-directory my-download-dir 0)
-	 )
+    (require 'url)
+    (let ((my-download-dir (concat "~/.emacs.d/custom/" my-download-package-dir-name "/")))
+        (add-to-list 'load-path my-download-dir)
+        (make-directory my-download-dir t)
+        (mapcar (lambda (arg)
+                (let ((local-file (concat my-download-dir arg)))
+                    (unless (file-exists-p local-file)
+                    (url-copy-file (concat my-url-path arg) local-file t))))
+                my-download-files)
+        (byte-recompile-directory my-download-dir 0)
+     )
  )
 
 (defun my-download-file-github-func (my-download-github-repo my-download-files)
-	(let ((my-download-github-full-path (concat "https://raw.githubusercontent.com/" my-download-github-repo "/master/"))
-		;; Use the repo name as dir name
-		(my-download-package-dir-name (car (last (split-string my-download-github-repo "/")))))
-		(my-download-file-func my-download-github-full-path my-download-package-dir-name my-download-files)
-	 )
+    (let ((my-download-github-full-path (concat "https://raw.githubusercontent.com/" my-download-github-repo "/master/"))
+        ;; Use the repo name as dir name
+        (my-download-package-dir-name (car (last (split-string my-download-github-repo "/")))))
+        (my-download-file-func my-download-github-full-path my-download-package-dir-name my-download-files)
+     )
  )
 
 ; Install Bookmark+ from the EmacsWiki
 (let ((bookmarkplus-dir-name "bookmark-plus")
-	(emacswiki-base "https://www.emacswiki.org/emacs/download/")
-	(bookmark-files '("bookmark+.el" "bookmark+-mac.el" "bookmark+-bmu.el" "bookmark+-key.el" "bookmark+-lit.el" "bookmark+-1.el")))
-	(my-download-file-func emacswiki-base bookmarkplus-dir-name bookmark-files)
+    (emacswiki-base "https://www.emacswiki.org/emacs/download/")
+    (bookmark-files '("bookmark+.el" "bookmark+-mac.el" "bookmark+-bmu.el" "bookmark+-key.el" "bookmark+-lit.el" "bookmark+-1.el")))
+    (my-download-file-func emacswiki-base bookmarkplus-dir-name bookmark-files)
 )
 
 ;; Install from github
@@ -193,8 +193,8 @@ cat << _EOF_ >$install_package_script
 
 ;; Delete anki-editor elc file if existed, this file will cause note id cannot be added.
 (let ((filename (concat (concat (expand-file-name "~/.emacs.d/elpa/") (car (directory-files (expand-file-name "~/.emacs.d/elpa/") nil "^anki-editor"))) "/anki-editor.elc")))
-	(if (file-exists-p filename)
-		(delete-file filename)))
+    (if (file-exists-p filename)
+        (delete-file filename)))
 
 _EOF_
 

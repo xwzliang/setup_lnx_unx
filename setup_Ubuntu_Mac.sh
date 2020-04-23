@@ -35,10 +35,10 @@ $setup_dir/proxychains_setup.sh
 $setup_dir/privoxy_setup.sh
 
 if [ "$(uname)" == "Darwin" ]; then
-	# MacOS settings
-	$setup_dir/macos_setup.sh
+    # MacOS settings
+    $setup_dir/macos_setup.sh
 else
-	# systemd settings
-	# $setup_dir/systemd_setup.sh
-	echo ubuntu
+    # systemd settings
+    # $setup_dir/systemd_setup.sh
+    echo ubuntu
 fi
