@@ -136,6 +136,11 @@ cat << _EOF_ >$install_package_script
       proxy-mode                            ; A minor mode to toggle proxy for Emacs. Supports HTTP proxy and socks v4, v5 proxy with Emacs built-in functions
       python-docstring                      ; Emacs minor-mode for editing Python docstrings 
       sphinx-doc                            ; Generate Sphinx friendly docstrings for Python functions in Emacs
+      pyenv-mode                            ; Integrate pyenv with python-mode
+      list-environment                      ; A tabulated process environment editor 
+      format-all                            ; Auto-format source code in many languages with one command
+      pippel                                ; Emacs frontend to python package manager pip
+      elisp-slime-nav                       ; Slime-style navigation of Emacs Lisp source with M-. & M-,
 	  ))
 
 ; activate all the packages
