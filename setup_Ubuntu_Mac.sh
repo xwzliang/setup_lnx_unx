@@ -34,6 +34,9 @@ $setup_dir/proxychains_setup.sh
 # privoxy settings
 $setup_dir/privoxy_setup.sh
 
+# Setup nautilus-admin
+nautilus -q
+
 if [ "$(uname)" == "Darwin" ]; then
     # MacOS settings
     $setup_dir/macos_setup.sh
