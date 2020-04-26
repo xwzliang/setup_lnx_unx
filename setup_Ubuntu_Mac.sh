@@ -37,6 +37,9 @@ $setup_dir/privoxy_setup.sh
 # Setup nautilus-admin
 nautilus -q
 
+# Setup Docker
+sudo usermod -aG docker ${USER}
+
 if [ "$(uname)" == "Darwin" ]; then
     # MacOS settings
     $setup_dir/macos_setup.sh
