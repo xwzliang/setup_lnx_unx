@@ -141,6 +141,9 @@ cat << _EOF_ >$install_package_script
       format-all                            ; Auto-format source code in many languages with one command
       pippel                                ; Emacs frontend to python package manager pip
       elisp-slime-nav                       ; Slime-style navigation of Emacs Lisp source with M-. & M-,
+      keyfreq                               ; Track Emacs commands frequency
+      elmacro                               ; Package to display keyboard macros or latest interactive commands as emacs lisp
+      ace-window                            ; Quickly switch windows in Emacs
   ))
 
 ; activate all the packages
