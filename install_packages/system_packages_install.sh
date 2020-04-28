@@ -145,6 +145,7 @@ apps_other_methods=(
     ["tiv"]="$dir/others/tiv_install.sh"
     ["go"]="sudo snap install --classic go"
     ["shfmt"]="sudo snap install shfmt"
+    ["nix"]="sh <(curl https://nixos.org/nix/install)"		# Nix, the purely functional package manager
 )
 
 for app_other in "${!apps_other_methods[@]}"; do
