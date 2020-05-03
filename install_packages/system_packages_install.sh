@@ -44,6 +44,7 @@ apps_to_install=(
     ripgrep			# ripgrep recursively searches directories for a regex pattern (faster than ag)
     zsh			# Zsh is a shell designed for interactive use, although it is also a powerful scripting language
     clang-format			# Tool to format C/C++/Obj-C code
+    fish			# fish is a smart and user-friendly command line shell for Linux, macOS, and the rest of the family
 )
 
 if [ "$(uname)" == "Darwin" ]; then

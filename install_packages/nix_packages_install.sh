@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 nix_packages_to_install=(
-    fish				# fish is a smart and user-friendly command line shell for Linux, macOS, and the rest of the family
+    # fish				# fish installed by nix not working correctly with utf-8 chars
 )
 
 command_exists() {
