@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Use fish as default shell
+if [[ ! "$SHELL" =~ fish ]]; then
+  fish_path="$( command -v fish )"
+  sudo chsh -s "$fish_path" $USER
+  echo "default shell changed to $fish_path"
+fi
+
 # Install ohmyfish if not already installed
 if [ ! -d $HOME/.local/share/omf ]; then
     # Using socks proxy
@@ -16,14 +23,26 @@ fi
 fish <<-"EOF"
     # Install packages using omf
     set packages_to_install \
-        gnuykeaj \
-            # Super minimal one line version of clearance theme
-        tomita \
-            # A minimal, aesthetically pleasing fish theme
-        default
+        emacs \
+            # This plugin replicates the functionality of the emacs plugin for oh-my-zsh
+        extract \
+            # Plugin to expand or extract bundled & compressed files
+        fzf \
+            # Ef-fish-ient fish keybindings for fzf
+        python \
+            # Set of shortcuts to Python based utilities (pybeatifyjson – clean JSON files, pyclean – remove old .pyc, pyhttp & pysmtp – simple HTTP & SMTP servers)
+        spark \
+            # ▁▂▃▅▂▇ in your shell
+        weather
+            # A simple, location-aware weather command for Fish
 
     for package in $packages_to_install
         omf install $package
+    end
+
+    # Install plugin brew for mac
+    if test (uname) = "Darwin"
+        omf install brew
     end
 
     # Install plugins using fisher
