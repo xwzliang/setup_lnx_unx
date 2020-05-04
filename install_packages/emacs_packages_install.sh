@@ -144,6 +144,15 @@ cat << _EOF_ >$install_package_script
       keyfreq                               ; Track Emacs commands frequency
       elmacro                               ; Package to display keyboard macros or latest interactive commands as emacs lisp
       ace-window                            ; Quickly switch windows in Emacs
+      emr                                   ; language-specific refactoring in Emacs
+      eros                                  ; Evaluation Result inline OverlayS for Emacs Lisp
+      nix-mode                              ; An Emacs major mode for editing Nix expressions
+      eshell-prompt-extras                  ; Display extra information and color for your eshell prompt
+      exec-path-from-shell                  ; Make Emacs use the PATH set up by the user's shell
+      eshell-up                             ; Quickly go to a specific parent directory in eshell
+      eshell-did-you-mean                   ; command not found ("did you mean…" feature) in Eshell
+      fish-completion                       ;
+      fish-mode                             ; Emacs major mode for fish shell scripts
   ))
 
 ; activate all the packages
@@ -192,7 +201,11 @@ cat << _EOF_ >$install_package_script
 )
 
 ;; Install from github
+
 ;; (my-download-file-github-func "hekinami/justify-kp" '("justify-kp.el"))
+
+;; aweshell -- Awesome shell extension base on eshell with wonderful features!
+(my-download-file-github-func "manateelazycat/aweshell" '("aweshell.el"))
 
 ;; Delete anki-editor elc file if existed, this file will cause note id cannot be added.
 (let ((filename (concat (concat (expand-file-name "~/.emacs.d/elpa/") (car (directory-files (expand-file-name "~/.emacs.d/elpa/") nil "^anki-editor"))) "/anki-editor.elc")))
