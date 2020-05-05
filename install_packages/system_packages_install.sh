@@ -45,6 +45,7 @@ apps_to_install=(
     zsh			# Zsh is a shell designed for interactive use, although it is also a powerful scripting language
     clang-format			# Tool to format C/C++/Obj-C code
     fish			# fish is a smart and user-friendly command line shell for Linux, macOS, and the rest of the family
+    cmake			# cross-platform, open-source make system
 )
 
 if [ "$(uname)" == "Darwin" ]; then
@@ -72,6 +73,7 @@ if [ "$(uname)" == "Darwin" ]; then
         pyenv					# Simple Python version management
         go						# An open source programming language that makes it easy to build simple, reliable, and efficient software
         shfmt					# A shell parser, formatter and interpreter (POSIX/Bash/mksh)
+        libvterm                # abstract terminal library
     )
     for app in "${apps_to_install[@]}"; do
         if brew ls --versions ${app} > /dev/null; then
@@ -114,6 +116,7 @@ else
         libreadline-dev         # GNU readline and history libraries
         libsqlite3-dev          # SQLite 3 development files
         docker.io
+        libvterm-dev            # abstract terminal library
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
