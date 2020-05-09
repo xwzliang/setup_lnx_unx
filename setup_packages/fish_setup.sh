@@ -51,6 +51,8 @@ fish <<-"EOF"
             # Run bash utilities right from your fish shell
         jethrokuan/z \
             # z is a port of z for the fish shell
+        jorgebucaran/fish-nvm \
+            # Pure-fish, Node.js version manager
         barnybug/docker-fish-completion
             # docker command completion for the fish shell
 

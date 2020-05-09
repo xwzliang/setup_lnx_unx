@@ -131,6 +131,9 @@ fi
 
 # Install apps using other methods
 
+# Source ~/.all_sh_aliases because some commands will be a shell function
+source $HOME/.all_sh_aliases
+
 command_exists() {
     command -v "$@" > /dev/null 2>&1
 }
@@ -150,6 +153,9 @@ apps_other_methods=(
     ["go"]="sudo snap install --classic go"
     ["shfmt"]="sudo snap install shfmt"
     ["nix"]="sh <(curl https://nixos.org/nix/install)"		# Nix, the purely functional package manager
+    ["nvm"]="curl_socks -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash"		# Node Version Manager
+    ["node"]="nvm install node"                           # an open-source, cross-platform, JavaScript runtime environment
+    ["npm"]="curl -L https://www.npmjs.com/install.sh | sh"             # the Node.js package manager
 )
 
 for app_other in "${!apps_other_methods[@]}"; do
