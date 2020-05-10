@@ -151,8 +151,19 @@ cat << _EOF_ >$install_package_script
       exec-path-from-shell                  ; Make Emacs use the PATH set up by the user's shell
       eshell-up                             ; Quickly go to a specific parent directory in eshell
       eshell-did-you-mean                   ; command not found ("did you mean…" feature) in Eshell
-      fish-completion                       ;
+      fish-completion                       ; Emacs fish completion
       fish-mode                             ; Emacs major mode for fish shell scripts
+                                            ;;      vterm ; Emacs libvterm integration
+      json-reformat                         ; Reformat tool for JSON
+      json-snatcher                         ; Get the path to a JSON element in Emacs
+      json-mode                             ; Major mode for editing JSON files with emacs
+      dockerfile-mode                       ; An emacs mode for handling Dockerfiles
+      docker                                ; Manage docker from Emacs
+      jq-mode                               ; Emacs major mode for editing jq queries, can also be used interactively in a JSON buffer
+      lsp-mode                              ; Emacs client/library for the Language Server Protocol
+      helm-lsp                              ; Helm lsp integration
+      rainbow-delimiters                    ; Emacs rainbow delimiters mode which highlights delimiters such as parentheses, brackets or braces according to their depth
+      page-break-lines                      ; Emacs: display ugly ^L page breaks as tidy horizontal lines
   ))
 
 ; activate all the packages
