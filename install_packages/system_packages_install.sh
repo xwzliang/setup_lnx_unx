@@ -74,6 +74,7 @@ if [ "$(uname)" == "Darwin" ]; then
         go						# An open source programming language that makes it easy to build simple, reliable, and efficient software
         shfmt					# A shell parser, formatter and interpreter (POSIX/Bash/mksh)
         libvterm                # abstract terminal library
+        cask                    # Project management tool for Emacs
     )
     for app in "${apps_to_install[@]}"; do
         if brew ls --versions ${app} > /dev/null; then
@@ -156,6 +157,7 @@ apps_other_methods=(
     ["nvm"]="curl_socks -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash"		# Node Version Manager
     ["node"]="nvm install node"                           # an open-source, cross-platform, JavaScript runtime environment
     ["npm"]="curl -L https://www.npmjs.com/install.sh | sh"             # the Node.js package manager
+    ["cask"]="curl_socks -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python"             # Project management tool for Emacs
 )
 
 for app_other in "${!apps_other_methods[@]}"; do
