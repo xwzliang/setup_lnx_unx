@@ -164,6 +164,8 @@ cat << _EOF_ >$install_package_script
       helm-lsp                              ; Helm lsp integration
       rainbow-delimiters                    ; Emacs rainbow delimiters mode which highlights delimiters such as parentheses, brackets or braces according to their depth
       page-break-lines                      ; Emacs: display ugly ^L page breaks as tidy horizontal lines
+      ert-runner                            ; Ert-runner is a tool for Emacs projects tested using Ert
+      overseer                              ; Ert-runner Integration Into Emacs
   ))
 
 ; activate all the packages
