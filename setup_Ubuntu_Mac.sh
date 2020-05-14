@@ -22,6 +22,9 @@ $setup_dir/bash_setup.sh
 # zsh setup
 $setup_dir/zsh_setup.sh
 
+# cron setup
+$setup_dir/cron_setup.sh
+
 # git credential settings, import setting_git_credential.sh
 $setup_dir/git_setup.sh
 
