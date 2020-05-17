@@ -166,6 +166,9 @@ cat << _EOF_ >$install_package_script
       page-break-lines                      ; Emacs: display ugly ^L page breaks as tidy horizontal lines
       ert-runner                            ; Ert-runner is a tool for Emacs projects tested using Ert
       overseer                              ; Ert-runner Integration Into Emacs
+      helm-bibtex                           ; A bibliography manager based on Helm
+      bibtex-completion                     ; A BibTeX backend for completion frameworks
+      quickrun                              ; Run command quickly. This packages is inspired quickrun.vim
   ))
 
 ; activate all the packages
