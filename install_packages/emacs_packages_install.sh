@@ -223,6 +223,9 @@ cat << _EOF_ >$install_package_script
 ;; aweshell -- Awesome shell extension base on eshell with wonderful features!
 (my-download-file-github-func "manateelazycat/aweshell" '("aweshell.el"))
 
+;; doctest-mode.el --- Major mode for editing Python doctest files
+(my-download-file-github-func "xwzliang/el-doctest-mode" '("doctest-mode.el"))
+
 ;; Delete anki-editor elc file if existed, this file will cause note id cannot be added.
 (let ((filename (concat (concat (expand-file-name "~/.emacs.d/elpa/") (car (directory-files (expand-file-name "~/.emacs.d/elpa/") nil "^anki-editor"))) "/anki-editor.elc")))
     (if (file-exists-p filename)
