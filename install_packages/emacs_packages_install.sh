@@ -193,7 +193,7 @@ cat << _EOF_ >$install_package_script
         (add-to-list 'load-path my-download-dir)
         (make-directory my-download-dir t)
         (mapcar (lambda (arg)
-                (let ((local-file (concat my-download-dir arg)))
+                (let ((local-file (concat my-download-dir (car (last (split-string arg "/"))))))
                     (unless (file-exists-p local-file)
                     (url-copy-file (concat my-url-path arg) local-file t))))
                 my-download-files)
