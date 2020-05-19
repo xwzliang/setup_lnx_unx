@@ -13,6 +13,9 @@ $install_dir/python3_modules_install.sh
 # Emacs install packages
 $install_dir/emacs_packages_install.sh
 
+# Other methods install packages
+$install_dir/other_methods_packages_install.sh
+
 # directory setup
 $setup_dir/dir_setup.sh
 
