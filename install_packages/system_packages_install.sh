@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+command_exists() {
+    command -v "$@" > /dev/null 2>&1
+}
+
+# Install homebrew for linux and macos
+if ! command_exists brew; then
+    echo -e "brew not installed, will install it\n"
+    /bin/bash -c "$(curl_socks -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+else
+    echo "brew already installed, will skip it"
+fi
+
 # Add ppa repos
 # ppa_to_add=(
 # )
@@ -135,10 +147,6 @@ fi
 
 # Source ~/.all_sh_aliases because some commands will be a shell function
 source $HOME/.all_sh_aliases
-
-command_exists() {
-    command -v "$@" > /dev/null 2>&1
-}
 
 dir="$(dirname "$0")"
 
