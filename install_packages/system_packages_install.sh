@@ -118,6 +118,7 @@ else
         libsqlite3-dev          # SQLite 3 development files
         docker.io
         libvterm-dev            # abstract terminal library
+        at                      # Delayed job execution
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
