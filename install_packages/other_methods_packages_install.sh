@@ -28,6 +28,9 @@ apps_other_methods=(
     ["node"]="nvm install node"                           # an open-source, cross-platform, JavaScript runtime environment
     ["npm"]="curl -L https://www.npmjs.com/install.sh | sh"             # the Node.js package manager
     ["cask"]="curl_socks -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python"             # Project management tool for Emacs
+    ["docker-machine"]="curl_socks -L https://github.com/docker/machine/releases/download/v$(lastversion docker/machine)/docker-machine-`uname -s`-`uname -m` >/tmp/docker-machine &&
+                        chmod +x /tmp/docker-machine &&
+                        sudo cp /tmp/docker-machine /usr/local/bin/docker-machine"             # Machine management for a container-centric world (needs privoxy maybe)
 )
 
 for app_other in "${!apps_other_methods[@]}"; do
