@@ -169,6 +169,7 @@ cat << _EOF_ >$install_package_script
       helm-bibtex                           ; A bibliography manager based on Helm
       bibtex-completion                     ; A BibTeX backend for completion frameworks
       quickrun                              ; Run command quickly. This packages is inspired quickrun.vim
+      mmm-mode                              ; a minor mode for Emacs that allows Multiple Major Modes to coexist in one buffer
   ))
 
 ; activate all the packages
