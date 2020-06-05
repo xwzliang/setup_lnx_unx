@@ -170,6 +170,7 @@ cat << _EOF_ >$install_package_script
       bibtex-completion                     ; A BibTeX backend for completion frameworks
       quickrun                              ; Run command quickly. This packages is inspired quickrun.vim
       mmm-mode                              ; a minor mode for Emacs that allows Multiple Major Modes to coexist in one buffer
+      vlf                                   ; View Large Files in Emacs
   ))
 
 ; activate all the packages
