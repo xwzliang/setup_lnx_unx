@@ -131,6 +131,8 @@ else
         docker.io
         libvterm-dev            # abstract terminal library
         at                      # Delayed job execution
+        default-jre             # default Java Runtime Environment (JRE)
+        default-jdk             # default Java Development Kit (JDK)
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
