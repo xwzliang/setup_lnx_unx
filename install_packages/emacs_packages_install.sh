@@ -171,6 +171,8 @@ cat << _EOF_ >$install_package_script
       quickrun                              ; Run command quickly. This packages is inspired quickrun.vim
       mmm-mode                              ; a minor mode for Emacs that allows Multiple Major Modes to coexist in one buffer
       vlf                                   ; View Large Files in Emacs
+      lsp-java                              ; Emacs Java IDE using Eclipse JDT Language Server
+      company-lsp                           ; Company completion backend for lsp-mode
   ))
 
 ; activate all the packages
