@@ -173,6 +173,7 @@ cat << _EOF_ >$install_package_script
       vlf                                   ; View Large Files in Emacs
       lsp-java                              ; Emacs Java IDE using Eclipse JDT Language Server
       company-lsp                           ; Company completion backend for lsp-mode
+      dap-mode                              ; Emacs client/library for Debug Adapter Protocol
   ))
 
 ; activate all the packages
