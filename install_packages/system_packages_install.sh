@@ -58,6 +58,7 @@ apps_to_install=(
     clang-format			# Tool to format C/C++/Obj-C code
     fish			# fish is a smart and user-friendly command line shell for Linux, macOS, and the rest of the family
     cmake			# cross-platform, open-source make system
+    tree			# a recursive directory listing command that produces a depth indented listing of files
 )
 
 if [ "$(uname)" == "Darwin" ]; then
