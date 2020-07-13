@@ -59,6 +59,7 @@ apps_to_install=(
     fish			# fish is a smart and user-friendly command line shell for Linux, macOS, and the rest of the family
     cmake			# cross-platform, open-source make system
     tree			# a recursive directory listing command that produces a depth indented listing of files
+    pdsh			# Efficient rsh-like utility, for using hosts in parallel
 )
 
 if [ "$(uname)" == "Darwin" ]; then
