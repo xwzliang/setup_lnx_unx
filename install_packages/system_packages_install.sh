@@ -60,6 +60,7 @@ apps_to_install=(
     cmake			# cross-platform, open-source make system
     tree			# a recursive directory listing command that produces a depth indented listing of files
     pdsh			# Efficient rsh-like utility, for using hosts in parallel
+    p7zip			# p7zip is the Unix command-line port of 7-Zip, a file archiver that handles the 7z format which features very high compression ratios
 )
 
 if [ "$(uname)" == "Darwin" ]; then
@@ -89,6 +90,7 @@ if [ "$(uname)" == "Darwin" ]; then
         shfmt					# A shell parser, formatter and interpreter (POSIX/Bash/mksh)
         libvterm                # abstract terminal library
         cask                    # Project management tool for Emacs
+        mysql					# a fast, stable and true multi-user, multi-threaded SQL database server
     )
     for app in "${apps_to_install[@]}"; do
         if brew ls --versions ${app} > /dev/null; then
@@ -135,6 +137,8 @@ else
         at                      # Delayed job execution
         default-jre             # default Java Runtime Environment (JRE)
         default-jdk             # default Java Development Kit (JDK)
+        p7zip-full				# p7zip-full provides utilities to pack and unpack 7z archives within a shell or using a GUI (such as Ark, File Roller or Nautilus), Additionally, it provides the 7z and 7za commands
+        mysql-server			# a fast, stable and true multi-user, multi-threaded SQL database server
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
