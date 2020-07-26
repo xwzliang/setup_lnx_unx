@@ -15,6 +15,8 @@ modules_to_install=(
     flake8				# flake8 is a python tool that glues together pep8, pyflakes, mccabe, and third-party plugins to check the style and quality of some python code
     docker-compose				# Define and run multi-container applications with Docker
     lastversion					# Fetch latest release version of an arbitrary project
+    mrjob						# mrjob is a Python 2.7/3.4+ package that helps you write and run Hadoop Streaming jobs.
+    pyspark						# Python API for Spark
 )
 
 for module in "${modules_to_install[@]}"; do
