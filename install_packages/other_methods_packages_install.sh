@@ -31,6 +31,7 @@ apps_other_methods=(
     ["docker-machine"]="curl_socks -L https://github.com/docker/machine/releases/download/v$(lastversion docker/machine)/docker-machine-`uname -s`-`uname -m` >/tmp/docker-machine &&
                         chmod +x /tmp/docker-machine &&
                         sudo cp /tmp/docker-machine /usr/local/bin/docker-machine"             # Machine management for a container-centric world (needs privoxy maybe)
+    ["spark-shell"]="$dir/others/spark_install.sh"
 )
 
 for app_other in "${!apps_other_methods[@]}"; do
