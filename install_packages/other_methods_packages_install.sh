@@ -32,6 +32,7 @@ apps_other_methods=(
                         chmod +x /tmp/docker-machine &&
                         sudo cp /tmp/docker-machine /usr/local/bin/docker-machine"             # Machine management for a container-centric world (needs privoxy maybe)
     ["spark-shell"]="$dir/others/spark_install.sh"
+    ["ebook-convert"]="sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin"
 )
 
 for app_other in "${!apps_other_methods[@]}"; do

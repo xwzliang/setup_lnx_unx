@@ -114,7 +114,7 @@ else
         nautilus-admin			# Extension for Nautilus to do administrative operations
         python3-pip
         djvulibre-bin           # djvulibre including ddjvu
-        calibre
+        # calibre
         xterm
         mpv
         hfsprogs
