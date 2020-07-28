@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # Use zsh as default shell
-# if [[ ! "$SHELL" =~ zsh ]]; then
-#   zsh_path="$( command -v zsh )"
-#   sudo chsh -s "$zsh_path" $USER
-#   echo "default shell changed to $zsh_path"
-# fi
+if [[ ! "$SHELL" =~ zsh ]]; then
+  zsh_path="$( command -v zsh )"
+  sudo chsh -s "$zsh_path" $USER
+  echo "default shell changed to $zsh_path"
+fi
 
 # Install ohmyzsh if not already installed
 if [ ! -d ~/.oh-my-zsh ]; then

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # Use fish as default shell
-if [[ ! "$SHELL" =~ fish ]]; then
-  fish_path="$( command -v fish )"
-  sudo chsh -s "$fish_path" $USER
-  echo "default shell changed to $fish_path"
-fi
+# if [[ ! "$SHELL" =~ fish ]]; then
+#   fish_path="$( command -v fish )"
+#   sudo chsh -s "$fish_path" $USER
+#   echo "default shell changed to $fish_path"
+# fi
 
 # Install ohmyfish if not already installed
 if [ ! -d $HOME/.local/share/omf ]; then
