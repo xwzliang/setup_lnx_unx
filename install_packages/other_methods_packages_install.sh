@@ -33,6 +33,9 @@ apps_other_methods=(
                         sudo cp /tmp/docker-machine /usr/local/bin/docker-machine"             # Machine management for a container-centric world (needs privoxy maybe)
     ["spark-shell"]="$dir/others/spark_install.sh"
     ["ebook-convert"]="sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin"
+    ["sdk"]="curl_socks -s https://get.sdkman.io | bash"					# SDKMAN! is a tool for managing parallel versions of multiple Software Development Kits on most Unix based systems
+    ["sbt"]="sdk install sbt"					# sbt is a build tool for Scala, Java, and more
+    ["metals-emacs"]="$dir/others/metals-emacs_install.sh"					# Scala language server with rich IDE features
 )
 
 for app_other in "${!apps_other_methods[@]}"; do
