@@ -7,6 +7,9 @@ setup_dir=$dir/setup_packages
 # Install packages
 $install_dir/system_packages_install.sh
 
+# Install packages use brew
+$install_dir/brew_packages_unx_lnx_install.sh
+
 # Python3 install packages
 $install_dir/python3_modules_install.sh
 
