@@ -4,6 +4,7 @@
 
 brew_packages_to_install=(
     minikube				# a tool that runs a single-node Kubernetes cluster in a virtual machine on your personal computer
+    kubectl					# The Kubernetes command-line tool, kubectl, allows you to run commands against Kubernetes clusters
 )
 
 for app in "${brew_packages_to_install[@]}"; do
