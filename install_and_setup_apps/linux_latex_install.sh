@@ -6,6 +6,7 @@ apps_to_install=(
     texlive-fonts-recommended
     # texlive-fonts-extra		# large font package
     texlive-lang-italian	# For LaTeX Error: File `layaureo.sty' not found.
+    texlive-xetex			# Packages for XeTeX, the Unicode/OpenType-enabled TeX
 )
 
 for app in "${apps_to_install[@]}"; do
