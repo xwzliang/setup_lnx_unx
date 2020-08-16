@@ -176,6 +176,7 @@ cat << _EOF_ >$install_package_script
       dap-mode                              ; Emacs client/library for Debug Adapter Protocol
       scala-mode                            ; The definitive scala-mode for emacs
       sbt-mode                              ; An emacs mode for interacting with scala sbt and projects
+      leetcode                              ; An Emacs LeetCode client
   ))
 
 ; activate all the packages
