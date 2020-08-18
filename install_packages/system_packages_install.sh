@@ -36,6 +36,8 @@ apps_to_install=(
     w3m
     imagemagick
     ffmpeg
+    sox		      # Swiss army knife of sound processing
+    libsox-fmt-mp3		      # SoX MP2 and MP3 format library
     mosh
     ocrmypdf
     rename
