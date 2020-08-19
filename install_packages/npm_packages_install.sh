@@ -2,6 +2,7 @@
 
 npm_packages_to_install=(
     bash-language-server				# A language server for Bash
+    bootstrap							# The most popular HTML, CSS, and JavaScript framework for developing responsive, mobile first projects on the web
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
