@@ -7,6 +7,8 @@ npm_packages_to_install=(
     express								# Express is a minimal and flexible Node.js web application framework that provides a robust set of features for web and mobile applications
     nodemon								# Nodemon is a utility that will monitor for any changes in your source and automatically restart your server
     body-parser							# Parse incoming request bodies in a middleware before your handlers, available under the req.body property
+    ejs									# Embedded JavaScript templates
+    lodash								# A modern JavaScript utility library delivering modularity, performance, & extras
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
