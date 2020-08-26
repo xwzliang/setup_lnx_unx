@@ -68,6 +68,14 @@ apps_to_install=(
 
 if [ "$(uname)" == "Darwin" ]; then
     # MacOS
+    taps_to_tap=(
+        mongodb/brew
+    )
+
+    for tap in "${taps_to_tap[@]}"; do
+        brew tap $tap
+    done
+
     apps_to_install+=(
         bash
         coreutils
@@ -94,7 +102,9 @@ if [ "$(uname)" == "Darwin" ]; then
         libvterm                # abstract terminal library
         cask                    # Project management tool for Emacs
         mysql					# a fast, stable and true multi-user, multi-threaded SQL database server
+        mongodb-community		# object/document-oriented database
     )
+
     for app in "${apps_to_install[@]}"; do
         if brew ls --versions ${app} > /dev/null; then
             echo -e "${app} already installed, will skip it"
@@ -142,6 +152,7 @@ else
         default-jdk             # default Java Development Kit (JDK)
         p7zip-full				# p7zip-full provides utilities to pack and unpack 7z archives within a shell or using a GUI (such as Ark, File Roller or Nautilus), Additionally, it provides the 7z and 7za commands
         mysql-server			# a fast, stable and true multi-user, multi-threaded SQL database server
+        mongodb					# object/document-oriented database
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")

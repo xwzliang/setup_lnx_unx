@@ -9,6 +9,8 @@ npm_packages_to_install=(
     body-parser							# Parse incoming request bodies in a middleware before your handlers, available under the req.body property
     ejs									# Embedded JavaScript templates
     lodash								# A modern JavaScript utility library delivering modularity, performance, & extras
+    mongodb								# MongoDB driver for Node.js. Provides a high-level API on top of mongodb-core that is meant for end users
+    mongoose							# a MongoDB object modeling tool designed to work in an asynchronous environment
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
