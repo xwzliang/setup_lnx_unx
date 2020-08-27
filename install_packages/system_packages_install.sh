@@ -64,6 +64,7 @@ apps_to_install=(
     pdsh			# Efficient rsh-like utility, for using hosts in parallel
     p7zip			# p7zip is the Unix command-line port of 7-Zip, a file archiver that handles the 7z format which features very high compression ratios
     scala			# Scala is a Java-compatible programming language with many modern language features
+    ansible			# Configuration management, deployment, and task execution system
 )
 
 if [ "$(uname)" == "Darwin" ]; then
