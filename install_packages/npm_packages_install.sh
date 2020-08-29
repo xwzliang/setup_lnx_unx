@@ -11,6 +11,19 @@ npm_packages_to_install=(
     lodash								# A modern JavaScript utility library delivering modularity, performance, & extras
     mongodb								# MongoDB driver for Node.js. Provides a high-level API on top of mongodb-core that is meant for end users
     mongoose							# a MongoDB object modeling tool designed to work in an asynchronous environment
+    mongoose-encryption					# Simple encryption and authentication for mongoose documents
+    newman								# the cli companion for postman
+    dotenv								# Dotenv is a zero-dependency module that loads environment variables from a .env file into process.env
+    # md5									# a JavaScript function for hashing messages with MD5
+    bcrypt								# A library to help you hash passwords
+    passport							# Passport is Express-compatible authentication middleware for Node.js
+    passport-local						# Local username and password authentication strategy for Passport
+    passport-local-mongoose				# Mongoose plugin that simplifies building username and password login with Passport
+    express-session						# Simple session middleware for Express
+    mongoose-findorcreate				# Simple plugin for Mongoose which adds a findOrCreate method to models. This is useful for libraries like Passport which require it
+    react								# React is a JavaScript library for creating user interfaces
+    react-dom							# React package for working with the DOM
+    react-scripts						# Configuration and scripts for Create React App
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
