@@ -24,6 +24,8 @@ npm_packages_to_install=(
     react								# React is a JavaScript library for creating user interfaces
     react-dom							# React package for working with the DOM
     react-scripts						# Configuration and scripts for Create React App
+    @material-ui/core					# React components that implement Google's Material Design
+    @material-ui/icons					# Material Design Svg Icons converted to Material-UI React components
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
