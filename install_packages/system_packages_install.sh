@@ -154,6 +154,7 @@ else
         p7zip-full				# p7zip-full provides utilities to pack and unpack 7z archives within a shell or using a GUI (such as Ark, File Roller or Nautilus), Additionally, it provides the 7z and 7za commands
         mysql-server			# a fast, stable and true multi-user, multi-threaded SQL database server
         mongodb					# object/document-oriented database
+        cheese					# tool to take pictures and videos from your webcam
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
