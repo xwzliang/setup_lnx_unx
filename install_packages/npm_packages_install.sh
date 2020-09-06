@@ -26,6 +26,8 @@ npm_packages_to_install=(
     react-scripts						# Configuration and scripts for Create React App
     @material-ui/core					# React components that implement Google's Material Design
     @material-ui/icons					# Material Design Svg Icons converted to Material-UI React components
+    serverless							# Serverless Framework - Build web, mobile and IoT applications with serverless architectures using AWS Lambda, Azure Functions, Google CloudFunctions
+    serverless-offline					# Emulate AWS λ and API Gateway locally when developing your Serverless project
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
