@@ -4,20 +4,11 @@ dir="$(dirname "$0")"
 install_dir=$dir/install_packages
 setup_dir=$dir/setup_packages
 
+# Install dotfiles and daily_tools
+$install_dir/dotfiles_daily_tools_install.sh
+
 # Install packages
 $install_dir/system_packages_install.sh
-
-# Install packages use brew
-$install_dir/brew_packages_unx_lnx_install.sh
-
-# Python3 install packages
-$install_dir/python3_modules_install.sh
-
-# Emacs install packages
-$install_dir/emacs_packages_install.sh
-
-# Other methods install packages
-$install_dir/other_methods_packages_install.sh
 
 # directory setup
 $setup_dir/dir_setup.sh
@@ -55,5 +46,20 @@ if [ "$(uname)" == "Darwin" ]; then
 else
     # systemd settings
     # $setup_dir/systemd_setup.sh
-    echo ubuntu
+
+	# Swap caps lock key and escape key
+	gsettings set org.gnome.desktop.input-sources xkb-options "['caps:escape']"
 fi
+
+# Emacs install packages
+$install_dir/emacs_packages_install.sh
+
+# Python3 install packages
+$install_dir/python3_modules_install.sh
+
+# Other methods install packages
+$install_dir/other_methods_packages_install.sh
+
+# Install packages use brew
+$install_dir/brew_packages_unx_lnx_install.sh
+
