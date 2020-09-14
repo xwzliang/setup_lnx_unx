@@ -30,6 +30,9 @@ npm_packages_to_install=(
     @material-ui/icons					# Material Design Svg Icons converted to Material-UI React components
     serverless							# Serverless Framework - Build web, mobile and IoT applications with serverless architectures using AWS Lambda, Azure Functions, Google CloudFunctions
     serverless-offline					# Emulate AWS λ and API Gateway locally when developing your Serverless project
+    @nestjs/cli							# A progressive Node.js framework for building efficient, reliable and scalable server-side applications
+    @nestjs/mongoose					# Mongoose module for Nest
+    @types/mongoose						# TypeScript definitions for Mongoose
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
