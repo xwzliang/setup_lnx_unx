@@ -177,6 +177,7 @@ cat << _EOF_ >$install_package_script
       scala-mode                            ; The definitive scala-mode for emacs
       sbt-mode                              ; An emacs mode for interacting with scala sbt and projects
       leetcode                              ; An Emacs LeetCode client
+      typescript-mode                       ; TypeScript-support for Emacs 
   ))
 
 ; activate all the packages
