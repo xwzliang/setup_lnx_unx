@@ -4,6 +4,7 @@ npm_packages_to_install=(
     bash-language-server				# A language server for Bash
     typescript-language-server			# TypeScript & JavaScript Language Server
     typescript							# TypeScript is a language for application-scale JavaScript
+    uuid								# RFC4122 (v1, v4, and v5) UUIDs
     bootstrap							# The most popular HTML, CSS, and JavaScript framework for developing responsive, mobile first projects on the web
     jquery								# jQuery JavaScript Library
     express								# Express is a minimal and flexible Node.js web application framework that provides a robust set of features for web and mobile applications
