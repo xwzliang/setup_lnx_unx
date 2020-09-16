@@ -34,6 +34,8 @@ npm_packages_to_install=(
     @nestjs/cli							# A progressive Node.js framework for building efficient, reliable and scalable server-side applications
     @nestjs/mongoose					# Mongoose module for Nest
     @types/mongoose						# TypeScript definitions for Mongoose
+    class-validator						# Class-based validation with Typescript / ES6 / ES5 using decorators or validation schemas
+    class-transformer					# Proper decorator-based transformation / serialization / deserialization of plain javascript objects to class constructors
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
