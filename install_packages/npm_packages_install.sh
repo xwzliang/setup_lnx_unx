@@ -36,6 +36,8 @@ npm_packages_to_install=(
     @types/mongoose						# TypeScript definitions for Mongoose
     class-validator						# Class-based validation with Typescript / ES6 / ES5 using decorators or validation schemas
     class-transformer					# Proper decorator-based transformation / serialization / deserialization of plain javascript objects to class constructors
+    typeorm								# Data-Mapper ORM for TypeScript
+    @nestjs/typeorm						# TypeORM module for Nest framework
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
