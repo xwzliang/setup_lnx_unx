@@ -13,6 +13,7 @@ npm_packages_to_install=(
     ejs									# Embedded JavaScript templates
     lodash								# A modern JavaScript utility library delivering modularity, performance, & extras
     mongodb								# MongoDB driver for Node.js. Provides a high-level API on top of mongodb-core that is meant for end users
+    @types/mongodb						# TypeScript definitions for MongoDB
     mongoose							# a MongoDB object modeling tool designed to work in an asynchronous environment
     mongoose-encryption					# Simple encryption and authentication for mongoose documents
     newman								# the cli companion for postman
@@ -38,6 +39,7 @@ npm_packages_to_install=(
     class-transformer					# Proper decorator-based transformation / serialization / deserialization of plain javascript objects to class constructors
     typeorm								# Data-Mapper ORM for TypeScript
     @nestjs/typeorm						# TypeORM module for Nest framework
+    jest								# Delightful JavaScript Testing
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
