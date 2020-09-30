@@ -40,6 +40,7 @@ npm_packages_to_install=(
     typeorm								# Data-Mapper ORM for TypeScript
     @nestjs/typeorm						# TypeORM module for Nest framework
     jest								# Delightful JavaScript Testing
+    @alicloud/fun						# Fun is a development tool for serverless applications
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
