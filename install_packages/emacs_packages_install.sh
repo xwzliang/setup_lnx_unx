@@ -178,6 +178,7 @@ cat << _EOF_ >$install_package_script
       sbt-mode                              ; An emacs mode for interacting with scala sbt and projects
       leetcode                              ; An Emacs LeetCode client
       typescript-mode                       ; TypeScript-support for Emacs 
+      yaml-mode                       		; The emacs major mode for editing files in the YAML data serialization format
   ))
 
 ; activate all the packages
