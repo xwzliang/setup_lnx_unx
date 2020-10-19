@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
 npm_packages_to_install=(
+    moment								# A JavaScript date library for parsing, validating, manipulating, and formatting dates
+    faker								# generate massive amounts of realistic fake data in Node.js and the browser
+    @types/faker						# This package contains type definitions for faker
+    @nestjs/jwt							# JWT utilities module for Nest based on the jsonwebtoken package
+    @nestjs/passport					# Passport module for Nest framework
+    passport-jwt						# A Passport strategy for authenticating with a JSON Web Token
+    dayjs								# a minimalist JavaScript library that parses, validates, manipulates, and displays dates and times for modern browsers with a largely Moment.js-compatible API
+    express-validator					# An express.js middleware for validator.js
     bash-language-server				# A language server for Bash
     typescript-language-server			# TypeScript & JavaScript Language Server
     typescript							# TypeScript is a language for application-scale JavaScript
