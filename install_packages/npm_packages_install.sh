@@ -9,6 +9,8 @@ npm_packages_to_install=(
     passport-jwt						# A Passport strategy for authenticating with a JSON Web Token
     dayjs								# a minimalist JavaScript library that parses, validates, manipulates, and displays dates and times for modern browsers with a largely Moment.js-compatible API
     express-validator					# An express.js middleware for validator.js
+    vscode-html-languageserver-bin		# Extracted from vscode tree
+    vscode-css-languageserver-bin		# Extracted from vscode tree
     bash-language-server				# A language server for Bash
     typescript-language-server			# TypeScript & JavaScript Language Server
     typescript							# TypeScript is a language for application-scale JavaScript
