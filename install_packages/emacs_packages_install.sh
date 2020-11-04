@@ -179,6 +179,7 @@ cat << _EOF_ >$install_package_script
       leetcode                              ; An Emacs LeetCode client
       typescript-mode                       ; TypeScript-support for Emacs 
       yaml-mode                       		; The emacs major mode for editing files in the YAML data serialization format
+      emmet-mode                       		; Emmet's support for emacs, Emmet is a plugin for many popular text editors which greatly improves HTML & CSS workflow
   ))
 
 ; activate all the packages
