@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 npm_packages_to_install=(
+    urijs								# a javascript library for working with URLs
     nrm									# NPM registry manager, nrm can help you easy and fast switch between different npm registries
     moment								# A JavaScript date library for parsing, validating, manipulating, and formatting dates
     faker								# generate massive amounts of realistic fake data in Node.js and the browser
