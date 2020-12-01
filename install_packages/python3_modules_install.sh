@@ -20,6 +20,7 @@ modules_to_install=(
     pyspark						# Python API for Spark
     selenium					# Python language bindings for Selenium WebDriver
     pymongo						# Python driver for MongoDB
+    awsebcli					# The AWS Elastic Beanstalk Command Line Interface (EB CLI) is a tool that helps you deploy and manage your Elastic Beanstalk applications and environments
 )
 
 for module in "${modules_to_install[@]}"; do
