@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 npm_packages_to_install=(
+    vls									# Vue Language Server
     multer								# Multer is a node.js middleware for handling multipart/form-data, which is primarily used for uploading files
     firebase-tools						# The Firebase Command Line Interface (CLI) Tools can be used to test, manage, and deploy your Firebase project from the command line
     urijs								# a javascript library for working with URLs
