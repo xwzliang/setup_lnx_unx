@@ -21,6 +21,10 @@ modules_to_install=(
     selenium					# Python language bindings for Selenium WebDriver
     pymongo						# Python driver for MongoDB
     awsebcli					# The AWS Elastic Beanstalk Command Line Interface (EB CLI) is a tool that helps you deploy and manage your Elastic Beanstalk applications and environments
+    django						# Django is a high-level Python Web framework that encourages rapid development and clean, pragmatic design
+    mongoengine					# MongoEngine is a Python Object-Document Mapper for working with MongoDB
+    djangorestframework			# Django REST framework is a powerful and flexible toolkit for building Web APIs
+    django-rest-framework-mongoengine			# The package provides mongoengine support for django-rest-framework
 )
 
 for module in "${modules_to_install[@]}"; do
