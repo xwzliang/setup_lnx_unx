@@ -106,6 +106,7 @@ if [ "$(uname)" == "Darwin" ]; then
         cask                    # Project management tool for Emacs
         mysql					# a fast, stable and true multi-user, multi-threaded SQL database server
         mongodb-community		# object/document-oriented database
+        gpick					# advanced GTK+ color picker
     )
 
     for app in "${apps_to_install[@]}"; do
