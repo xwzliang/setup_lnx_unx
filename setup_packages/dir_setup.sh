@@ -2,6 +2,7 @@
 
 my_dirs=(
 	~/bin
+	~/venv
 	~/tmp
 	~/pipes/zotero
 	~/pipes/pdf_img
