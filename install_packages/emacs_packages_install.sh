@@ -90,6 +90,8 @@ cat << _EOF_ >$install_package_script
       exato                                 ; This package provides the x text object to manipulate html/xml tag attributes
       evil-textobj-syntax                   ; This package is a port of vim-textobj-syntax for emacs. It provides evil text objects for consecutive items with same syntax highlight.
       evil-cleverparens                     ; Evil normal-state minor-mode for editing lisp-like languages
+      evil-string-inflection                ; Evil operator to cycle text objects through camelCase, kebab-case, snake_case and UPPER_CASE
+      undo-tree                				; Treat undo history as a tree
       emamux                                ; tmux manipulation from Emacs
       which-key                             ; Emacs package that displays available keybindings in popup
       helpful                               ; A better Emacs *help* buffer
@@ -172,6 +174,7 @@ cat << _EOF_ >$install_package_script
       mmm-mode                              ; a minor mode for Emacs that allows Multiple Major Modes to coexist in one buffer
       vlf                                   ; View Large Files in Emacs
       lsp-java                              ; Emacs Java IDE using Eclipse JDT Language Server
+      lsp-metals                            ; Emacs Scala IDE using lsp-mode to connect to Metals
       company-lsp                           ; Company completion backend for lsp-mode
       dap-mode                              ; Emacs client/library for Debug Adapter Protocol
       scala-mode                            ; The definitive scala-mode for emacs

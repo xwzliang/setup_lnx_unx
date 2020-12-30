@@ -28,6 +28,9 @@ $setup_dir/git_setup.sh
 # vim settings
 $setup_dir/vim_setup.sh
 
+# emacs setup
+$setup_dir/emacs_setup.sh
+
 # proxychains settings
 $setup_dir/proxychains_setup.sh
 

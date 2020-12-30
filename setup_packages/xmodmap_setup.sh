@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # Swap control and alt key for windows keyboard layout
+# Caps Lock as escape
 
 cat<< EOF > ~/.Xmodmap
 clear control
@@ -10,4 +11,6 @@ keycode 64 = Control_L
 keycode 108 = Control_R
 add control = Control_L Control_R
 add mod1 = Alt_L Meta_L
+
+keycode 66 = Escape NoSymbol Escape
 EOF
