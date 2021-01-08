@@ -32,10 +32,10 @@ $setup_dir/vim_setup.sh
 $setup_dir/emacs_setup.sh
 
 # proxychains settings
-$setup_dir/proxychains_setup.sh
+sudo $setup_dir/proxychains_setup.sh
 
 # privoxy settings
-$setup_dir/privoxy_setup.sh
+sudo $setup_dir/privoxy_setup.sh
 
 # Setup nautilus-admin
 nautilus -q
