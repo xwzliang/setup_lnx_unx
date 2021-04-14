@@ -184,6 +184,7 @@ cat << _EOF_ >$install_package_script
       yaml-mode                       		; The emacs major mode for editing files in the YAML data serialization format
       emmet-mode                       		; Emmet's support for emacs, Emmet is a plugin for many popular text editors which greatly improves HTML & CSS workflow
       vue-mode                       		; Emacs major mode for vue.js based on mmm-mode
+      prettier-js                       	; prettier-js is a function that formats the current buffer using prettier
   ))
 
 ; activate all the packages

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
 npm_packages_to_install=(
+    prettier							# Prettier is an opinionated code formatter
+    eslint								# ESLint is a tool for identifying and reporting on patterns found in ECMAScript/JavaScript code
+    @vue/cli							# Vue CLI is a full system for rapid Vue.js development
     vls									# Vue Language Server
     multer								# Multer is a node.js middleware for handling multipart/form-data, which is primarily used for uploading files
     firebase-tools						# The Firebase Command Line Interface (CLI) Tools can be used to test, manage, and deploy your Firebase project from the command line
@@ -59,10 +62,10 @@ npm_packages_to_install=(
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
-    if ! npm -g ls $npm_package; then
-        echo -e "${npm_package} not installed, will install it\n"
+    # if ! npm -g ls $npm_package; then
+    #     echo -e "${npm_package} not installed, will install it\n"
         npm install -g $npm_package
-    else
-        echo -e "${npm_package} already installed, will skip it"
-    fi
+    # else
+    #     echo -e "${npm_package} already installed, will skip it"
+    # fi
 done
