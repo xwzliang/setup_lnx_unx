@@ -25,6 +25,7 @@ modules_to_install=(
     mongoengine					# MongoEngine is a Python Object-Document Mapper for working with MongoDB
     djangorestframework			# Django REST framework is a powerful and flexible toolkit for building Web APIs
     django-rest-framework-mongoengine			# The package provides mongoengine support for django-rest-framework
+    flask						# Flask is a lightweight WSGI web application framework
 )
 
 for module in "${modules_to_install[@]}"; do
