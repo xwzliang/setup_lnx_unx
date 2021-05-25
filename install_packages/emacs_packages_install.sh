@@ -174,7 +174,6 @@ cat << _EOF_ >$install_package_script
       vlf                                   ; View Large Files in Emacs
       lsp-java                              ; Emacs Java IDE using Eclipse JDT Language Server
       lsp-metals                            ; Emacs Scala IDE using lsp-mode to connect to Metals
-      company-lsp                           ; Company completion backend for lsp-mode
       dap-mode                              ; Emacs client/library for Debug Adapter Protocol
       scala-mode                            ; The definitive scala-mode for emacs
       sbt-mode                              ; An emacs mode for interacting with scala sbt and projects
