@@ -185,7 +185,8 @@ cat << _EOF_ >$install_package_script
       prettier-js                           ; prettier-js is a function that formats the current buffer using prettier
       tide                                  ; TypeScript Interactive Development Environment for Emacs
       web-mode                              ; an emacs major mode for editing web templates aka HTML files embedding parts (CSS/JavaScript) and blocks
-
+      restclient                            ; HTTP REST client tool for emacs
+      ob-restclient                         ; An extension to restclient.el for emacs that provides org-babel support.
   ))
 
 ; activate all the packages
