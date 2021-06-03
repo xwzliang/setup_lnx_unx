@@ -90,7 +90,7 @@ cat << _EOF_ >$install_package_script
       evil-textobj-syntax                   ; This package is a port of vim-textobj-syntax for emacs. It provides evil text objects for consecutive items with same syntax highlight.
       evil-cleverparens                     ; Evil normal-state minor-mode for editing lisp-like languages
       evil-string-inflection                ; Evil operator to cycle text objects through camelCase, kebab-case, snake_case and UPPER_CASE
-      undo-tree                				; Treat undo history as a tree
+      undo-tree                             ; Treat undo history as a tree
       emamux                                ; tmux manipulation from Emacs
       which-key                             ; Emacs package that displays available keybindings in popup
       helpful                               ; A better Emacs *help* buffer
@@ -178,11 +178,14 @@ cat << _EOF_ >$install_package_script
       scala-mode                            ; The definitive scala-mode for emacs
       sbt-mode                              ; An emacs mode for interacting with scala sbt and projects
       leetcode                              ; An Emacs LeetCode client
-      typescript-mode                       ; TypeScript-support for Emacs 
-      yaml-mode                       		; The emacs major mode for editing files in the YAML data serialization format
-      emmet-mode                       		; Emmet's support for emacs, Emmet is a plugin for many popular text editors which greatly improves HTML & CSS workflow
-      vue-mode                       		; Emacs major mode for vue.js based on mmm-mode
-      prettier-js                       	; prettier-js is a function that formats the current buffer using prettier
+      typescript-mode                       ; TypeScript-support for Emacs
+      yaml-mode                             ; The emacs major mode for editing files in the YAML data serialization format
+      emmet-mode                            ; Emmet's support for emacs, Emmet is a plugin for many popular text editors which greatly improves HTML & CSS workflow
+      vue-mode                              ; Emacs major mode for vue.js based on mmm-mode
+      prettier-js                           ; prettier-js is a function that formats the current buffer using prettier
+      tide                                  ; TypeScript Interactive Development Environment for Emacs
+      web-mode                              ; an emacs major mode for editing web templates aka HTML files embedding parts (CSS/JavaScript) and blocks
+
   ))
 
 ; activate all the packages
