@@ -36,8 +36,8 @@ apps_to_install=(
     w3m
     imagemagick
     ffmpeg
-    sox		      # Swiss army knife of sound processing
-    libsox-fmt-mp3		      # SoX MP2 and MP3 format library
+    sox           # Swiss army knife of sound processing
+    libsox-fmt-mp3            # SoX MP2 and MP3 format library
     mplayer			# video and audio player for Unix-like systems
     mosh
     ocrmypdf
@@ -67,6 +67,8 @@ apps_to_install=(
     scala			# Scala is a Java-compatible programming language with many modern language features
     ansible			# Configuration management, deployment, and task execution system
     postgresql		# object-relational SQL database
+    leiningen		# Leiningen is for automating Clojure projects without setting your hair on fire
+    maven			# Apache Maven is a software project management and comprehension tool for Java projects
 )
 
 if [ "$(uname)" == "Darwin" ]; then

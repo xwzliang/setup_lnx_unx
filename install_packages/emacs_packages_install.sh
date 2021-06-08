@@ -187,6 +187,7 @@ cat << _EOF_ >$install_package_script
       web-mode                              ; an emacs major mode for editing web templates aka HTML files embedding parts (CSS/JavaScript) and blocks
       restclient                            ; HTTP REST client tool for emacs
       ob-restclient                         ; An extension to restclient.el for emacs that provides org-babel support.
+      ejc-sql                         		; Emacs SQL client uses Clojure JDBC
   ))
 
 ; activate all the packages
