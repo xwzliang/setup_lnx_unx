@@ -15,6 +15,7 @@ declare -A apps_other_methods
 
 apps_other_methods=(
     # ["docker"]="wget -qO- https://get.docker.com/ | sh"
+    ["emacs"]="sudo snap install --classic emacs"
     ["youtube-dl"]="curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl && chmod a+rx /usr/local/bin/youtube-dl"
     ["ceedling"]="gem install ceedling"		# Ceedling is an automated testing framework for C applications.
     ["pyenv"]="curl_socks -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash"		# Simple Python version management

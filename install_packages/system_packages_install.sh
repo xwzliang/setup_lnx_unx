@@ -28,7 +28,7 @@ apps_to_install=(
     git
     curl
     vim
-    emacs
+    # emacs			# Use snap install emacs
     python3
     tmux
     aria2
