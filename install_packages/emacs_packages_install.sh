@@ -16,6 +16,7 @@ cat << _EOF_ >$install_package_script
 (setq package-list
     '(
       clues-theme                           ; An Emacs theme, which is approaching awesomeness
+      f                            			; Modern API for working with files and directories in Emacs
       evil                                  ; The extensible vi layer for Emacs.
       evil-collection                       ; A set of keybindings for evil-mode
       use-package                           ; The use-package macro allows you to isolate package configuration in your .emacs file in a way that is both performance-oriented and, well, tidy. Also can auto-install package and warn instead of give error when certain package is lacking.
