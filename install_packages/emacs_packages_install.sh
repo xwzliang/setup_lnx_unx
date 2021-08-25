@@ -189,6 +189,7 @@ cat << _EOF_ >$install_package_script
       restclient                            ; HTTP REST client tool for emacs
       ob-restclient                         ; An extension to restclient.el for emacs that provides org-babel support.
       ejc-sql                         		; Emacs SQL client uses Clojure JDBC
+      org-analyzer                         	; org-analyzer creates an interactive visualization of org-mode time-tracking data
   ))
 
 ; activate all the packages
