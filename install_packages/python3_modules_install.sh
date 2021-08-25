@@ -7,6 +7,7 @@ modules_to_install=(
     isbnlib		# isbnlib is a (pure) python library that provides several useful methods and functions to validate, clean, transform, hyphenate and get metadata for ISBN strings.
     beautifulsoup4		# Beautiful Soup is a library that makes it easy to scrape information from web pages.
     virtualenv			# a tool to create isolated Python environments
+    pipenv				# Python Dev Workflow for Humans
     jedi				# Jedi is a static analysis tool for Python that is typically used in IDEs/editors plugins. Jedi has a focus on autocompletion and goto functionality.
     rope				# a python refactoring library
     trepan3k			# A gdb-like Python3 Debugger in the Trepan family
@@ -26,6 +27,8 @@ modules_to_install=(
     djangorestframework			# Django REST framework is a powerful and flexible toolkit for building Web APIs
     django-rest-framework-mongoengine			# The package provides mongoengine support for django-rest-framework
     flask						# Flask is a lightweight WSGI web application framework
+    xlrd						# for Excel support
+    openpyxl					# for Excel support
 )
 
 for module in "${modules_to_install[@]}"; do
