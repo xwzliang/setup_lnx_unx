@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 modules_to_install=(
+    rerun				# Command-line script to re-run the given command when files change
     numpy
     pandas
     pyzotero
@@ -29,6 +30,8 @@ modules_to_install=(
     flask						# Flask is a lightweight WSGI web application framework
     xlrd						# for Excel support
     openpyxl					# for Excel support
+    scikit-learn 				# machine learning in Python
+    matplotlib					# a comprehensive library for creating static, animated, and interactive visualizations in Python
 )
 
 for module in "${modules_to_install[@]}"; do

@@ -69,6 +69,7 @@ apps_to_install=(
     postgresql		# object-relational SQL database
     leiningen		# Leiningen is for automating Clojure projects without setting your hair on fire
     maven			# Apache Maven is a software project management and comprehension tool for Java projects
+    entr			# Run arbitrary commands when files change
 )
 
 if [ "$(uname)" == "Darwin" ]; then
