@@ -70,6 +70,7 @@ apps_to_install=(
     leiningen		# Leiningen is for automating Clojure projects without setting your hair on fire
     maven			# Apache Maven is a software project management and comprehension tool for Java projects
     entr			# Run arbitrary commands when files change
+    zathura			# a plugin-based, highly customizable document viewer with vi-styled keybindings
 )
 
 if [ "$(uname)" == "Darwin" ]; then
