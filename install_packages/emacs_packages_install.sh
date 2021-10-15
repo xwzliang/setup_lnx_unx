@@ -16,7 +16,7 @@ cat << _EOF_ >$install_package_script
 (setq package-list
     '(
       clues-theme                           ; An Emacs theme, which is approaching awesomeness
-      f                            			; Modern API for working with files and directories in Emacs
+      f                                     ; Modern API for working with files and directories in Emacs
       evil                                  ; The extensible vi layer for Emacs.
       evil-collection                       ; A set of keybindings for evil-mode
       use-package                           ; The use-package macro allows you to isolate package configuration in your .emacs file in a way that is both performance-oriented and, well, tidy. Also can auto-install package and warn instead of give error when certain package is lacking.
@@ -188,8 +188,10 @@ cat << _EOF_ >$install_package_script
       web-mode                              ; an emacs major mode for editing web templates aka HTML files embedding parts (CSS/JavaScript) and blocks
       restclient                            ; HTTP REST client tool for emacs
       ob-restclient                         ; An extension to restclient.el for emacs that provides org-babel support.
-      ejc-sql                         		; Emacs SQL client uses Clojure JDBC
-      org-analyzer                         	; org-analyzer creates an interactive visualization of org-mode time-tracking data
+      ejc-sql                               ; Emacs SQL client uses Clojure JDBC
+      org-analyzer                          ; org-analyzer creates an interactive visualization of org-mode time-tracking data
+      ebib                                  ; A BibTeX database manager for Emacs
+      biblio                                ; Browse and import bibliographic references from CrossRef, DBLP, HAL, arXiv, Dissemin, and doi.org from Emacs
   ))
 
 ; activate all the packages
