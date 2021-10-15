@@ -192,6 +192,7 @@ cat << _EOF_ >$install_package_script
       org-analyzer                          ; org-analyzer creates an interactive visualization of org-mode time-tracking data
       ebib                                  ; A BibTeX database manager for Emacs
       biblio                                ; Browse and import bibliographic references from CrossRef, DBLP, HAL, arXiv, Dissemin, and doi.org from Emacs
+      csv-mode                              ; Major mode for editing comma/char separated values
   ))
 
 ; activate all the packages
