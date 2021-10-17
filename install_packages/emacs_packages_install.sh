@@ -155,7 +155,8 @@ cat << _EOF_ >$install_package_script
       eshell-did-you-mean                   ; command not found ("did you mean…" feature) in Eshell
       fish-completion                       ; Emacs fish completion
       fish-mode                             ; Emacs major mode for fish shell scripts
-                                            ;;      vterm ; Emacs libvterm integration
+      vterm                                 ; A fully-fledged terminal emulator inside GNU Emacs based on libvterm
+      multi-vterm                           ; Managing multiple vterm buffers in Emacs
       json-reformat                         ; Reformat tool for JSON
       json-snatcher                         ; Get the path to a JSON element in Emacs
       json-mode                             ; Major mode for editing JSON files with emacs
