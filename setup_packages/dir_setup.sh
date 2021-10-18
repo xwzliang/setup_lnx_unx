@@ -4,6 +4,7 @@ my_dirs=(
 	~/bin
 	~/venv
 	~/tmp
+    ~/git/Downloads
 	~/pipes/zotero
 	~/pipes/pdf_img
 	~/Downloads/git

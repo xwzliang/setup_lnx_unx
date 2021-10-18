@@ -162,6 +162,9 @@ else
         mysql-server			# a fast, stable and true multi-user, multi-threaded SQL database server
         mongodb					# object/document-oriented database
         cheese					# tool to take pictures and videos from your webcam
+        libtool					# Generic library support script
+        libtool-bin				# Generic library support script (libtool binary)
+        go-dep					# Go dependency management tool
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
