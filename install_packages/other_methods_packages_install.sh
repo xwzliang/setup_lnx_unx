@@ -15,15 +15,15 @@ declare -A apps_other_methods
 
 apps_other_methods=(
     # ["docker"]="wget -qO- https://get.docker.com/ | sh"
-    ["emacs"]="sudo snap install --classic emacs"
+    # ["emacs"]="sudo snap install --classic emacs"
     ["youtube-dl"]="curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl && chmod a+rx /usr/local/bin/youtube-dl"
     ["ceedling"]="gem install ceedling"		# Ceedling is an automated testing framework for C applications.
     ["pyenv"]="curl_socks -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash"		# Simple Python version management
     ["zshdb"]="$dir/others/zshdb_install.sh"
     ["bashdb"]="$dir/others/bashdb_install.sh"
     ["tiv"]="$dir/others/tiv_install.sh"
-    ["go"]="sudo snap install --classic go"
-    ["shfmt"]="sudo snap install shfmt"
+    # ["go"]="sudo snap install --classic go"
+    # ["shfmt"]="sudo snap install shfmt"
     ["nix"]="sh <(curl https://nixos.org/nix/install)"		# Nix, the purely functional package manager
     ["nvm"]="curl_socks -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash"		# Node Version Manager
     ["node"]="nvm install node"                           # an open-source, cross-platform, JavaScript runtime environment

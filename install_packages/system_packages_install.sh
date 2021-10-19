@@ -111,6 +111,7 @@ if [ "$(uname)" == "Darwin" ]; then
         mysql					# a fast, stable and true multi-user, multi-threaded SQL database server
         mongodb-community		# object/document-oriented database
         gpick					# advanced GTK+ color picker
+        caddy          			# Fast, multi-platform web server with automatic HTTPS
     )
 
     for app in "${apps_to_install[@]}"; do
@@ -171,6 +172,36 @@ else
         if [ "" == "$PKG_OK" ]; then
             echo -e "${app} not installed, will install it\n"
             sudo apt install -y ${app}
+        else
+            echo -e "${app} already installed, will skip it"
+        fi
+    done
+
+    snaps_stable_to_install=(
+        emacs
+        go
+        shfmt          			# A shell parser, formatter and interpreter (POSIX/Bash/mksh)
+    )
+    snap_installed_list=$(snap list)
+    for app in "${snaps_stable_to_install[@]}"; do
+        PKG_OK=$(echo $snap_installed_list | grep "${app}")
+        if [ "" == "$PKG_OK" ]; then
+            echo -e "${app} not installed, will install it\n"
+            sudo snap install --classic ${app}
+        else
+            echo -e "${app} already installed, will skip it"
+        fi
+    done
+
+    snaps_edge_to_install=(
+        tiv          			# Terminal Image Viewer
+        caddy          			# Fast, multi-platform web server with automatic HTTPS
+    )
+    for app in "${snaps_edge_to_install[@]}"; do
+        PKG_OK=$(echo $snap_installed_list | grep "${app}")
+        if [ "" == "$PKG_OK" ]; then
+            echo -e "${app} not installed, will install it\n"
+            sudo snap install --edge ${app}
         else
             echo -e "${app} already installed, will skip it"
         fi
