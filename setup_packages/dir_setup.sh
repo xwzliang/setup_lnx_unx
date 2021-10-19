@@ -7,6 +7,7 @@ my_dirs=(
     ~/git/Downloads
 	~/pipes/zotero
 	~/pipes/pdf_img
+	~/pipes/pdftohtml
 	~/Downloads/git
 	~/Downloads/books
 	~/Downloads/bin
