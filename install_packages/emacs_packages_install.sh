@@ -16,6 +16,7 @@ cat << _EOF_ >$install_package_script
 (setq package-list
     '(
       clues-theme                           ; An Emacs theme, which is approaching awesomeness
+      dash                                  ; A modern list API for Emacs
       f                                     ; Modern API for working with files and directories in Emacs
       evil                                  ; The extensible vi layer for Emacs.
       evil-collection                       ; A set of keybindings for evil-mode
