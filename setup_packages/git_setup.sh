@@ -19,6 +19,8 @@ cat <<- _EOF_ >$HOME/.gitconfig
 	status = always
 [include]
 	path = ./.gitconfig.local
+[http]
+	proxy = socks5://127.0.0.1:1080
 _EOF_
 
 # git credential settings
