@@ -29,6 +29,7 @@ npm_packages_to_install=(
     # bootstrap							# The most popular HTML, CSS, and JavaScript framework for developing responsive, mobile first projects on the web
     # jquery								# jQuery JavaScript Library
     # express								# Express is a minimal and flexible Node.js web application framework that provides a robust set of features for web and mobile applications
+    # express-generator-api				# Express' api application generator
     nodemon								# Nodemon is a utility that will monitor for any changes in your source and automatically restart your server
     # body-parser							# Parse incoming request bodies in a middleware before your handlers, available under the req.body property
     # ejs									# Embedded JavaScript templates
