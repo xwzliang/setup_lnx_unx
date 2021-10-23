@@ -4,6 +4,9 @@ dir="$(dirname "$0")"
 install_dir=$dir/install_packages
 setup_dir=$dir/setup_packages
 
+# locale setup
+$setup_dir/locale_setup.sh
+
 # Install dotfiles and daily_tools
 $install_dir/dotfiles_daily_tools_install.sh
 
