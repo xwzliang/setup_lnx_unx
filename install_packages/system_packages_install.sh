@@ -71,6 +71,7 @@ apps_to_install=(
     maven			# Apache Maven is a software project management and comprehension tool for Java projects
     entr			# Run arbitrary commands when files change
     zathura			# a plugin-based, highly customizable document viewer with vi-styled keybindings
+    git-filter-repo			# a versatile tool for rewriting git history
 )
 
 if [ "$(uname)" == "Darwin" ]; then
