@@ -19,9 +19,14 @@ cat <<- _EOF_ >$HOME/.gitconfig
 	status = always
 [include]
 	path = ./.gitconfig.local
-[http]
-	proxy = socks5://127.0.0.1:1080
+[merge]
+    conflictStyle = diff3
 _EOF_
+
+# If socks proxy is needed, put following two lines to the config.
+# [http]
+# 	proxy = socks5://127.0.0.1:1080
+
 
 # git credential settings
 git_config_local_file=$HOME/.gitconfig.local
