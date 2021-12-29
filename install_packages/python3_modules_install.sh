@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 modules_to_install=(
+    pulsemixer			# CLI and curses mixer for PulseAudio, useful to change ubuntu sound volume manually or via command.
     rerun				# Command-line script to re-run the given command when files change
     numpy
     pandas
