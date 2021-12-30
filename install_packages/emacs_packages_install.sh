@@ -31,4 +31,5 @@
 # loop until emacs package installation finished
 until yes | emacs --batch --script ~/git/dot_emacs/init.el; do
     echo "Retring in 10 seconds"
+    sleep 10
 done
