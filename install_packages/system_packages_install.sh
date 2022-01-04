@@ -133,9 +133,12 @@ else
         openssh-server          # A powerful collection of tools for remote control
         net-tools
         bcmwl-kernel-source		# Wifi adapter for laptop
+        # brightnessctl			# A program to read and control device brightness
+        # light					# GNU/Linux application to control backlights or display brightness
         arandr					# ARandR is a visual front end for XRandR, which provides full control over the relative positioning and rotation of monitors
         picom					# picom is a compositor for X11, based on xcompmgr. In addition to shadows, fading and translucency, picom implements window frame opacity control, inactive window transparency, and shadows on argb windows
         feh						# a fast, lightweight image viewer which uses imlib2. It can be used to set desktop background image
+        scrot					# command line screen capture utility
         exuberant-ctags         # build tag file indexes of source code definitions
         nautilus-admin			# Extension for Nautilus to do administrative operations
         python3-pip
