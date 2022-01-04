@@ -112,7 +112,7 @@ if [ "$(uname)" == "Darwin" ]; then
         mysql					# a fast, stable and true multi-user, multi-threaded SQL database server
         mongodb-community		# object/document-oriented database
         gpick					# advanced GTK+ color picker
-        caddy          			# Fast, multi-platform web server with automatic HTTPS
+        caddy                   # Fast, multi-platform web server with automatic HTTPS
     )
 
     for app in "${apps_to_install[@]}"; do
@@ -139,6 +139,8 @@ else
         picom					# picom is a compositor for X11, based on xcompmgr. In addition to shadows, fading and translucency, picom implements window frame opacity control, inactive window transparency, and shadows on argb windows
         feh						# a fast, lightweight image viewer which uses imlib2. It can be used to set desktop background image
         scrot					# command line screen capture utility
+        slock					# Simple X display locker
+        xss-lock				# invoke external screen lock in response to X ScreenSaver events
         exuberant-ctags         # build tag file indexes of source code definitions
         nautilus-admin			# Extension for Nautilus to do administrative operations
         python3-pip
@@ -188,7 +190,7 @@ else
     snaps_stable_to_install=(
         emacs
         go
-        shfmt          			# A shell parser, formatter and interpreter (POSIX/Bash/mksh)
+        shfmt                   # A shell parser, formatter and interpreter (POSIX/Bash/mksh)
     )
     snap_installed_list=$(snap list)
     for app in "${snaps_stable_to_install[@]}"; do
@@ -202,8 +204,8 @@ else
     done
 
     snaps_edge_to_install=(
-        tiv          			# Terminal Image Viewer
-        caddy          			# Fast, multi-platform web server with automatic HTTPS
+        tiv                     # Terminal Image Viewer
+        caddy                   # Fast, multi-platform web server with automatic HTTPS
     )
     for app in "${snaps_edge_to_install[@]}"; do
         PKG_OK=$(echo $snap_installed_list | grep "${app}")
