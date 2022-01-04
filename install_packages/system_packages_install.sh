@@ -133,6 +133,7 @@ else
         openssh-server          # A powerful collection of tools for remote control
         net-tools
         bcmwl-kernel-source		# Wifi adapter for laptop
+        arandr					# ARandR is a visual front end for XRandR, which provides full control over the relative positioning and rotation of monitors
         exuberant-ctags         # build tag file indexes of source code definitions
         nautilus-admin			# Extension for Nautilus to do administrative operations
         python3-pip
