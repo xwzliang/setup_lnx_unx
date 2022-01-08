@@ -131,6 +131,7 @@ else
     # Ubuntu
     apps_to_install+=(
         openssh-server          # A powerful collection of tools for remote control
+        sshfs					# filesystem client based on SSH File Transfer Protocol
         net-tools
         bcmwl-kernel-source		# Wifi adapter for laptop
         # brightnessctl			# A program to read and control device brightness
