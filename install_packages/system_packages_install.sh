@@ -153,6 +153,7 @@ else
         python3-lxml
         proxychains
         virtualbox              # A general-purpose full virtualizer
+        qutebrowser             # A keyboard-driven, vim-like browser based on PyQt5 and Qt
         vagrant                 # A tool for building and managing virtual machine environments in a single workflow
         ruby-full
         glimpse                 # A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
