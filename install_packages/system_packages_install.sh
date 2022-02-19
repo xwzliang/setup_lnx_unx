@@ -36,6 +36,7 @@ apps_to_install=(
     w3m
     imagemagick
     ffmpeg
+    progress				# Linux tool to show progress for cp, mv, dd, ...
     sox           # Swiss army knife of sound processing
     libsox-fmt-mp3            # SoX MP2 and MP3 format library
     mplayer			# video and audio player for Unix-like systems

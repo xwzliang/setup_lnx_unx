@@ -21,6 +21,8 @@ cat <<- _EOF_ >$HOME/.gitconfig
 	path = ./.gitconfig.local
 [merge]
     conflictStyle = diff3
+[github]
+	user = xwzliang
 _EOF_
 
 # If socks proxy is needed, put following two lines to the config.

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 modules_to_install=(
+    apt-mirror-updater			# Automated, robust apt-get mirror selection for Debian and Ubuntu. Usage: sudo apt-mirror-updater -c "http://mirrors.aliyun.com/ubuntu/"
     pulsemixer			# CLI and curses mixer for PulseAudio, useful to change ubuntu sound volume manually or via command.
     rerun				# Command-line script to re-run the given command when files change
     numpy
