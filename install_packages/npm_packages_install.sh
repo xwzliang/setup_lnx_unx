@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 npm_packages_to_install=(
+    node-static							# rfc 2616 compliant HTTP static-file server module, with built-in caching
     # yun-playlist-downloader				# Downloader for music from Wangyi
     rollup								# Rollup is a module bundler for JavaScript which compiles small pieces of code into something larger and more complex, such as a library or application
     webpack								# A bundler for javascript and friends. Packs many modules into a few bundled assets
