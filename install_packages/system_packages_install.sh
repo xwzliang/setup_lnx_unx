@@ -106,6 +106,8 @@ if [ "$(uname)" == "Darwin" ]; then
         the_silver_searcher		# A code-searching tool similar to ack, but faster
         readline				# GNU readline and history libraries
         pyenv					# Simple Python version management
+        java
+        openjdk@8				# Install old java 8 for some programs
         go						# An open source programming language that makes it easy to build simple, reliable, and efficient software
         shfmt					# A shell parser, formatter and interpreter (POSIX/Bash/mksh)
         libvterm                # abstract terminal library
@@ -128,6 +130,11 @@ if [ "$(uname)" == "Darwin" ]; then
             fi
         fi
     done
+
+    # Some setup
+    # For the system Java wrappers to find this JDK, symlink it with
+    sudo ln -sfn $(brew --prefix)/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+    sudo ln -sfn /usr/local/opt/openjdk@8/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-8.jdk
 else
     # Ubuntu
     apps_to_install+=(
