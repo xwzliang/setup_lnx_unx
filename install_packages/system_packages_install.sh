@@ -7,7 +7,7 @@ command_exists() {
 # Install homebrew for linux and macos
 if ! command_exists brew; then
     echo -e "brew not installed, will install it\n"
-    /bin/bash -c "$(curl_socks -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 else
     echo "brew already installed, will skip it"
 fi
