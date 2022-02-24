@@ -96,6 +96,7 @@ if [ "$(uname)" == "Darwin" ]; then
         autoconf
         automake
         docker
+        wget
         youtube-dl
         proxychains-ng
         aspell
