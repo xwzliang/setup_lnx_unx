@@ -43,6 +43,12 @@ if [ ! -f "$git_config_local_file" ]; then
 	fi
 fi
 
+git_credetial_file=$HOME/Dropbox/org/keys/git/git-credentials
+if [ -f "$git_credetial_file" ]; then
+    # Copy credential file
+    cp $git_credetial_file ~/.git-credentials
+fi
+
 # git flow set up 
 if [ "$(uname)" == "Darwin" ]; then
 	# MacOS
