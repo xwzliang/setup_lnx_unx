@@ -2,6 +2,8 @@
 
 brew install flutter
 
+brew install --cask chromedriver
+
 brew install android-studio
 
 ### Then open andrioid studio to finish setup and android-sdk downloading.
