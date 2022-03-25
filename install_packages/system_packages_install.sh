@@ -98,6 +98,7 @@ if [ "$(uname)" == "Darwin" ]; then
         docker
         wget
         youtube-dl
+        firefox
         proxychains-ng
         aspell
         poppler                 # PDF rendering library
