@@ -98,6 +98,7 @@ if [ "$(uname)" == "Darwin" ]; then
         docker
         wget
         youtube-dl
+        firefox
         proxychains-ng
         aspell
         poppler                 # PDF rendering library
@@ -117,6 +118,7 @@ if [ "$(uname)" == "Darwin" ]; then
         mongodb-community		# object/document-oriented database
         gpick					# advanced GTK+ color picker
         caddy                   # Fast, multi-platform web server with automatic HTTPS
+        node                    # an open-source, cross-platform, JavaScript runtime environment
     )
 
     for app in "${apps_to_install[@]}"; do
