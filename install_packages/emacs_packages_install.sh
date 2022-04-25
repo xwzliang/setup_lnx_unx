@@ -28,6 +28,9 @@
 # # Then use socks proxy to clone git repos
 # yes | emacs --batch --script ~/git/dot_emacs/init.el
 
+# Don't check certificate
+export GIT_SSL_NO_VERIFY=1
+
 # loop until emacs package installation finished
 until yes | emacs --batch --script ~/git/dot_emacs/init.el; do
     echo "Retring in 10 seconds"

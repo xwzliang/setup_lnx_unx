@@ -57,9 +57,6 @@ else
 	gsettings set org.gnome.desktop.input-sources xkb-options "['caps:escape']"
 fi
 
-# Emacs install packages
-$install_dir/emacs_packages_install.sh
-
 # Python3 install packages
 $install_dir/python3_modules_install.sh
 
@@ -69,3 +66,5 @@ $install_dir/other_methods_packages_install.sh
 # Install packages use brew
 $install_dir/brew_packages_unx_lnx_install.sh
 
+# Emacs install packages
+$install_dir/emacs_packages_install.sh
