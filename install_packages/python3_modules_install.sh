@@ -6,9 +6,9 @@ modules_to_install=(
     rerun				# Command-line script to re-run the given command when files change
     numpy
     pandas
-    pyzotero
-    isbnlib		# isbnlib is a (pure) python library that provides several useful methods and functions to validate, clean, transform, hyphenate and get metadata for ISBN strings.
-    beautifulsoup4		# Beautiful Soup is a library that makes it easy to scrape information from web pages.
+    # pyzotero
+    # isbnlib		# isbnlib is a (pure) python library that provides several useful methods and functions to validate, clean, transform, hyphenate and get metadata for ISBN strings.
+    # beautifulsoup4		# Beautiful Soup is a library that makes it easy to scrape information from web pages.
     virtualenv			# a tool to create isolated Python environments
     pipenv				# Python Dev Workflow for Humans
     jedi				# Jedi is a static analysis tool for Python that is typically used in IDEs/editors plugins. Jedi has a focus on autocompletion and goto functionality.
@@ -21,18 +21,18 @@ modules_to_install=(
     pyright						# Static type checker for Python
     docker-compose				# Define and run multi-container applications with Docker
     lastversion					# Fetch latest release version of an arbitrary project
-    mrjob						# mrjob is a Python 2.7/3.4+ package that helps you write and run Hadoop Streaming jobs.
-    pyspark						# Python API for Spark
-    selenium					# Python language bindings for Selenium WebDriver
-    pymongo						# Python driver for MongoDB
-    awsebcli					# The AWS Elastic Beanstalk Command Line Interface (EB CLI) is a tool that helps you deploy and manage your Elastic Beanstalk applications and environments
-    django						# Django is a high-level Python Web framework that encourages rapid development and clean, pragmatic design
-    mongoengine					# MongoEngine is a Python Object-Document Mapper for working with MongoDB
-    djangorestframework			# Django REST framework is a powerful and flexible toolkit for building Web APIs
-    django-rest-framework-mongoengine			# The package provides mongoengine support for django-rest-framework
-    flask						# Flask is a lightweight WSGI web application framework
-    xlrd						# for Excel support
-    openpyxl					# for Excel support
+    # mrjob						# mrjob is a Python 2.7/3.4+ package that helps you write and run Hadoop Streaming jobs.
+    # pyspark						# Python API for Spark
+    # selenium					# Python language bindings for Selenium WebDriver
+    # pymongo						# Python driver for MongoDB
+    # awsebcli					# The AWS Elastic Beanstalk Command Line Interface (EB CLI) is a tool that helps you deploy and manage your Elastic Beanstalk applications and environments
+    # django						# Django is a high-level Python Web framework that encourages rapid development and clean, pragmatic design
+    # mongoengine					# MongoEngine is a Python Object-Document Mapper for working with MongoDB
+    # djangorestframework			# Django REST framework is a powerful and flexible toolkit for building Web APIs
+    # django-rest-framework-mongoengine			# The package provides mongoengine support for django-rest-framework
+    # flask						# Flask is a lightweight WSGI web application framework
+    # xlrd						# for Excel support
+    # openpyxl					# for Excel support
     scikit-learn 				# machine learning in Python
     matplotlib					# a comprehensive library for creating static, animated, and interactive visualizations in Python
 )
