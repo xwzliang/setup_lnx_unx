@@ -119,6 +119,7 @@ if [ "$(uname)" == "Darwin" ]; then
         gpick					# advanced GTK+ color picker
         caddy                   # Fast, multi-platform web server with automatic HTTPS
         node                    # an open-source, cross-platform, JavaScript runtime environment
+        db-browser-for-sqlite                    # DB browser for sqlite
     )
 
     for app in "${apps_to_install[@]}"; do
@@ -189,6 +190,7 @@ else
         libtool					# Generic library support script
         libtool-bin				# Generic library support script (libtool binary)
         go-dep					# Go dependency management tool
+        sqlitebrowser                    # DB browser for sqlite
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
