@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sudo snap install flutter --classic
+# sudo snap install flutter --classic
 
 sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
 # sudo apt-get install -y default-jre default-jdk
@@ -22,3 +22,8 @@ sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-
 
 # # Run flutter doctor to see if everything is OK
 # flutter doctor
+
+
+# snap version has cmake dependency issue, try using git clone to install
+cd $HOME/git/Downloads/
+git clone https://github.com/flutter/flutter.git -b stable
