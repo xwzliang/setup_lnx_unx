@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-brew install flutter
+# brew install flutter
+cd $HOME/git/Downloads/
+git clone https://github.com/flutter/flutter.git -b stable
 
 brew install --cask chromedriver
 
