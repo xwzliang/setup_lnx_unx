@@ -231,6 +231,10 @@ else
             echo -e "${app} already installed, will skip it"
         fi
     done
+
+    # Some setup
+    # Link python3 to python
+    sudo ln -s /usr/bin/python3 /usr/bin/python
 fi
 
 
