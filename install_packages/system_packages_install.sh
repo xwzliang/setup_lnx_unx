@@ -39,7 +39,8 @@ apps_to_install=(
     progress				# Linux tool to show progress for cp, mv, dd, ...
     sox           # Swiss army knife of sound processing
     libsox-fmt-mp3            # SoX MP2 and MP3 format library
-    mplayer			# video and audio player for Unix-like systems
+    # mplayer			# video and audio player for Unix-like systems
+    mpv
     mosh
     ocrmypdf
     rename
@@ -50,7 +51,7 @@ apps_to_install=(
     bats        # Bash Automated Testing System
     check		# A unit testing framework for C
     jq          # jq is like sed for JSON data - you can use it to slice and filter and map and transform structured data
-    unrar       # For extracting rar archive files
+    rar       # For extracting rar archive files
     global      # Source code tag system
     graphviz	# open source graph visualization software. Graph visualization is a way of representing structural information as diagrams of abstract graphs and networks
     fzf			# fzf is a general-purpose command-line fuzzy finder.
@@ -160,7 +161,7 @@ else
         djvulibre-bin           # djvulibre including ddjvu
         # calibre
         xterm
-        mpv
+        # mpv
         hfsprogs
         python3-lxml
         proxychains
