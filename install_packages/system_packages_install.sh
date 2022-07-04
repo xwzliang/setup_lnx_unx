@@ -7,7 +7,7 @@ command_exists() {
 # Install homebrew for linux and macos
 if ! command_exists brew; then
     echo -e "brew not installed, will install it\n"
-    /bin/bash -c "$(curl_socks -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 else
     echo "brew already installed, will skip it"
 fi
@@ -36,9 +36,11 @@ apps_to_install=(
     w3m
     imagemagick
     ffmpeg
+    progress				# Linux tool to show progress for cp, mv, dd, ...
     sox           # Swiss army knife of sound processing
     libsox-fmt-mp3            # SoX MP2 and MP3 format library
-    mplayer			# video and audio player for Unix-like systems
+    # mplayer			# video and audio player for Unix-like systems
+    mpv
     mosh
     ocrmypdf
     rename
@@ -49,7 +51,7 @@ apps_to_install=(
     bats        # Bash Automated Testing System
     check		# A unit testing framework for C
     jq          # jq is like sed for JSON data - you can use it to slice and filter and map and transform structured data
-    unrar       # For extracting rar archive files
+    rar       # For extracting rar archive files
     global      # Source code tag system
     graphviz	# open source graph visualization software. Graph visualization is a way of representing structural information as diagrams of abstract graphs and networks
     fzf			# fzf is a general-purpose command-line fuzzy finder.
@@ -95,7 +97,9 @@ if [ "$(uname)" == "Darwin" ]; then
         autoconf
         automake
         docker
+        wget
         youtube-dl
+        firefox
         proxychains-ng
         aspell
         poppler                 # PDF rendering library
@@ -105,6 +109,8 @@ if [ "$(uname)" == "Darwin" ]; then
         the_silver_searcher		# A code-searching tool similar to ack, but faster
         readline				# GNU readline and history libraries
         pyenv					# Simple Python version management
+        java
+        openjdk@8				# Install old java 8 for some programs
         go						# An open source programming language that makes it easy to build simple, reliable, and efficient software
         shfmt					# A shell parser, formatter and interpreter (POSIX/Bash/mksh)
         libvterm                # abstract terminal library
@@ -112,7 +118,9 @@ if [ "$(uname)" == "Darwin" ]; then
         mysql					# a fast, stable and true multi-user, multi-threaded SQL database server
         mongodb-community		# object/document-oriented database
         gpick					# advanced GTK+ color picker
-        caddy          			# Fast, multi-platform web server with automatic HTTPS
+        caddy                   # Fast, multi-platform web server with automatic HTTPS
+        node                    # an open-source, cross-platform, JavaScript runtime environment
+        db-browser-for-sqlite                    # DB browser for sqlite
     )
 
     for app in "${apps_to_install[@]}"; do
@@ -127,23 +135,38 @@ if [ "$(uname)" == "Darwin" ]; then
             fi
         fi
     done
+
+    # Some setup
+    # For the system Java wrappers to find this JDK, symlink it with
+    sudo ln -sfn $(brew --prefix)/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+    sudo ln -sfn /usr/local/opt/openjdk@8/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-8.jdk
 else
     # Ubuntu
     apps_to_install+=(
         openssh-server          # A powerful collection of tools for remote control
+        sshfs					# filesystem client based on SSH File Transfer Protocol
         net-tools
         bcmwl-kernel-source		# Wifi adapter for laptop
+        # brightnessctl			# A program to read and control device brightness
+        # light					# GNU/Linux application to control backlights or display brightness
+        arandr					# ARandR is a visual front end for XRandR, which provides full control over the relative positioning and rotation of monitors
+        picom					# picom is a compositor for X11, based on xcompmgr. In addition to shadows, fading and translucency, picom implements window frame opacity control, inactive window transparency, and shadows on argb windows
+        feh						# a fast, lightweight image viewer which uses imlib2. It can be used to set desktop background image
+        scrot					# command line screen capture utility
+        slock					# Simple X display locker
+        xss-lock				# invoke external screen lock in response to X ScreenSaver events
         exuberant-ctags         # build tag file indexes of source code definitions
         nautilus-admin			# Extension for Nautilus to do administrative operations
         python3-pip
         djvulibre-bin           # djvulibre including ddjvu
         # calibre
         xterm
-        mpv
+        # mpv
         hfsprogs
         python3-lxml
         proxychains
         virtualbox              # A general-purpose full virtualizer
+        qutebrowser             # A keyboard-driven, vim-like browser based on PyQt5 and Qt
         vagrant                 # A tool for building and managing virtual machine environments in a single workflow
         ruby-full
         glimpse                 # A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep
@@ -168,6 +191,7 @@ else
         libtool					# Generic library support script
         libtool-bin				# Generic library support script (libtool binary)
         go-dep					# Go dependency management tool
+        sqlitebrowser                    # DB browser for sqlite
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
@@ -182,7 +206,7 @@ else
     snaps_stable_to_install=(
         emacs
         go
-        shfmt          			# A shell parser, formatter and interpreter (POSIX/Bash/mksh)
+        shfmt                   # A shell parser, formatter and interpreter (POSIX/Bash/mksh)
     )
     snap_installed_list=$(snap list)
     for app in "${snaps_stable_to_install[@]}"; do
@@ -196,8 +220,8 @@ else
     done
 
     snaps_edge_to_install=(
-        tiv          			# Terminal Image Viewer
-        caddy          			# Fast, multi-platform web server with automatic HTTPS
+        tiv                     # Terminal Image Viewer
+        caddy                   # Fast, multi-platform web server with automatic HTTPS
     )
     for app in "${snaps_edge_to_install[@]}"; do
         PKG_OK=$(echo $snap_installed_list | grep "${app}")
@@ -208,6 +232,10 @@ else
             echo -e "${app} already installed, will skip it"
         fi
     done
+
+    # Some setup
+    # Link python3 to python
+    sudo ln -s /usr/bin/python3 /usr/bin/python
 fi
 
 

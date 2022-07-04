@@ -21,6 +21,8 @@ cat <<- _EOF_ >$HOME/.gitconfig
 	path = ./.gitconfig.local
 [merge]
     conflictStyle = diff3
+[github]
+	user = xwzliang
 _EOF_
 
 # If socks proxy is needed, put following two lines to the config.
@@ -39,6 +41,12 @@ if [ ! -f "$git_config_local_file" ]; then
 		echo -e "[credential]\nhelper = cache --timeout 7200\n" > $git_config_local_file
 		echo -e "\nWill cache credentails for two hours"
 	fi
+fi
+
+git_credetial_file=$HOME/Dropbox/org/keys/git/git-credentials
+if [ -f "$git_credetial_file" ]; then
+    # Copy credential file
+    cp $git_credetial_file ~/.git-credentials
 fi
 
 # git flow set up 

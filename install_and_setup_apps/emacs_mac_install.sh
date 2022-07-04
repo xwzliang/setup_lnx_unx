@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 
-brew tap railwaycat/emacsmacport
+# brew tap railwaycat/emacsmacport
+# brew install emacs-mac
+# brew untap railwaycat/emacsmacport
 
-brew install emacs-mac
+# To use emacs gui
+# cd /usr/local/Cellar/emacs-mac/*/
+# open Emacs.app
 
-brew untap railwaycat/emacsmacport
+
+# brew install emacs --with-cocoa
+
+brew install --cask emacs
