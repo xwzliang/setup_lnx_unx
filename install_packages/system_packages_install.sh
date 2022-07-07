@@ -43,6 +43,7 @@ apps_to_install=(
     mpv
     mosh
     ocrmypdf
+    qpdf      	# Tools for and transforming and inspecting PDF files
     rename
     elinks      # Full-Featured Text web Browser, advanced and well-established feature-rich text mode web browser
     shadowsocks-libev
