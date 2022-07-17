@@ -40,7 +40,6 @@ apps_to_install=(
     sox           # Swiss army knife of sound processing
     libsox-fmt-mp3            # SoX MP2 and MP3 format library
     # mplayer			# video and audio player for Unix-like systems
-    mpv
     mosh
     ocrmypdf
     qpdf      	# Tools for and transforming and inspecting PDF files
@@ -98,6 +97,7 @@ if [ "$(uname)" == "Darwin" ]; then
         autoconf
         automake
         docker
+        mpv --cask
         wget
         youtube-dl
         firefox
@@ -158,6 +158,7 @@ else
         xss-lock				# invoke external screen lock in response to X ScreenSaver events
         exuberant-ctags         # build tag file indexes of source code definitions
         nautilus-admin			# Extension for Nautilus to do administrative operations
+        mpv
         python3-pip
         djvulibre-bin           # djvulibre including ddjvu
         # calibre
