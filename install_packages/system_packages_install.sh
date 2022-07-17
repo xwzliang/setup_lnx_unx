@@ -194,6 +194,7 @@ else
         libtool-bin				# Generic library support script (libtool binary)
         go-dep					# Go dependency management tool
         sqlitebrowser                    # DB browser for sqlite
+        dos2unix                # DOS/MAC to UNIX text file format converter; convert Windows/DOS-style line endings (CR+LF)
     )
     for app in "${apps_to_install[@]}"; do
         PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $app | grep "install ok installed")
