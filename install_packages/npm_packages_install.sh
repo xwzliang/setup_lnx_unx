@@ -67,6 +67,7 @@ npm_packages_to_install=(
     # @nestjs/typeorm						# TypeORM module for Nest framework
     jest								# Delightful JavaScript Testing
     # @alicloud/fun						# Fun is a development tool for serverless applications
+    appdmg								# Generate beautiful DMG-images for your OS X applications.
 )
 
 for npm_package in "${npm_packages_to_install[@]}"; do
