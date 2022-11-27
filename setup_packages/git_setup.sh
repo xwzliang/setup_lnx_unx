@@ -58,4 +58,10 @@ else
 	gitflow_path=/etc/bash_completion.d/git-flow-completion.bash
 fi
 
-sudo wget -O $gitflow_path https://raw.githubusercontent.com/bobthecow/git-flow-completion/master/git-flow-completion.bash
+cd $HOME/git/Downloads/
+
+git clone https://github.com/bobthecow/git-flow-completion.git
+
+cp git-flow-completion/git-flow-completion.bash $gitflow_path
+
+# sudo wget -O $gitflow_path https://raw.githubusercontent.com/bobthecow/git-flow-completion/master/git-flow-completion.bash

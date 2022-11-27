@@ -10,7 +10,10 @@ fi
 # Install ohmyzsh if not already installed
 if [ ! -d ~/.oh-my-zsh ]; then
     echo "not installed"
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    # sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    cd $HOME/git/Downloads/
+    git clone https://github.com/ohmyzsh/ohmyzsh.git
+    sh ohmyzsh/tools/install.sh
     # Using socks proxy
     # . set_proxy
     # sh -c "$(curl_socks -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
