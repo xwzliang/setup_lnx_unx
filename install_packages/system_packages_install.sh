@@ -5,12 +5,15 @@ command_exists() {
 }
 
 # Install homebrew for linux and macos
-if ! command_exists brew; then
-    echo -e "brew not installed, will install it\n"
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-else
-    echo "brew already installed, will skip it"
-fi
+install_brew() {
+    if ! command_exists brew; then
+        echo -e "brew not installed, will install it\n"
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+    else
+        echo "brew already installed, will skip it"
+    fi
+
+}
 
 # Add ppa repos
 # ppa_to_add=(
@@ -78,6 +81,8 @@ apps_to_install=(
 
 if [ "$(uname)" == "Darwin" ]; then
     # MacOS
+    install_brew
+
     taps_to_tap=(
         mongodb/brew
     )
