@@ -23,6 +23,8 @@ cat <<- _EOF_ >$HOME/.gitconfig
     conflictStyle = diff3
 [github]
 	user = xwzliang
+[diff "lfs"]
+	textconv = cat
 _EOF_
 
 # If socks proxy is needed, put following two lines to the config.
