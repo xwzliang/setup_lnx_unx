@@ -15,5 +15,5 @@ install_brew() {
 install_brew
 
 # Install packages
-brew install jellyfin
+brew install  --cask jellyfin
 brew install --cask nextcloud
