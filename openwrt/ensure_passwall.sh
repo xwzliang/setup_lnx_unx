@@ -1,9 +1,8 @@
 #!/bin/sh
 
-
 check_node_availability() {
     local url=$1
-    response=$(curl -s -I "$url")
+    response=$(curl -s -I --connect-timeout 2 "$url")
     if echo "$response" | grep -q "200 OK"; then
         echo "$url is accessible"
         return 0
@@ -23,15 +22,18 @@ check_url() {
         wait
         sleep 3
     done
-    return "$success_count"
+    return $success_count
 }
 
 while :
 do
-    success_count=$(check_url)
-    if [ "$success_count" -ne 3 ]; then
+    check_url
+    success_count=$? # Capture the echoed value here
+    echo "success count $success_count"
+    if [ ! "$success_count" = "3" ]; then
         echo "Restarting passwall"
         /etc/init.d/passwall restart
     fi
-    sleep 600
+    echo "sleeping"
+    sleep 300
 done
