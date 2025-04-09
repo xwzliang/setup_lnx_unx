@@ -60,6 +60,7 @@ else
 	gitflow_path=/etc/bash_completion.d/git-flow-completion.bash
 fi
 
+mkdir -p $HOME/git/Downloads
 cd $HOME/git/Downloads/
 
 git clone https://github.com/bobthecow/git-flow-completion.git
