@@ -1,4 +1,4 @@
-sudo apt install -y openssh-server tmux git git-lfs
+sudo apt install -y openssh-server tmux git git-lfs gcc sqlite3
 bash ./install_packages/conda_install.sh
 
 bash ./setup_packages/dir_setup.sh
