@@ -11,3 +11,9 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 
 conda install cuda -c nvidia
+
+# cudnn
+sudo apt-get install nvidia-cuda-toolkit
+
+# Install cuDNN
+sudo apt-get install libcudnn8
