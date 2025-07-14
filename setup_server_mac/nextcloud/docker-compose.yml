@@ -16,17 +16,19 @@ services:
   app:
     image: nextcloud
     ports:
-      - 8080:80
+      - 8899:80
     links:
       - db
     volumes:
       - nextcloud:/var/www/html
+      - ./config:/var/www/html/config
     restart: always
     environment:
       - MYSQL_PASSWORD=${password}
       - MYSQL_DATABASE=nextcloud
       - MYSQL_USER=nextcloud
       - MYSQL_HOST=db
+      - NEXTCLOUD_TRUSTED_DOMAINS=nextclound.xwzliabg.dynv6.net:16666
 
 volumes:
   db:

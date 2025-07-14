@@ -127,6 +127,7 @@ if [ "$(uname)" == "Darwin" ]; then
         caddy                   # Fast, multi-platform web server with automatic HTTPS
         node                    # an open-source, cross-platform, JavaScript runtime environment
         db-browser-for-sqlite                    # DB browser for sqlite
+        karabiner-elements --cask         # a powerful utility for keyboard customization
     )
 
     for app in "${apps_to_install[@]}"; do
