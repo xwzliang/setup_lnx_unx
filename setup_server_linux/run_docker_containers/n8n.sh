@@ -1,0 +1,2 @@
+docker volume create n8n_data
+docker run -d  --restart always --add-host=host.docker.internal:host-gateway --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n -v /Users/broliang:/files -e NODE_FUNCTION_ALLOW_BUILTIN='*' -e NODE_FUNCTION_ALLOW_EXTERNAL='*' docker.n8n.io/n8nio/n8n
