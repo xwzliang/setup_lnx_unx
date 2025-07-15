@@ -1,0 +1,3 @@
+# sudo docker run --gpus all -v ~/models/fluxgym/start.sh:/app/start.sh -v ~/models/fluxgym:/app/fluxgym -e DOWNLOAD_MODELS=false --ipc=host --network=host --name fluxgym thelocallab/fluxgym-flux-lora-training:latest
+
+sudo docker run --gpus all -v ~/models/fluxgym/start.sh:/app/start.sh -v ~/models/fluxgym:/app/fluxgym -v ~/models/comfyui/workspace/ComfyUI/models:/models -e DOWNLOAD_MODELS=false --ipc=host --network=host --name fluxgym xwzliang/myfluxgym
