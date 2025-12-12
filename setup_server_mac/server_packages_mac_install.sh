@@ -18,3 +18,4 @@ install_brew
 brew install --cask jellyfin
 brew install --cask nextcloud
 brew install --cask docker
+brew install --cask notunes
