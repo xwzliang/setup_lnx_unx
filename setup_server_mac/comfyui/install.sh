@@ -15,4 +15,5 @@ cd custom_nodes
 git clone https://github.com/ltdrdata/ComfyUI-Manager.git
 
 # cd ..
-# python main.py --listen 0.0.0.0
+# PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 python main.py --listen 0.0.0.0
+# --use-split-cross-attention
