@@ -20,3 +20,6 @@ brew install --cask nextcloud
 brew install --cask docker
 brew install --cask notunes
 brew install --cask iina
+
+# Install iina plugins
+"./iina/install-iina-plugins.sh"
