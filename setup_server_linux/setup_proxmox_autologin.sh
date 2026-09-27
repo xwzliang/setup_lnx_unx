@@ -107,6 +107,55 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+configure_firefox_trust() {
+    local ca_file="$1"
+    local ff_profile_dirs=()
+
+    # Detect Firefox profile directories on macOS and Linux
+    if [[ -d "${HOME}/Library/Application Support/Firefox/Profiles" ]]; then
+        for p in "${HOME}/Library/Application Support/Firefox/Profiles"/*; do
+            [[ -d "$p" ]] && ff_profile_dirs+=("$p")
+        done
+    fi
+    if [[ -d "${HOME}/.mozilla/firefox" ]]; then
+        for p in "${HOME}/.mozilla/firefox"/*; do
+            [[ -d "$p" ]] && ff_profile_dirs+=("$p")
+        done
+    fi
+    if [[ -d "${HOME}/.var/app/org.mozilla.firefox/.mozilla/firefox" ]]; then
+        for p in "${HOME}/.var/app/org.mozilla.firefox/.mozilla/firefox"/*; do
+            [[ -d "$p" ]] && ff_profile_dirs+=("$p")
+        done
+    fi
+
+    if [[ ${#ff_profile_dirs[@]} -gt 0 ]]; then
+        echo "==> Configuring Firefox to trust OS / enterprise Root CAs..."
+        for p in "${ff_profile_dirs[@]}"; do
+            local user_js="${p}/user.js"
+            if [[ -f "${user_js}" ]]; then
+                if ! grep -q 'security.enterprise_roots.enabled' "${user_js}"; then
+                    echo 'user_pref("security.enterprise_roots.enabled", true);' >> "${user_js}"
+                    echo "    Updated ${user_js}"
+                fi
+            else
+                echo 'user_pref("security.enterprise_roots.enabled", true);' > "${user_js}"
+                echo "    Created ${user_js}"
+            fi
+        done
+        echo "[OK] Firefox configured (security.enterprise_roots.enabled = true)."
+    fi
+
+    # Save a permanent copy of the Root CA for reference or manual import
+    local pve_conf_dir="${HOME}/.config/proxmox"
+    mkdir -p "${pve_conf_dir}"
+    local host_id
+    host_id="$(echo "${REMOTE_HOST:-local}" | tr -cd '[:alnum:]_-')"
+    local saved_ca="${pve_conf_dir}/pve-root-ca-${host_id}.pem"
+    cp -f "${ca_file}" "${saved_ca}"
+    chmod 644 "${saved_ca}"
+    echo "    Saved CA copy to: ${saved_ca}"
+}
+
 # If remote execution requested, transfer and invoke script over SSH
 if [[ -n "${REMOTE_HOST}" ]]; then
     echo "==> Remote mode selected: target '${REMOTE_HOST}' (port ${REMOTE_PORT})"
@@ -130,16 +179,21 @@ if [[ -n "${REMOTE_HOST}" ]]; then
     echo "==> Executing setup remotely on ${REMOTE_HOST}..."
     ssh -p "${REMOTE_PORT}" "${REMOTE_HOST}" "bash -s" -- -u "${PVE_USER}" -p "${PVE_PASS}" < "${SCRIPT_PATH}"
 
-    # If running from macOS, automatically import and trust the PVE root CA
-    if [[ "$(uname -s)" == "Darwin" ]]; then
-        echo "==> Detected macOS client: Fetching PVE Root CA to establish trusted HTTPS..."
-        tmp_ca="/tmp/pve-root-ca-$(echo "${REMOTE_HOST}" | tr -cd '[:alnum:]_-').pem"
-        if ssh -p "${REMOTE_PORT}" "${REMOTE_HOST}" "cat /etc/pve/pve-root-ca.pem" > "${tmp_ca}" 2>/dev/null; then
-            echo "==> Adding PVE Root CA to macOS login keychain..."
-            security add-trusted-cert -r trustRoot -p ssl -k ~/Library/Keychains/login.keychain-db "${tmp_ca}" 2>/dev/null || true
-            rm -f "${tmp_ca}"
-            echo "[OK] PVE Root CA trusted in macOS keychain. HTTPS warnings eliminated!"
+    # Fetch PVE Root CA to establish client-side trust (macOS Keychain + Firefox)
+    tmp_ca="/tmp/pve-root-ca-$(echo "${REMOTE_HOST}" | tr -cd '[:alnum:]_-').pem"
+    if ssh -p "${REMOTE_PORT}" "${REMOTE_HOST}" "cat /etc/pve/pve-root-ca.pem" > "${tmp_ca}" 2>/dev/null; then
+        if [[ "$(uname -s)" == "Darwin" ]]; then
+            cert_cn="$(openssl x509 -in "${tmp_ca}" -noout -subject 2>/dev/null | sed -n 's/.*CN[ =]*//p' | sed 's/,.*//' || echo "Proxmox Virtual Environment")"
+            if security find-certificate -c "${cert_cn}" ~/Library/Keychains/login.keychain-db &>/dev/null; then
+                echo "[OK] PVE Root CA is already present in macOS login keychain."
+            else
+                echo "==> Detected macOS client: Adding PVE Root CA to macOS login keychain..."
+                security add-trusted-cert -r trustRoot -p ssl -k ~/Library/Keychains/login.keychain-db "${tmp_ca}" 2>/dev/null || true
+                echo "[OK] PVE Root CA trusted in macOS keychain (Safari, Chrome, Edge, curl)."
+            fi
         fi
+        configure_firefox_trust "${tmp_ca}"
+        rm -f "${tmp_ca}"
     fi
     exit 0
 fi
