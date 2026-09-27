@@ -5,9 +5,9 @@ set -euo pipefail
 # setup_proxmox_autologin.sh
 #
 # Description:
-#   Configures passwordless, automatic login for Proxmox VE (PVE) web interface.
+#   Configures passwordless, automatic login and trusted SSL for Proxmox VE (PVE).
 #   Designed for private LAN / homelab environments where typing credentials
-#   repeatedly or handling session expirations is undesirable.
+#   repeatedly or handling certificate warnings and session expirations is undesirable.
 #
 # Features:
 #   1. Automatic silent login as root@pam (or custom user) on page load.
@@ -15,8 +15,11 @@ set -euo pipefail
 #   3. Silent re-authentication on 401 / session expiration (e.g. computer wake from sleep).
 #   4. Disables the annoying "No Subscription" nag popup completely.
 #   5. Supports both Desktop UI and Mobile Touch UI.
-#   6. Survives PVE upgrades via APT Post-Invoke hook and systemd service.
-#   7. Supports local execution directly on PVE or remote execution via SSH from Mac/Linux.
+#   6. Configures valid SSL certificate with SANs (.local, hostname, IP, localhost)
+#      signed by the internal PVE Root CA.
+#   7. If invoked from macOS, automatically imports and trusts the PVE Root CA in Keychain.
+#   8. Survives PVE upgrades via APT Post-Invoke hook and systemd service.
+#   9. Supports local execution directly on PVE or remote execution via SSH from Mac/Linux.
 #
 # Usage:
 #   # Local execution on Proxmox host:
@@ -126,6 +129,18 @@ if [[ -n "${REMOTE_HOST}" ]]; then
 
     echo "==> Executing setup remotely on ${REMOTE_HOST}..."
     ssh -p "${REMOTE_PORT}" "${REMOTE_HOST}" "bash -s" -- -u "${PVE_USER}" -p "${PVE_PASS}" < "${SCRIPT_PATH}"
+
+    # If running from macOS, automatically import and trust the PVE root CA
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        echo "==> Detected macOS client: Fetching PVE Root CA to establish trusted HTTPS..."
+        tmp_ca="/tmp/pve-root-ca-$(echo "${REMOTE_HOST}" | tr -cd '[:alnum:]_-').pem"
+        if ssh -p "${REMOTE_PORT}" "${REMOTE_HOST}" "cat /etc/pve/pve-root-ca.pem" > "${tmp_ca}" 2>/dev/null; then
+            echo "==> Adding PVE Root CA to macOS login keychain..."
+            security add-trusted-cert -r trustRoot -p ssl -k ~/Library/Keychains/login.keychain-db "${tmp_ca}" 2>/dev/null || true
+            rm -f "${tmp_ca}"
+            echo "[OK] PVE Root CA trusted in macOS keychain. HTTPS warnings eliminated!"
+        fi
+    fi
     exit 0
 fi
 
@@ -210,6 +225,66 @@ if [[ -f "/usr/share/pve-manager/touch/index.html.tpl" && ! -f "/usr/share/pve-m
     cp -a /usr/share/pve-manager/touch/index.html.tpl /usr/share/pve-manager/touch/index.html.tpl.bak
     echo "[OK] Created backup /usr/share/pve-manager/touch/index.html.tpl.bak"
 fi
+
+# Configure SSL Certificate with full Subject Alternative Names (SANs)
+setup_ssl_certificate() {
+    echo "==> Configuring SSL certificate with SANs (including .local and IP)..."
+    local nodename
+    nodename="$(hostname)"
+    local local_ip
+    local_ip="$(hostname -I 2>/dev/null | awk '{print $1}' || echo '')"
+
+    cat << 'CNF_EOF' > /tmp/pveproxy-ssl.cnf
+[ req ]
+default_bits = 2048
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
+
+[ dn ]
+CN = __NODENAME__.local
+O = Proxmox Virtual Environment
+OU = PVE Cluster Node
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ v3_ext ]
+authorityKeyIdentifier = keyid,issuer
+basicConstraints = CA:FALSE
+keyUsage = digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = __NODENAME__.local
+DNS.2 = __NODENAME__
+DNS.3 = localhost
+IP.1 = 127.0.0.1
+IP.2 = ::1
+CNF_EOF
+
+    sed -i "s/__NODENAME__/${nodename}/g" /tmp/pveproxy-ssl.cnf
+    if [[ -n "${local_ip}" ]]; then
+        echo "IP.3 = ${local_ip}" >> /tmp/pveproxy-ssl.cnf
+    fi
+
+    if [[ -f "/etc/pve/pve-root-ca.pem" && -f "/etc/pve/priv/pve-root-ca.key" ]]; then
+        openssl genrsa -out /tmp/pveproxy-ssl.key 2048 2>/dev/null
+        openssl req -new -key /tmp/pveproxy-ssl.key -out /tmp/pveproxy-ssl.csr -config /tmp/pveproxy-ssl.cnf 2>/dev/null
+        openssl x509 -req -in /tmp/pveproxy-ssl.csr \
+            -CA /etc/pve/pve-root-ca.pem -CAkey /etc/pve/priv/pve-root-ca.key -CAcreateserial \
+            -out /tmp/pveproxy-ssl.crt -days 820 -extfile /tmp/pveproxy-ssl.cnf -extensions v3_ext -sha256 2>/dev/null
+
+        cat /tmp/pveproxy-ssl.crt /etc/pve/pve-root-ca.pem > /etc/pve/local/pveproxy-ssl.pem
+        cp -f /tmp/pveproxy-ssl.key /etc/pve/local/pveproxy-ssl.key
+        rm -f /tmp/pveproxy-ssl.*
+        echo "[OK] Generated /etc/pve/local/pveproxy-ssl.pem with SAN for ${nodename}.local"
+    fi
+}
+
+setup_ssl_certificate
 
 # Write /usr/local/bin/pve-autologin-apply generator script
 echo "==> Installing /usr/local/bin/pve-autologin-apply..."
@@ -454,8 +529,8 @@ echo "==> Reloading pveproxy service..."
 systemctl reload-or-try-restart pveproxy || systemctl restart pveproxy
 
 echo "------------------------------------------------------------------------------"
-echo " SUCCESS: Proxmox VE auto-login setup completed!"
+echo " SUCCESS: Proxmox VE auto-login & SSL setup completed!"
 echo " User:        ${PVE_USER}"
-echo " Web UI URL:  https://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'YOUR_PVE_IP'):8006/"
+echo " Web UI URL:  https://$(hostname).local:8006/ (or https://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'YOUR_PVE_IP'):8006/)"
 echo " Persistence: APT Post-Invoke hook & systemd service enabled."
 echo "------------------------------------------------------------------------------"
