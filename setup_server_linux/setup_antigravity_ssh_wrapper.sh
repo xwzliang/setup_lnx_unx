@@ -12,11 +12,12 @@
 #   logged in on the Linux desktop / XRDP session.
 #
 # This script:
-#   1. Moves the raw ELF binary from 'agy' to 'agy.real'.
-#   2. Installs an intelligent wrapper script at 'agy' that strips SSH_* env vars and
+#   1. Detects whether agy is installed; if not, automatically downloads & installs it.
+#   2. Moves the raw ELF binary from 'agy' to 'agy.real'.
+#   3. Installs an intelligent wrapper script at 'agy' that strips SSH_* env vars and
 #      exports the correct DBUS_SESSION_BUS_ADDRESS.
-#   3. Adds an interactive shell fallback in ~/.all_sh_aliases (or ~/.bashrc / ~/.zshrc).
-#   4. Verifies the setup and tests keyring connectivity.
+#   4. Adds an interactive shell fallback in ~/.all_sh_aliases (or ~/.bashrc / ~/.zshrc).
+#   5. Verifies the setup and tests keyring connectivity.
 #
 
 set -euo pipefail
@@ -49,19 +50,20 @@ show_usage() {
 Usage: $SCRIPT_NAME [OPTIONS]
 
 Set up the Antigravity CLI (agy) wrapper on Linux to allow seamless GNOME Keyring
-authentication within SSH terminal sessions.
+authentication within SSH terminal sessions. If 'agy' is not installed, it will be
+installed automatically.
 
 Options:
-  -i, --install       Download & install official Antigravity CLI if not found, then wrap
+  -i, --install       Force download & reinstall official Antigravity CLI, then wrap
   -u, --uninstall     Restore original raw agy binary and remove shell hooks
   -c, --check         Check current setup status and test authentication
   -d, --dir <DIR>     Explicit directory containing agy (default: auto-detect)
   -h, --help          Show this help message
 
 Examples:
-  ./$SCRIPT_NAME              # Automatically find and wrap existing agy
-  ./$SCRIPT_NAME --install    # Install agy if missing, then wrap
+  ./$SCRIPT_NAME              # Auto-detect agy (or install if missing) and set up wrapper
   ./$SCRIPT_NAME --check      # Verify SSH authentication status
+  ./$SCRIPT_NAME --install    # Force fresh install from official source and wrap
   ./$SCRIPT_NAME --uninstall  # Restore raw agy binary
 EOF
 }
@@ -131,16 +133,29 @@ detect_agy_locations() {
         fi
     done
 
-    FOUND_DIR="$HOME/.local/bin"
+    if [[ -n "$TARGET_DIR" ]]; then
+        FOUND_DIR="$TARGET_DIR"
+    else
+        FOUND_DIR="$HOME/.local/bin"
+    fi
     return 1
 }
 
 install_official_agy() {
     log_info "Installing official Antigravity CLI via curl..."
     mkdir -p "$FOUND_DIR"
-    curl -fsSL https://antigravity.google/cli/install.sh | bash
-    [[ -f "$FOUND_DIR/agy" ]] || die "Installation completed but $FOUND_DIR/agy was not found."
-    log_success "Official Antigravity CLI installed successfully."
+    curl -fsSL https://antigravity.google/cli/install.sh | bash -s -- -d "$FOUND_DIR"
+
+    if [[ ! -f "$FOUND_DIR/agy" && ! -f "$FOUND_DIR/agy.real" ]]; then
+        if [[ -f "$HOME/.local/bin/agy" ]]; then
+            FOUND_DIR="$HOME/.local/bin"
+        elif [[ -f "/usr/local/bin/agy" ]]; then
+            FOUND_DIR="/usr/local/bin"
+        else
+            die "Installation completed but 'agy' was not found in $FOUND_DIR or standard paths."
+        fi
+    fi
+    log_success "Official Antigravity CLI installed successfully at $FOUND_DIR/agy."
 }
 
 configure_shell_hook() {
@@ -205,7 +220,7 @@ apply_wrapper() {
     elif [[ -f "$real_path" ]]; then
         log_info "Found existing $real_path."
     else
-        die "No agy executable found in $bin_dir. Run with --install to download it."
+        die "No agy executable found in $bin_dir."
     fi
 
     [[ -x "$real_path" ]] || chmod +x "$real_path"
@@ -300,13 +315,20 @@ do_uninstall() {
 # --- Main Execution Flow ---
 
 if ! detect_agy_locations; then
-    if [[ "$ACTION" == "install" ]]; then
+    if [[ "$ACTION" == "check" || "$ACTION" == "uninstall" ]]; then
+        log_warn "Antigravity CLI ('agy') is not installed on this system."
+        if [[ "$ACTION" == "uninstall" ]]; then
+            remove_shell_hook
+            exit 0
+        fi
+    else
+        log_info "'agy' executable was not found. Installing official Antigravity CLI automatically..."
         install_official_agy
-    elif [[ "$ACTION" != "uninstall" ]]; then
-        log_warn "Could not locate 'agy' executable in candidate directories."
-        echo "Run with --install to automatically download and install official Antigravity CLI."
-        exit 1
     fi
+elif [[ "$ACTION" == "install" ]]; then
+    log_info "Forcing re-installation of official Antigravity CLI..."
+    rm -f "$FOUND_DIR/agy" "$FOUND_DIR/agy.real"
+    install_official_agy
 fi
 
 case "$ACTION" in
