@@ -5,16 +5,39 @@ set -euo pipefail
 # Run this as the same non-root Linux user that runs Codex.
 
 usage() {
-    echo "Usage: $0 [--no-linger]"
+    cat <<EOF
+Usage: $0 [OPTIONS]
+
+Options:
+  --unset, --uninstall, -u   Remove and disable the systemd monitor and restart service
+  --no-linger               Do not enable loginctl user lingering on installation
+  -h, --help                Show this help message
+EOF
 }
 
+action="install"
 enable_linger=1
-case "${1:-}" in
-    "") ;;
-    --no-linger) enable_linger=0 ;;
-    -h|--help) usage; exit 0 ;;
-    *) usage >&2; exit 2 ;;
-esac
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --unset|--uninstall|-u)
+            action="unset"
+            shift
+            ;;
+        --no-linger)
+            enable_linger=0
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            usage >&2
+            exit 2
+            ;;
+    esac
+done
 
 if [[ $(id -u) -eq 0 ]]; then
     echo "Refusing to infer a Codex user from root. Run as the non-root user that runs Codex." >&2
@@ -25,11 +48,48 @@ target_user=$(id -un)
 target_uid=$(id -u)
 passwd_record=$(getent passwd "$target_user")
 real_home=$(printf '%s\n' "$passwd_record" | cut -d: -f6)
-real_home=$(realpath -e "$real_home")
+real_home=$(realpath -e "$real_home" 2>/dev/null || echo "$HOME")
 codex_home=$(realpath -m "${CODEX_HOME:-$real_home/.codex}")
 config_file="$codex_home/config.toml"
 auth_file="$codex_home/auth.json"
-source_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+source_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)
+libexec_dir="$real_home/.local/libexec"
+state_dir="$real_home/.local/state/codex-auth-account-monitor"
+unit_dir="$real_home/.config/systemd/user"
+detector="$libexec_dir/codex-auth-account-monitor"
+state_file="$state_dir/identity.sha256"
+service_unit="$unit_dir/codex-auth-account-monitor.service"
+path_unit="$unit_dir/codex-auth-account-monitor.path"
+
+if [[ $action == "unset" ]]; then
+    echo "Unsetting Codex auth account monitor and restart service for $target_user..."
+
+    if command -v systemctl >/dev/null 2>&1; then
+        echo "  Stopping and disabling systemd path and service units..."
+        systemctl --user stop codex-auth-account-monitor.path 2>/dev/null || true
+        systemctl --user disable codex-auth-account-monitor.path 2>/dev/null || true
+        systemctl --user stop codex-auth-account-monitor.service 2>/dev/null || true
+        systemctl --user disable codex-auth-account-monitor.service 2>/dev/null || true
+    fi
+
+    echo "  Removing systemd unit files..."
+    rm -f "$path_unit"
+    rm -f "$service_unit"
+
+    echo "  Removing installed detector and state files..."
+    rm -f "$detector"
+    rm -rf "$state_dir"
+
+    if command -v systemctl >/dev/null 2>&1; then
+        echo "  Reloading systemd user daemon..."
+        systemctl --user daemon-reload 2>/dev/null || true
+        systemctl --user reset-failed 2>/dev/null || true
+    fi
+
+    echo "Unset complete. codex-auth-account-monitor systemd service and path have been removed."
+    echo "Account switching and background service restart is now integrated directly into Cockpit Tools."
+    exit 0
+fi
 
 echo "Codex runtime diagnosis"
 echo "  user=$target_user uid=$target_uid HOME=$real_home CODEX_HOME=$codex_home"
