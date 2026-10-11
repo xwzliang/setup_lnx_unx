@@ -1,10 +1,10 @@
 #!/bin/sh
-# Install daily Codex Luna runs at 05:00, 10:05, 15:10 Singapore time.
+# Install daily Codex Luna runs at 05:00, 10:05, 15:10 in the system timezone.
 # Usage: ./setup_codex_hi_cron.sh
 # Run as your normal user, not with sudo; sign in when prompted, then exit Codex.
 # Installs missing codex-cli; requires crontab and an active cron service.
-# A minute-level shell check avoids nonportable CRON_TZ behavior and DST issues.
-# Scheduled model calls run only at the three matching minutes.
+# Use Asia/Shanghai or Asia/Singapore for the intended UTC+8 schedule.
+# If the system timezone changes, cron follows the new timezone.
 set -eu
 umask 077
 
@@ -80,10 +80,7 @@ fi
   printf 'codex_bin=%s\n' "$(quote "$codex_bin")"
   printf 'export PATH=%s\n' "$(quote "$(dirname "$codex_bin"):/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin")"
   cat <<'RUNNER'
-# POSIX TZ syntax: UTC-8 means UTC+08:00, without requiring zoneinfo files.
-export TZ=UTC-8
 slot=$(date '+%Y-%m-%d_%H:%M')
-case "$slot" in *_05:00|*_10:05|*_15:10) ;; *) exit 0 ;; esac
 
 # Prevent overlapping runs and duplicate calls in the same scheduled minute.
 if ! mkdir "$task_dir/run.lock" 2>/dev/null; then exit 0; fi
@@ -96,7 +93,7 @@ fi
 [ "$slot" != "$previous_slot" ] || exit 0
 printf '%s\n' "$slot" > "$task_dir/last-slot"
 exec > "$task_dir/latest.log" 2>&1
-printf 'Scheduled run: %s Singapore time\n' "$slot"
+printf 'Scheduled run: %s system timezone (%s)\n' "$slot" "$(date '+%Z %z')"
 status=0
 "$codex_bin" exec \
   --ignore-user-config --ephemeral --skip-git-repo-check \
@@ -126,8 +123,10 @@ awk -v legacy="$HOME/.local/bin/codex-hi-cron.sh" '
 ' "$temp_dir/before" > "$temp_dir/after" || die 'Unclosed managed cron block; repair it before retrying.'
 {
   printf '# BEGIN codex-hi-cron\n'
-  printf '# Shell checks Singapore time; Codex runs only at 05:00, 10:05, 15:10 daily.\n'
-  printf '* * * * * /bin/sh %s\n' "$(quote "$runner")"
+  printf '# Daily 05:00, 10:05, 15:10 in the system timezone; update if timezone changes.\n'
+  printf '0 5 * * * /bin/sh %s\n' "$(quote "$runner")"
+  printf '5 10 * * * /bin/sh %s\n' "$(quote "$runner")"
+  printf '10 15 * * * /bin/sh %s\n' "$(quote "$runner")"
   printf '# END codex-hi-cron\n'
 } >> "$temp_dir/after"
 
@@ -146,7 +145,8 @@ fi
 crontab -l > "$temp_dir/installed"
 cmp -s "$temp_dir/after" "$temp_dir/installed" || die 'Installed crontab differs; inspect crontab -l.'
 printf '%s\n' \
-  'Installed: daily 05:00, 10:05, 15:10 Singapore time (independent of system timezone).' \
+  'Installed: daily 05:00, 10:05, 15:10 in the system timezone.' \
+  'Use Asia/Shanghai or Asia/Singapore for UTC+8; update the schedules if the system timezone changes.' \
   'Model: gpt-5.6-luna; reasoning: low; response: hi. No model call made during setup.' \
   "Runner: $runner" \
   "Latest log: $install_dir/latest.log" \
