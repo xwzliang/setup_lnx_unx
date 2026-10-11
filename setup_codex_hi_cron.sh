@@ -1,10 +1,10 @@
 #!/bin/sh
 # Install daily Codex Luna runs at 05:00, 10:05, 15:10 Singapore time.
 # Usage: ./setup_codex_hi_cron.sh
-# Run as your normal user after `codex login`, not with sudo.
-# Requires codex-cli, crontab, and an active cron service.
+# Run as your normal user, not with sudo; sign in when prompted, then exit Codex.
+# Installs missing codex-cli; requires crontab and an active cron service.
 # A minute-level shell check avoids nonportable CRON_TZ behavior and DST issues.
-# Only the three matching minutes invoke the model; setup makes no model calls.
+# Scheduled model calls run only at the three matching minutes.
 set -eu
 umask 077
 
@@ -20,8 +20,17 @@ case "${1-}" in
 esac
 case "$(uname -s)" in Darwin|Linux) ;; *) die 'Only macOS and Linux are supported.' ;; esac
 : "${HOME:?HOME must be set}"
-codex_bin=$(command -v codex) || die 'Install codex-cli and add codex to PATH first.'
 command -v crontab >/dev/null 2>&1 || die 'Install cron/crontab and enable the cron service first.'
+if ! codex_bin=$(command -v codex); then
+  command -v curl >/dev/null 2>&1 || die 'Install curl before installing codex-cli.'
+  printf '%s\n' 'Installing codex-cli...'
+  # Let this script own the interactive sign-in step.
+  (export CODEX_NON_INTERACTIVE=true; curl -fsSL https://chatgpt.com/codex/install.sh | sh)
+  # The installer cannot update this parent shell's PATH.
+  PATH="${CODEX_INSTALL_DIR:-$HOME/.local/bin}:$PATH"
+  export PATH
+  codex_bin=$(command -v codex) || die 'Codex installation failed: codex is not on PATH.'
+fi
 case "$codex_bin" in /*) ;; *) die 'codex must resolve to an absolute executable path.' ;; esac
 
 # Reject characters that crontab itself interprets even inside shell quotes.
@@ -33,7 +42,16 @@ codex_help=$("$codex_bin" exec --help)
 for flag in --ignore-user-config --ephemeral --skip-git-repo-check --output-last-message; do
   printf '%s\n' "$codex_help" | grep -q -- "$flag" || die "Update codex-cli: missing $flag."
 done
-login_status=$("$codex_bin" login status 2>&1) || die 'Run codex login with your ChatGPT account first.'
+login_status=$("$codex_bin" login status 2>&1) || login_status=''
+case "$login_status" in
+  *'Logged in using ChatGPT'*) ;;
+  *)
+    [ -t 0 ] && [ -t 1 ] || die 'Sign-in requires a terminal. Run this script interactively (ssh -t when using SSH).'
+    printf '%s\n' 'Sign in with your ChatGPT account in Codex, then use /quit to continue cron setup.'
+    "$codex_bin" || die 'Codex exited unsuccessfully; rerun setup to finish sign-in.'
+    login_status=$("$codex_bin" login status 2>&1) || die 'Sign-in was not completed; rerun setup and sign in with ChatGPT.'
+    ;;
+esac
 case "$login_status" in
   *'Logged in using ChatGPT'*) ;;
   *) die 'ChatGPT login is required for this quota-window use case. Run codex login first.' ;;
@@ -118,7 +136,13 @@ if [ ! -f "$install_dir/crontab.before-first-install" ]; then
   cp "$temp_dir/before" "$install_dir/crontab.before-first-install"
 fi
 mv "$temp_dir/run.sh" "$runner"
-crontab "$temp_dir/after"
+if ! crontab "$temp_dir/after" 2> "$temp_dir/error"; then
+  cat "$temp_dir/error" >&2
+  if [ "$(uname -s)" = Darwin ] && grep -qi 'Operation not permitted' "$temp_dir/error"; then
+    printf '%s\n' 'macOS: when running over SSH, enable System Settings > General > Sharing > Remote Login > Allow full disk access for remote users, then reconnect and rerun setup.' >&2
+  fi
+  die 'Unable to install crontab. Resolve cron permissions and rerun setup; the runner was saved.'
+fi
 crontab -l > "$temp_dir/installed"
 cmp -s "$temp_dir/after" "$temp_dir/installed" || die 'Installed crontab differs; inspect crontab -l.'
 printf '%s\n' \
