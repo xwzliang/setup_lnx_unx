@@ -1,0 +1,39 @@
+{
+  "name": "iina",
+  "description": "Iina",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "iina",
+      "options": [
+        "--cask"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/setup_server_mac/server_packages_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "legacy/setup_server_mac/iina/iina-plugin-repos.txt",
+      "os": [
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/setup_server_mac/iina/install-iina-plugins.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

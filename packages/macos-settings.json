@@ -1,0 +1,14 @@
+{
+  "name": "macos-settings",
+  "description": "Macos settings",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/setup_packages/macos_setup.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Legacy personal configuration; may overwrite files, download plugins, or change system settings. Manual review required."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "eslint",
+  "description": "ESLint is a tool for identifying and reporting on patterns found in ECMAScript/JavaScript code",
+  "install": {
+    "ubuntu": {
+      "manager": "npm",
+      "package": "eslint"
+    },
+    "debian": {
+      "manager": "npm",
+      "package": "eslint"
+    },
+    "macos": {
+      "manager": "npm",
+      "package": "eslint"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/npm_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

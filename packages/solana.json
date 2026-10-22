@@ -1,0 +1,15 @@
+{
+  "name": "solana",
+  "description": "Solana",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/install_and_setup_apps/solana_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "coursera-dl",
+  "description": "Coursera dl",
+  "install": {
+    "ubuntu": {
+      "manager": "pip",
+      "package": "coursera-dl"
+    },
+    "debian": {
+      "manager": "pip",
+      "package": "coursera-dl"
+    },
+    "macos": {
+      "manager": "pip",
+      "package": "coursera-dl"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/python3_modules_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "legacy/setup_packages/coursera-dl_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy personal configuration; may overwrite files, download plugins, or change system settings. Manual review required."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

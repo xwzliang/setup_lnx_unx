@@ -1,0 +1,42 @@
+{
+  "name": "samba",
+  "description": "SMB file sharing and mounts",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "samba"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "samba"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_and_setup_apps/samba_install_and_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/setup_server_linux/mount_smb.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/setup_server_linux/setup_omv_smb_aio.py",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ],
+  "notes": [
+    "Extracted from the existing script; availability depends on your OS release and configured repositories."
+  ]
+}

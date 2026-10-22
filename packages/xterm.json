@@ -1,0 +1,26 @@
+{
+  "name": "xterm",
+  "description": "Xterm",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "xterm"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "xterm"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

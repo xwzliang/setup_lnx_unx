@@ -1,0 +1,15 @@
+{
+  "name": "fluxgym",
+  "description": "Fluxgym",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/setup_server_linux/run_docker_containers/fluxgym.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

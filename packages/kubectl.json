@@ -1,0 +1,32 @@
+{
+  "name": "kubectl",
+  "description": "The Kubernetes command-line tool, kubectl, allows you to run commands against Kubernetes clusters",
+  "install": {
+    "ubuntu": {
+      "manager": "brew",
+      "package": "kubectl"
+    },
+    "debian": {
+      "manager": "brew",
+      "package": "kubectl"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "kubectl"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/brew_packages_unx_lnx_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

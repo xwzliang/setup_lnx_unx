@@ -1,0 +1,14 @@
+{
+  "name": "apt-mirror",
+  "description": "Apt mirror",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/setup_packages/apt_aliyun_mirror.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy personal configuration; may overwrite files, download plugins, or change system settings. Manual review required."
+    }
+  ]
+}

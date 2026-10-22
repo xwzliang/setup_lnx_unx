@@ -1,0 +1,32 @@
+{
+  "name": "web-ext",
+  "description": "This is a command line tool to help build, run, and test WebExtensions",
+  "install": {
+    "ubuntu": {
+      "manager": "npm",
+      "package": "web-ext"
+    },
+    "debian": {
+      "manager": "npm",
+      "package": "web-ext"
+    },
+    "macos": {
+      "manager": "npm",
+      "package": "web-ext"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/npm_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

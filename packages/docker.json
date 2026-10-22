@@ -1,0 +1,52 @@
+{
+  "name": "docker",
+  "description": "Container engine and desktop tools",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "docker",
+      "options": [
+        "--cask"
+      ]
+    },
+    "ubuntu": {
+      "manager": "apt",
+      "package": "docker.io"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "docker.io"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "legacy/setup_server_mac/server_packages_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "legacy/setup_server_linux/docker_setup.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ],
+  "aliases": [
+    "docker.io"
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

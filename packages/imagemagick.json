@@ -1,0 +1,38 @@
+{
+  "name": "imagemagick",
+  "description": "Image conversion and processing",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "imagemagick"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "imagemagick"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "imagemagick"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "legacy/setup_packages/imagemagick_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy personal configuration; may overwrite files, download plugins, or change system settings. Manual review required."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "libsox-fmt-mp3",
+  "description": "SoX MP2 and MP3 format library",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "libsox-fmt-mp3"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "libsox-fmt-mp3"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign.",
+    "The old bulk script also tried this Linux package name on macOS; that unverified mapping is reference-only."
+  ]
+}

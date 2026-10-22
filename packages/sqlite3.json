@@ -1,0 +1,27 @@
+{
+  "name": "sqlite3",
+  "description": "SQLite command-line database",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "sqlite3"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "sqlite3"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/minimal_setup.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

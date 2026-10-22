@@ -1,0 +1,36 @@
+{
+  "name": "python-lsp-server",
+  "description": "Fork of the python-language-server project, maintained by the Spyder IDE team and the community",
+  "install": {
+    "ubuntu": {
+      "manager": "pip",
+      "package": "python-lsp-server[all]"
+    },
+    "debian": {
+      "manager": "pip",
+      "package": "python-lsp-server[all]"
+    },
+    "macos": {
+      "manager": "pip",
+      "package": "python-lsp-server[all]"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/python3_modules_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "aliases": [
+    "python-lsp-server[all]",
+    "pylsp"
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

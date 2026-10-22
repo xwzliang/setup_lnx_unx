@@ -1,0 +1,31 @@
+{
+  "name": "zathura",
+  "description": "a plugin-based, highly customizable document viewer with vi-styled keybindings",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "zathura"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "zathura"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "zathura"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

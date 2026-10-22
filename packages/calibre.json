@@ -1,0 +1,25 @@
+{
+  "name": "calibre",
+  "description": "Calibre",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "calibre",
+      "options": [
+        "--cask"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_and_setup_apps/mac_brew_cask_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

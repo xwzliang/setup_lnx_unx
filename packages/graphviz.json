@@ -1,0 +1,31 @@
+{
+  "name": "graphviz",
+  "description": "open source graph visualization software. Graph visualization is a way of representing structural information as diagrams of abstract graphs and networks",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "graphviz"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "graphviz"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "graphviz"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

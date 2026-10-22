@@ -1,0 +1,24 @@
+{
+  "name": "p7zip",
+  "description": "p7zip is the Unix command-line port of 7-Zip, a file archiver that handles the 7z format which features very high compression ratios",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "p7zip"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign.",
+    "The old bulk script also tried this Linux package name on macOS; that unverified mapping is reference-only."
+  ]
+}

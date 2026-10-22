@@ -1,0 +1,28 @@
+{
+  "name": "mac-server",
+  "description": "Mac server",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/setup_server_mac/config.php",
+      "os": [
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/setup_server_mac/server_packages_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/setup_server_mac/start_server.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

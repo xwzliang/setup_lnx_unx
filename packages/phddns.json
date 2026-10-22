@@ -1,0 +1,14 @@
+{
+  "name": "phddns",
+  "description": "Phddns",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/install_and_setup_apps/phddns_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "rerun",
+  "description": "Command-line script to re-run the given command when files change",
+  "install": {
+    "ubuntu": {
+      "manager": "pip",
+      "package": "rerun"
+    },
+    "debian": {
+      "manager": "pip",
+      "package": "rerun"
+    },
+    "macos": {
+      "manager": "pip",
+      "package": "rerun"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/python3_modules_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

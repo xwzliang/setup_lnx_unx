@@ -1,0 +1,42 @@
+{
+  "name": "mpv",
+  "description": "Mpv",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "mpv",
+      "options": [
+        "--cask"
+      ]
+    },
+    "ubuntu": {
+      "manager": "apt",
+      "package": "mpv"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "mpv"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "legacy/setup_packages/mpv_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Legacy personal configuration; may overwrite files, download plugins, or change system settings. Manual review required."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "caddy",
+  "description": "Fast, multi-platform web server with automatic HTTPS",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "caddy"
+    },
+    "ubuntu": {
+      "manager": "snap",
+      "package": "caddy",
+      "options": [
+        "--edge"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

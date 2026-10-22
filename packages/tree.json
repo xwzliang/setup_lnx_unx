@@ -1,0 +1,31 @@
+{
+  "name": "tree",
+  "description": "a recursive directory listing command that produces a depth indented listing of files",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "tree"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "tree"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "tree"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

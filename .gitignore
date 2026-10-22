@@ -1,3 +1,8 @@
 .DS_Store
-*/nextcloud/config/
+**/nextcloud/config/
 .env
+# Preserve the already-versioned legacy Compose environment file after relocation.
+!legacy/setup_server_mac/nextcloud/.env
+__pycache__/
+*.py[cod]
+.venv/

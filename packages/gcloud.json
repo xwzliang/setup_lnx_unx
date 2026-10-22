@@ -1,0 +1,28 @@
+{
+  "name": "gcloud",
+  "description": "Gcloud",
+  "install": {
+    "ubuntu": {
+      "manager": "snap",
+      "package": "google-cloud-sdk",
+      "options": [
+        "--classic"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_and_setup_apps/google_cloud_sdk_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ],
+  "aliases": [
+    "google-cloud-sdk"
+  ],
+  "notes": [
+    "Extracted from the existing script; availability depends on your OS release and configured repositories."
+  ]
+}

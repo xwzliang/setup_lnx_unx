@@ -1,0 +1,26 @@
+{
+  "name": "p7zip-full",
+  "description": "p7zip-full provides utilities to pack and unpack 7z archives within a shell or using a GUI (such as Ark, File Roller or Nautilus), Additionally, it provides the 7z and 7za commands",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "p7zip-full"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "p7zip-full"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

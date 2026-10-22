@@ -1,0 +1,15 @@
+{
+  "name": "dotfiles",
+  "description": "Dotfiles",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/install_packages/dotfiles_daily_tools_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "minimal-workstation",
+  "description": "Minimal workstation",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/minimal_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "flutter",
+  "description": "Flutter",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/install_and_setup_apps/flutter_linux_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/install_and_setup_apps/flutter_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

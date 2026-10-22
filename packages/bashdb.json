@@ -1,0 +1,14 @@
+{
+  "name": "bashdb",
+  "description": "Bashdb",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/install_packages/others/bashdb_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

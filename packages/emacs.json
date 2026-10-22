@@ -1,0 +1,55 @@
+{
+  "name": "emacs",
+  "description": "Extensible text editor",
+  "install": {
+    "ubuntu": {
+      "manager": "snap",
+      "package": "emacs",
+      "options": [
+        "--classic"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "legacy/install_and_setup_apps/emacs_27_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/install_and_setup_apps/emacs_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/install_packages/others/emacs_ejc_sql_dependencies_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/setup_packages/emacs_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Legacy personal configuration; may overwrite files, download plugins, or change system settings. Manual review required."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

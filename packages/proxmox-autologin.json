@@ -1,0 +1,15 @@
+{
+  "name": "proxmox-autologin",
+  "description": "Proxmox console autologin workflow",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/setup_server_linux/setup_proxmox_autologin.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

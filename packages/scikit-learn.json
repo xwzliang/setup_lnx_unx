@@ -1,0 +1,32 @@
+{
+  "name": "scikit-learn",
+  "description": "machine learning in Python",
+  "install": {
+    "ubuntu": {
+      "manager": "pip",
+      "package": "scikit-learn"
+    },
+    "debian": {
+      "manager": "pip",
+      "package": "scikit-learn"
+    },
+    "macos": {
+      "manager": "pip",
+      "package": "scikit-learn"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/python3_modules_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

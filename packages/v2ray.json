@@ -1,0 +1,37 @@
+{
+  "name": "v2ray",
+  "description": "V2ray",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/install_and_setup_apps/v2ray_client_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/install_and_setup_apps/v2ray_server_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/install_and_setup_apps/v2ray_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    },
+    {
+      "path": "legacy/install_and_setup_apps/v2ray_uninstall.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Legacy removal script: deletes software or user data. Manual review required."
+    }
+  ]
+}

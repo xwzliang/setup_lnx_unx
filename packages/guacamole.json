@@ -1,0 +1,14 @@
+{
+  "name": "guacamole",
+  "description": "Guacamole",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/setup_server_mac/guacamole/docker-compose.yml",
+      "os": [
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}

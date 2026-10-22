@@ -1,0 +1,32 @@
+{
+  "name": "docker-compose",
+  "description": "Define and run multi-container applications with Docker",
+  "install": {
+    "ubuntu": {
+      "manager": "pip",
+      "package": "docker-compose"
+    },
+    "debian": {
+      "manager": "pip",
+      "package": "docker-compose"
+    },
+    "macos": {
+      "manager": "pip",
+      "package": "docker-compose"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/python3_modules_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Migrated from existing repository recipes. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "zshdb",
+  "description": "Zshdb",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "zshdb"
+    }
+  },
+  "references": [
+    {
+      "path": "legacy/install_packages/others/zshdb_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ],
+  "notes": [
+    "Extracted from the existing script; availability depends on your OS release and configured repositories."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "openwrt-certificate",
+  "description": "Openwrt certificate",
+  "install": {},
+  "references": [
+    {
+      "path": "legacy/setup_openwrt/https_cert.sh",
+      "os": [
+        "openwrt"
+      ],
+      "note": "Legacy workflow; inspect prerequisites, pinned versions, paths, and side effects before running manually."
+    }
+  ]
+}
