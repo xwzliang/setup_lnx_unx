@@ -1,0 +1,60 @@
+{
+  "name": "codex-account-monitor",
+  "description": "Restart local Codex processes when the authenticated account changes",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/codex-account-monitor/scripts/linux/codex_auth_account_monitor.py",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/codex-account-monitor/scripts/linux/setup_codex_account_restart.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "codex-auth-account-monitor": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/codex-account-monitor/scripts/linux/codex_auth_account_monitor.py",
+      "interpreter": "python3",
+      "description": "codex auth account monitor (script options accepted after --; inspect --help where supported)",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {}
+    },
+    "setup-codex-account-restart": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/codex-account-monitor/scripts/linux/setup_codex_account_restart.sh",
+      "interpreter": "bash",
+      "description": "setup codex account restart (script options accepted after --; inspect --help where supported)",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "python3",
+        "systemctl"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "setup-codex-account-restart",
+      "debian": "setup-codex-account-restart"
+    }
+  }
+}

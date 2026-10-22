@@ -1,0 +1,49 @@
+{
+  "name": "mongodb",
+  "description": "object/document-oriented database",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/mongodb/scripts/config/mongodb_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "aliases": [
+    "mongodb-community"
+  ],
+  "notes": [
+    "Historical package name or external repository requirement; review the original script and current upstream instructions for this OS."
+  ],
+  "recipes": {
+    "mongodb-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/mongodb/scripts/config/mongodb_setup.sh",
+      "interpreter": "bash",
+      "description": "mongodb setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "mongodb-setup"
+    }
+  }
+}

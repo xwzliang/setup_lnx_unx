@@ -1,0 +1,65 @@
+{
+  "name": "coursera-dl",
+  "description": "Coursera dl",
+  "install": {
+    "ubuntu": {
+      "manager": "pip",
+      "package": "coursera-dl"
+    },
+    "debian": {
+      "manager": "pip",
+      "package": "coursera-dl"
+    },
+    "macos": {
+      "manager": "pip",
+      "package": "coursera-dl"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/python3_modules_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/coursera-dl/scripts/config/coursera-dl_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "coursera-dl-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/coursera-dl/scripts/config/coursera-dl_setup.sh",
+      "interpreter": "bash",
+      "description": "coursera dl setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "python3"
+      ],
+      "parameters": {
+        "COURSERA_USER": {
+          "description": "Coursera account login; password is prompted without echo",
+          "required": true
+        }
+      }
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "coursera-dl-setup"
+    }
+  }
+}

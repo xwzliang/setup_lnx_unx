@@ -1,0 +1,35 @@
+{
+  "name": "private-vpn",
+  "description": "Private vpn",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/private-vpn/scripts/apps/private_vpn_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "private-vpn-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/private-vpn/scripts/apps/private_vpn_install.sh",
+      "interpreter": "bash",
+      "description": "private vpn install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "private-vpn-install"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "trojan",
+  "description": "Trojan",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "trojan"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/trojan/scripts/apps/trojan_client_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/trojan/scripts/apps/trojan_server_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Extracted from the existing script; availability depends on your OS release and configured repositories."
+  ],
+  "recipes": {
+    "trojan-client-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/trojan/scripts/apps/trojan_client_install.sh",
+      "interpreter": "bash",
+      "description": "trojan client install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {}
+    },
+    "trojan-server-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/trojan/scripts/apps/trojan_server_install.sh",
+      "interpreter": "bash",
+      "description": "trojan server install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "curl"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "macos": "trojan-client-install"
+    }
+  }
+}

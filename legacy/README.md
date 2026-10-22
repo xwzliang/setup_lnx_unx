@@ -1,22 +1,13 @@
-# Original scripts
+# Compatibility paths
 
-This directory preserves the original repository layout and script contents.
-Start with [`../setup`](../setup) and the [package index](../docs/packages.md) for
-single-package installation and setup discovery.
+Implementation files have moved to `packages/<name>/scripts/`. This directory now
+contains compatibility symlinks so existing checkout paths still resolve. Edit the
+canonical package files instead of these links.
 
-| Directory | Contents |
-| --- | --- |
-| `install_packages/` | Original bulk package arrays and language tool installers |
-| `install_and_setup_apps/` | Custom application installers and removal scripts |
-| `setup_packages/` | Personal shell, editor, proxy, keyboard, and system settings |
-| `setup_server_linux/` | Linux server and container workflows |
-| `setup_server_mac/` | macOS server and container workflows |
-| `setup_proxy/` | Proxy workflows and supporting assets |
-| `openwrt/`, `setup_openwrt/` | Router workflows |
+Use `../setup show NAME` to inspect package methods and named recipes, and
+`../setup setup NAME` to preview installation and configuration together.
+Add `--apply` only when you intend to execute the previewed changes.
 
-These scripts may install multiple packages, change services, overwrite personal
-configuration, or depend on old releases and hardcoded paths. They are references,
-not automatically executed extensions of the new CLI. Read a script and its
-prerequisites before running it manually; preserve any working-directory
-assumptions it makes. Top-level compatibility symlinks keep the previous paths
-available for existing automation.
+See the [migration guide](../docs/migration.md) and the complete
+[path mapping](../docs/recipe-migration.json). Exact historical script contents
+remain available in commit `4d99aa9`; compatibility links follow updated code.

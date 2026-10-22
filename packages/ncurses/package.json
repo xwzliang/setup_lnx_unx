@@ -1,0 +1,34 @@
+{
+  "name": "ncurses",
+  "description": "The ncurses library routines are a terminal-independent method of updating character screens with reasonable optimization.",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "ncurses"
+    },
+    "ubuntu": {
+      "manager": "apt",
+      "package": "libncurses-dev"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "libncurses-dev"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "aliases": [
+    "libncurses-dev"
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

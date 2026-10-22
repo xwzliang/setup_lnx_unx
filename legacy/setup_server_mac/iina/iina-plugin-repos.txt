@@ -1,1 +1,1 @@
-https://github.com/mhajder/iina-jellyfin.git
+../../../packages/iina/scripts/macos/iina/iina-plugin-repos.txt

@@ -1,0 +1,20 @@
+# sudo apt-get install -y nvidia-driver-535
+sudo apt-get install -y nvidia-driver-570
+
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey |sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+&& curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list \
+&& sudo apt-get update
+
+sudo apt-get install -y nvidia-container-toolkit
+
+sudo nvidia-ctk runtime configure --runtime=docker
+
+sudo systemctl restart docker
+
+conda install cuda -c nvidia
+
+# cudnn
+sudo apt-get install nvidia-cuda-toolkit
+
+# Install cuDNN
+sudo apt-get install libcudnn8

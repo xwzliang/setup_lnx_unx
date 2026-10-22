@@ -1,0 +1,26 @@
+{
+  "name": "vagrant",
+  "description": "A tool for building and managing virtual machine environments in a single workflow",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "vagrant"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "vagrant"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

@@ -1,11 +1,1 @@
-#!/usr/bin/env bash
-
-# postman: API Development Environment
-
-if [ "$(uname)" == "Darwin" ]; then
-	# MacOS
-	HOMEBREW_NO_AUTO_UPDATE=1 brew install postman
-else
-	# Ubuntu
-    sudo snap install postman
-fi
+../../packages/postman/scripts/apps/postman_install.sh

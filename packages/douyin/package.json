@@ -1,0 +1,32 @@
+{
+  "name": "douyin",
+  "description": "Douyin",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/douyin/scripts/linux/run_docker_containers/douyin.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "douyin": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/douyin/scripts/linux/run_docker_containers/douyin.sh",
+      "interpreter": "bash",
+      "description": "douyin",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "docker"
+      ],
+      "parameters": {}
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "dotfiles",
+  "description": "Dotfiles",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/dotfiles/scripts/install/dotfiles_daily_tools_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "dotfiles-daily-tools-install": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/dotfiles/scripts/install/dotfiles_daily_tools_install.sh",
+      "interpreter": "bash",
+      "description": "dotfiles daily tools install",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "git",
+        "make",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  }
+}

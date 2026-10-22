@@ -1,0 +1,66 @@
+{
+  "name": "mpv",
+  "description": "Mpv",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "mpv",
+      "options": [
+        "--cask"
+      ]
+    },
+    "ubuntu": {
+      "manager": "apt",
+      "package": "mpv"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "mpv"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/mpv/scripts/config/mpv_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "mpv-setup": {
+      "action": "configure",
+      "os": [
+        "debian",
+        "macos",
+        "ubuntu"
+      ],
+      "script": "packages/mpv/scripts/config/mpv_setup.sh",
+      "interpreter": "bash",
+      "description": "mpv setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "wget"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "mpv-setup",
+      "macos": "mpv-setup"
+    }
+  }
+}

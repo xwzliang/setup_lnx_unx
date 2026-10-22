@@ -1,0 +1,66 @@
+{
+  "name": "git",
+  "description": "Distributed version control",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "git"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "git"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "git"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/git/scripts/config/git_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "configure": {
+    "ubuntu": "git-aliases",
+    "debian": "git-aliases",
+    "macos": "git-aliases"
+  },
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "git-setup": {
+      "action": "configure",
+      "os": [
+        "debian",
+        "macos",
+        "ubuntu"
+      ],
+      "script": "packages/git/scripts/config/git_setup.sh",
+      "interpreter": "bash",
+      "description": "git setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "git-setup",
+      "macos": "git-setup"
+    }
+  }
+}

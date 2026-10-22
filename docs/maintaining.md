@@ -1,85 +1,90 @@
-# Maintaining the package catalog
+# Maintaining packages and recipes
 
-The source of truth is `packages/<name>.json`. Do not add another bulk installer
-or edit archived package arrays to introduce a new package.
+Each package has one home: `packages/<name>/package.json` and sibling scripts or
+assets. Names must match directory names. Aliases are unique across the catalog.
+Avoid new bulk installers; use explicit workflow recipes for intentional profiles.
 
-## Add a package
+## Native methods and built-in configuration
 
-Create a manifest using this structure (this example describes the existing Git
-entry; use another name for a new package):
+An `install` object maps OS names to one preferred manager method:
 
 ```json
-{
-  "name": "git",
-  "description": "Distributed version control",
-  "aliases": [],
-  "install": {
-    "ubuntu": {"manager": "apt", "package": "git"},
-    "debian": {"manager": "apt", "package": "git"},
-    "macos": {"manager": "brew", "package": "git"}
-  },
-  "configure": {
-    "ubuntu": "git-aliases",
-    "debian": "git-aliases",
-    "macos": "git-aliases"
-  },
-  "references": [],
-  "notes": []
+"install": {
+  "ubuntu": {"manager": "apt", "package": "docker.io"},
+  "macos": {"manager": "brew", "package": "docker", "options": ["--cask"]}
 }
 ```
 
-`name` must match the filename. Aliases must be unique across the catalog. Choose
-a user-facing name when OS package names differ: Docker uses `docker.io` on
-Ubuntu/Debian and the `docker` cask on macOS. Aliases allow both names in the CLI.
-Each OS maps to exactly one preferred install method. Preserve alternative or
-historical methods as references instead of introducing ambiguous defaults.
+Supported managers: `apt`, `brew`, `snap`, `pip`, `npm`, `go`. Options are restricted
+to `--cask` for Brew and `--classic`/`--edge` for Snap. Managers must already exist;
+pip requires an active virtual environment. OS mappings are explicit, with no
+Ubuntu inheritance for derivatives. Validate changed package names against the
+relevant upstream registry.
 
-| Manager | Package value | Allowed options | Apply requirements |
-| --- | --- | --- | --- |
-| `apt` | Distribution package name | none | `apt-get`, `dpkg-query`, `sudo` |
-| `brew` | Formula or cask name | `--cask` | Existing Homebrew |
-| `snap` | Snap name | `--classic`, `--edge` | Existing Snap and `sudo` |
-| `pip` | Distribution name, optionally with extras/version | none | Active Python virtual environment with pip |
-| `npm` | npm package name, including scoped names | none | Existing npm; global prefix must be writable |
-| `go` | Module path with `@version` or `@latest` | none | Existing Go; binaries use its configured install directory |
+`configure` maps OS names to built-in identifiers: `git-aliases`, `vim-filetypes`,
+`tmux-plugins`. These are narrow, repeatable operations in
+`setup_tool/configuration.py`. Native install methods and built-in configuration
+win over script defaults; `--recipe` explicitly selects a script alternative.
 
-Only declare OSes for which the method is appropriate. There is no implicit
-fallback based on `ID_LIKE`, no manager installation, and no package availability
-network call during discovery. Current manifests were extracted from earlier
-scripts; availability is still release- and repository-dependent. Validate new
-names with the relevant upstream package registry when changing them.
+## Script recipes
 
-For a custom workflow that has not been migrated, omit `install` or leave it
-empty and add a reference:
+Add a named entry under `recipes`:
 
 ```json
-{
-  "path": "legacy/setup_server_linux/docker_setup.sh",
-  "os": ["ubuntu", "debian"],
-  "note": "Legacy Docker server configuration; inspect user, service, and storage settings."
-}
+"recipes": {
+  "configure-share": {
+    "action": "configure",
+    "os": ["ubuntu", "debian"],
+    "script": "packages/example/scripts/configure.sh",
+    "interpreter": "bash",
+    "description": "Configure a named share",
+    "effects": "Adds a dedicated share and restarts its service; preserves other shares.",
+    "requires": ["python3", "sudo"],
+    "parameters": {
+      "SHARE_PATH": {"description": "Absolute directory to share", "required": true}
+    }
+  }
+},
+"defaults": {"configure": {"ubuntu": "configure-share", "debian": "configure-share"}}
 ```
 
-Paths are relative to the repository root and must resolve to an existing file
-inside it. Reference OSes may also include `macos`, `openwrt`, or `all`. References
-are searchable and displayed but never executed. Add prerequisites and effects
-to `note`; a reference does not certify compatibility or safety.
+Actions are `install`, `configure`, `run`, or `remove`. Only install/configure may
+have defaults. `run` and `remove` always require explicit selection. Defaults must
+point to a recipe supporting the same action and OS. Multiple alternatives without
+a default are an error, never an invitation to run every recipe.
 
-## Add configuration or manager support
+Scripts must resolve inside their owning package directory. Interpreters are
+`bash` (with `-e -o pipefail`), `sh` (with `-e`), or `python3` (the CLI interpreter).
+The working directory is the script's parent, so sibling assets remain local.
+Avoid depending on the caller's working directory or personal shell functions.
 
-Put reusable manager behavior in `setup_tool/managers.py`. Commands are argument
-lists passed without a shell. Each invocation selects one package. Add tests
-using fake executables; do not test by installing software on the development
-machine.
+A parameter may have a `default` string and/or `required: true`. The CLI validates
+keys, rejects unknown or duplicate values, and passes declared values as
+`SETUP_<NAME>`. Use those values as data and quote them inside scripts. Reserved
+runtime variables are `SETUP_REPO_ROOT`, `SETUP_PYTHON`, and `SETUP_OS`.
 
-Configuration recipes live in `setup_tool/configuration.py`; add their identifier
-to the validator in `setup_tool/catalog.py`. Each recipe must have a complete
-read-only preview, preserve existing user data, and behave sensibly on repeated
-runs. Keep setup separate from installation. Test file writes under a temporary
-home and mock network operations. Existing recipe identifiers are `git-aliases`,
-`vim-filetypes`, and `tmux-plugins`.
+Optional `arguments` metadata declares positional inputs:
 
-## Validate and publish the index
+```json
+"arguments": {"minimum": 3, "usage": "HOST PORT UUID [ALTER_ID]"}
+```
+
+Arguments after `--` pass unchanged to one script. Combined setup uses
+`--install-arg=VALUE` or `--configure-arg=VALUE` instead. Never interpret arguments
+with `eval` or `shell=True`. Scripts retaining Bash 4 features must declare
+`bash_min_version: 4`; macOS's bundled Bash may be older.
+
+Required inputs and the complete action selection are checked before any phase
+runs. Command prerequisites are rechecked immediately before execution. For
+combined setup, configuration prerequisites are deferred until after installation
+because the package may supply them. Do not promise atomic rollback across phases.
+
+A `references` array can link related source files or assets, but executable
+scripts belong in `recipes`. References are not executed implicitly. `notes`
+should explain release restrictions, pinned versions, remaining manual steps,
+and prerequisites that cannot be checked mechanically.
+
+## Maintenance checks
 
 ```sh
 ./setup validate
@@ -88,10 +93,12 @@ python3 -m unittest discover -s tests -v
 ./setup docs --check
 ```
 
-The test suite checks previews without subprocess execution, OS mismatch refusal,
-single-package invocation, skip behavior, failure propagation, catalog integrity,
-and preservation of configuration. No external Python packages are needed.
+Tests must not install software. Use fixture executables, temporary configurations,
+and mocked downloads. The suite previews every catalog recipe without allowing
+subprocesses, parses shell/Python code, checks migration links and complete script
+coverage, and exercises phase ordering and failure handling with temporary scripts.
 
-Keep the generated index in the same change as manifest edits. Archived shell
-scripts are preserved historical code and are not covered by a blanket assertion
-that every script is portable, current, or safe to run.
+The complete relocation map is `docs/recipe-migration.json`. Keep compatibility
+symlinks and their map entries current when moving files. Preserve sibling helper
+files (such as account-monitor tests and IINA's repository list). New implementation
+work belongs under the package; `legacy/` now contains only compatibility paths.

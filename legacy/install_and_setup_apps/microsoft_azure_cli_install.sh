@@ -1,3 +1,1 @@
-#!/usr/bin/env bash
-
-curl_socks -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+../../packages/azure-cli/scripts/apps/microsoft_azure_cli_install.sh

@@ -1,4 +1,1 @@
-#!/usr/bin/env bash
-
-# Install Tmux Plugin Manager
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+../../packages/tmux/scripts/config/tmux_setup.sh

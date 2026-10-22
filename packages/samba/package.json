@@ -1,0 +1,109 @@
+{
+  "name": "samba",
+  "description": "SMB file sharing and mounts",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "samba"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "samba"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/samba/scripts/apps/samba_install_and_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/samba/scripts/linux/mount_smb.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/samba/scripts/linux/setup_omv_smb_aio.py",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Extracted from the existing script; availability depends on your OS release and configured repositories."
+  ],
+  "recipes": {
+    "samba-install-and-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/samba/scripts/apps/samba_install_and_setup.sh",
+      "interpreter": "bash",
+      "description": "samba install and setup (script options accepted after --; inspect --help where supported)",
+      "effects": "Adds a dedicated Samba share while preserving other shares; prompts for an SMB password and restarts smbd.",
+      "requires": [
+        "python3",
+        "sudo",
+        "smbpasswd",
+        "testparm",
+        "systemctl"
+      ],
+      "parameters": {
+        "SMB_USER": {
+          "description": "Existing local user to enable for Samba",
+          "required": true
+        },
+        "SMB_PATH": {
+          "description": "Absolute directory to share",
+          "required": true
+        }
+      }
+    },
+    "mount-smb": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/samba/scripts/linux/mount_smb.sh",
+      "interpreter": "bash",
+      "description": "mount smb (script options accepted after --; inspect --help where supported)",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    },
+    "setup-omv-smb-aio": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/samba/scripts/linux/setup_omv_smb_aio.py",
+      "interpreter": "python3",
+      "description": "setup omv smb aio (script options accepted after --; inspect --help where supported)",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "python3",
+        "systemctl"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "samba-install-and-setup",
+      "debian": "samba-install-and-setup"
+    }
+  }
+}

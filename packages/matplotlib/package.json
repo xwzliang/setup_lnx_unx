@@ -1,0 +1,32 @@
+{
+  "name": "matplotlib",
+  "description": "a comprehensive library for creating static, animated, and interactive visualizations in Python",
+  "install": {
+    "ubuntu": {
+      "manager": "pip",
+      "package": "matplotlib"
+    },
+    "debian": {
+      "manager": "pip",
+      "package": "matplotlib"
+    },
+    "macos": {
+      "manager": "pip",
+      "package": "matplotlib"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/python3_modules_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

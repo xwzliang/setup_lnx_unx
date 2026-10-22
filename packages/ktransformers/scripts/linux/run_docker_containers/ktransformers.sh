@@ -1,0 +1,1 @@
+sudo docker run --gpus all -v ~/models:/models -p 8001:8001 -p 8002:8002 --name ktransformers --restart always --entrypoint bash -itd approachingai/ktransformers:v0.2.4post1-AVX512 -c "cd /models/ktransformers && python -m ktransformers.server.server_ktransformers --host 0.0.0.0 --port 8002"

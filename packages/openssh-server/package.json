@@ -1,0 +1,29 @@
+{
+  "name": "openssh-server",
+  "description": "A powerful collection of tools for remote control",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "openssh-server"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "openssh-server"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "aliases": [
+    "sshd"
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

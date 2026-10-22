@@ -1,0 +1,44 @@
+{
+  "name": "openwrt-certificate",
+  "description": "Openwrt certificate",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/openwrt-certificate/scripts/openwrt/https_cert.sh",
+      "os": [
+        "openwrt"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "https-cert": {
+      "action": "configure",
+      "os": [
+        "openwrt"
+      ],
+      "script": "packages/openwrt-certificate/scripts/openwrt/https_cert.sh",
+      "interpreter": "sh",
+      "description": "https cert",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "opkg"
+      ],
+      "parameters": {
+        "ACME_EMAIL": {
+          "description": "Certificate account email",
+          "required": true
+        },
+        "ACME_DOMAIN": {
+          "description": "DNS name to issue the certificate for",
+          "required": true
+        }
+      }
+    }
+  },
+  "defaults": {
+    "configure": {
+      "openwrt": "https-cert"
+    }
+  }
+}

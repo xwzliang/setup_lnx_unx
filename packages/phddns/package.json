@@ -1,0 +1,35 @@
+{
+  "name": "phddns",
+  "description": "Phddns",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/phddns/scripts/apps/phddns_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "phddns-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/phddns/scripts/apps/phddns_install.sh",
+      "interpreter": "bash",
+      "description": "phddns install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "phddns-install"
+    }
+  }
+}

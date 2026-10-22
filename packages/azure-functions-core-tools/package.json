@@ -1,0 +1,36 @@
+{
+  "name": "azure-functions-core-tools",
+  "description": "Azure functions core tools",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/azure-functions-core-tools/scripts/apps/azure-functions-core-tools_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "azure-functions-core-tools-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/azure-functions-core-tools/scripts/apps/azure-functions-core-tools_install.sh",
+      "interpreter": "bash",
+      "description": "azure functions core tools install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "wget",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "azure-functions-core-tools-install"
+    }
+  }
+}

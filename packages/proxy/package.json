@@ -1,0 +1,51 @@
+{
+  "name": "proxy",
+  "description": "Proxy",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/proxy/scripts/workflows/install_client.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/proxy/scripts/workflows/setup_proxy.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "install-client": {
+      "action": "run",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/proxy/scripts/workflows/install_client.sh",
+      "interpreter": "bash",
+      "description": "install client",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    },
+    "setup-proxy": {
+      "action": "run",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/proxy/scripts/workflows/setup_proxy.sh",
+      "interpreter": "bash",
+      "description": "setup proxy",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  }
+}

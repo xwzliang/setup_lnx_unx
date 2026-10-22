@@ -2,7 +2,7 @@
 **/nextcloud/config/
 .env
 # Preserve the already-versioned legacy Compose environment file after relocation.
-!legacy/setup_server_mac/nextcloud/.env
+!packages/nextcloud/scripts/macos/nextcloud/.env
 __pycache__/
 *.py[cod]
 .venv/

@@ -98,7 +98,7 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_all_legacy_scripts_are_discoverable(self):
         references = {ref["path"] for item in self.packages.values() for ref in item.get("references", [])}
-        for path in (catalog.ROOT / "legacy").rglob("*"):
+        for path in (catalog.ROOT / "packages").rglob("*"):
             if path.suffix in {".sh", ".py"} and not path.name.startswith("test_"):
                 self.assertIn(str(path.relative_to(catalog.ROOT)), references)
 
@@ -110,7 +110,7 @@ class DiscoveryTests(unittest.TestCase):
             path = catalog.ROOT / name
             self.assertTrue(path.is_symlink(), name)
             self.assertTrue(path.exists(), name)
-            self.assertTrue(path.resolve().is_relative_to(catalog.ROOT / "legacy"), name)
+            self.assertTrue(path.resolve().is_relative_to(catalog.ROOT), name)
 
 
 class ValidationTests(unittest.TestCase):
@@ -118,13 +118,16 @@ class ValidationTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        (self.root / "packages").mkdir()
+        (self.root / "packages/demo").mkdir(parents=True)
         self.item = {"name": "demo", "description": "Example",
                      "install": {"ubuntu": {"manager": "apt", "package": "demo"}}}
 
     def load(self):
-        (self.root / "packages/demo.json").write_text(json.dumps(self.item))
+        (self.root / "packages/demo/package.json").write_text(json.dumps(self.item))
         return catalog.load_catalog(self.root)
+
+    def test_valid_manifest_loads(self):
+        self.assertEqual(self.load()["demo"]["name"], "demo")
 
     def test_rejects_shell_fragments_and_options_disguised_as_packages(self):
         for value in ("demo; touch /tmp/bad", "--help", "$(curl example.com)", "git vim"):

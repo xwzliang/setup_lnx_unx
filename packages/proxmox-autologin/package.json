@@ -1,0 +1,39 @@
+{
+  "name": "proxmox-autologin",
+  "description": "Proxmox console autologin workflow",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/proxmox-autologin/scripts/linux/setup_proxmox_autologin.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "setup-proxmox-autologin": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/proxmox-autologin/scripts/linux/setup_proxmox_autologin.sh",
+      "interpreter": "bash",
+      "description": "setup proxmox autologin (script options accepted after --; inspect --help where supported)",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "python3",
+        "systemctl"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "setup-proxmox-autologin",
+      "debian": "setup-proxmox-autologin"
+    }
+  }
+}

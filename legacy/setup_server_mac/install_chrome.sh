@@ -1,1 +1,1 @@
-brew install google-chrome
+../../packages/google-chrome/scripts/macos/install_chrome.sh

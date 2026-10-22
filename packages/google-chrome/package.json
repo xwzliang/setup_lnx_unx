@@ -1,0 +1,79 @@
+{
+  "name": "google-chrome",
+  "description": "Google Chrome browser",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "google-chrome",
+      "options": [
+        "--cask"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "packages/mac-server/scripts/apps/mac_brew_cask_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/google-chrome/scripts/apps/google_chrome_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/google-chrome/scripts/macos/install_chrome.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "aliases": [
+    "chrome"
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "google-chrome-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/google-chrome/scripts/apps/google_chrome_install.sh",
+      "interpreter": "bash",
+      "description": "google chrome install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "curl",
+        "sudo"
+      ],
+      "parameters": {}
+    },
+    "install-chrome": {
+      "action": "install",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/google-chrome/scripts/macos/install_chrome.sh",
+      "interpreter": "bash",
+      "description": "install chrome",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "brew"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "google-chrome-install",
+      "macos": "install-chrome"
+    }
+  }
+}

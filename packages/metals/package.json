@@ -1,0 +1,38 @@
+{
+  "name": "metals",
+  "description": "Metals",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/metals/scripts/install/others/metals-emacs_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "metals-emacs-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/metals/scripts/install/others/metals-emacs_install.sh",
+      "interpreter": "bash",
+      "description": "metals emacs install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "metals-emacs-install",
+      "macos": "metals-emacs-install"
+    }
+  }
+}

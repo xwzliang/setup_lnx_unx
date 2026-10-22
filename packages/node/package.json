@@ -1,0 +1,65 @@
+{
+  "name": "node",
+  "description": "an open-source, cross-platform, JavaScript runtime environment",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "node"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/node/scripts/install/other_methods_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "nvm": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/node/scripts/install/other_methods_packages_install.sh",
+      "interpreter": "bash",
+      "description": "Install Node and its bundled npm through nvm",
+      "effects": "Bootstraps nvm if missing, then installs the selected Node version and bundled npm; may append shell initialization.",
+      "requires": [
+        "curl",
+        "bash"
+      ],
+      "parameters": {
+        "NVM_VERSION": {
+          "description": "nvm bootstrap release tag (historical default retained; override to choose another release)",
+          "default": "v0.35.3"
+        },
+        "NODE_VERSION": {
+          "description": "Node version understood by nvm, such as node or 22",
+          "default": "node"
+        }
+      }
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "nvm",
+      "debian": "nvm",
+      "macos": "nvm"
+    }
+  }
+}

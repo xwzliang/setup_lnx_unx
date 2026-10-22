@@ -1,0 +1,37 @@
+{
+  "name": "directories",
+  "description": "Directories",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/directories/scripts/config/dir_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "dir-setup": {
+      "action": "configure",
+      "os": [
+        "debian",
+        "macos",
+        "ubuntu"
+      ],
+      "script": "packages/directories/scripts/config/dir_setup.sh",
+      "interpreter": "bash",
+      "description": "dir setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "dir-setup",
+      "macos": "dir-setup"
+    }
+  }
+}

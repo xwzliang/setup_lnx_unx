@@ -1,0 +1,54 @@
+{
+  "name": "tiv",
+  "description": "Terminal Image Viewer",
+  "install": {
+    "ubuntu": {
+      "manager": "snap",
+      "package": "tiv",
+      "options": [
+        "--edge"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/tiv/scripts/install/others/tiv_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "tiv-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/tiv/scripts/install/others/tiv_install.sh",
+      "interpreter": "bash",
+      "description": "tiv install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "tiv-install",
+      "macos": "tiv-install"
+    }
+  }
+}

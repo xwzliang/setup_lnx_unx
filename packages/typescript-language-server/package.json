@@ -1,0 +1,32 @@
+{
+  "name": "typescript-language-server",
+  "description": "TypeScript & JavaScript Language Server",
+  "install": {
+    "ubuntu": {
+      "manager": "npm",
+      "package": "typescript-language-server"
+    },
+    "debian": {
+      "manager": "npm",
+      "package": "typescript-language-server"
+    },
+    "macos": {
+      "manager": "npm",
+      "package": "typescript-language-server"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/npm_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

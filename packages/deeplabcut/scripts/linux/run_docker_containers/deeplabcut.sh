@@ -1,0 +1,2 @@
+# docker run  -d --gpus all -v ~/models/deeplabcut:/workspace -p 8003:8003 --restart always --name deeplabcut --entrypoint bash mydeeplabcut -c "python /workspace/server.py"
+docker run  -d --gpus all -v ~/models/deeplabcut:/workspace -p 8003:8003 --restart always --name deeplabcut --entrypoint bash xwzliang/mydeeplabcut:latest -c "true; echo 'keeping container alive for debugging';tail -f /dev/null"

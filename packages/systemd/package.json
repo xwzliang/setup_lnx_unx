@@ -1,0 +1,35 @@
+{
+  "name": "systemd",
+  "description": "Systemd",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/systemd/scripts/config/systemd_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "systemd-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/systemd/scripts/config/systemd_setup.sh",
+      "interpreter": "bash",
+      "description": "systemd setup",
+      "effects": "Writes a dedicated logind drop-in for lid behavior; takes effect after a service restart or reboot.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "systemd-setup"
+    }
+  }
+}

@@ -1,4 +1,1 @@
-# Install Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-
-pip install vllm
+../packages/llm/scripts/workflows/llm_setup.sh

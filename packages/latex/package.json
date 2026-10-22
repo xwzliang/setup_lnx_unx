@@ -1,0 +1,49 @@
+{
+  "name": "latex",
+  "description": "Latex",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/latex/scripts/apps/latex_chinese_xelatex_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/latex/scripts/apps/linux_latex_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "latex-chinese-xelatex-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/latex/scripts/apps/latex_chinese_xelatex_install.sh",
+      "interpreter": "bash",
+      "description": "latex chinese xelatex install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    },
+    "linux-latex-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/latex/scripts/apps/linux_latex_install.sh",
+      "interpreter": "bash",
+      "description": "linux latex install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {}
+    }
+  }
+}

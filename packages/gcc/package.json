@@ -1,0 +1,38 @@
+{
+  "name": "gcc",
+  "description": "GNU C/C++ compiler",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "gcc"
+    },
+    "ubuntu": {
+      "manager": "apt",
+      "package": "gcc"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "gcc"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/minimal-workstation/scripts/workflows/minimal_setup.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

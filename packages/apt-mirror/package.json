@@ -1,0 +1,41 @@
+{
+  "name": "apt-mirror",
+  "description": "Apt mirror",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/apt-mirror/scripts/config/apt_aliyun_mirror.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "apt-aliyun-mirror": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/apt-mirror/scripts/config/apt_aliyun_mirror.sh",
+      "interpreter": "bash",
+      "description": "apt aliyun mirror",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "python3",
+        "sudo"
+      ],
+      "parameters": {
+        "APT_MIRROR": {
+          "description": "Ubuntu mirror base URL; existing release suites and third-party repositories are preserved",
+          "default": "https://mirrors.aliyun.com/ubuntu"
+        }
+      }
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "apt-aliyun-mirror"
+    }
+  }
+}

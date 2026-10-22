@@ -1,41 +1,50 @@
-# Migration from the script collection
+# Migration to package-owned recipes
 
-Previously, installing a single package meant searching several arrays or finding
-a script whose name did not consistently identify its OS. The new interface is
-`./setup search`, `show`, `install`, and `configure`; the source of truth for
-managed installs is `packages/*.json`.
+The initial catalog redesign is committed as `4d99aa9`. The next migration moves
+all remaining implementation files out of `legacy/`: 129 files, including 119
+executable recipes and their helper files/assets. Every package now owns a
+`packages/<name>/package.json` manifest and a `scripts/` tree. The complete mapping
+is [recipe-migration.json](recipe-migration.json).
 
-| Previous entry point | New workflow |
-| --- | --- |
-| `install_packages/system_packages_install.sh` | `./setup install NAME --os ubuntu` or `--os macos` |
-| `install_packages/python3_modules_install.sh` | Activate a virtual environment, then `./setup install NAME` |
-| `install_packages/npm_packages_install.sh` | `./setup install NAME` |
-| `install_packages/go_packages_install.sh` | `./setup install hover`, `sqls`, or `lux` |
-| `setup_packages/NAME_setup.sh` | `./setup show NAME` for managed setup and legacy references |
-| `install_and_setup_apps/*` | `./setup search NAME` and `./setup show NAME` |
-| `setup_server_linux/*`, `setup_server_mac/*` | Search the workflow/package name; follow its legacy reference |
-| `setup_Ubuntu_Mac.sh`, `minimal_setup.sh` | Select packages individually through the CLI |
+`./setup show NAME` displays install methods, configuration variants, parameters,
+effects, and source paths. `./setup setup NAME` plans installation followed by
+configuration. Either phase can be selected alone, and `--recipe` (or
+`--install-recipe`/`--configure-recipe`) selects alternatives. All commands preview
+unless `--apply` is present.
 
-Original files were moved, without changing their contents, to the same relative
-paths under `legacy/`. Top-level compatibility symlinks preserve all old tracked
-paths, including the existing Antigravity and Proxmox aliases. Directory symlinks
-also preserve sibling references used by the old scripts. Keep these links until
-you have migrated any external automation that depends on them.
+Old top-level paths and paths beneath `legacy/` are compatibility symlinks to the
+canonical files. They retain script filenames and executable permissions, but now
+follow the updated implementations described below. For an exact historical copy,
+use the initial redesign commit. Raw GitHub downloads must use canonical package
+paths because raw endpoints return a symlink's text rather than following it.
 
-Compatibility does not repair old assumptions: a script using a relative working
-directory still needs that working directory, and pinned download URLs may have
-expired. Existing server jobs were not executed or reconfigured during migration.
-Raw GitHub links are a special case: GitHub serves the contents of a symlink as
-text, so change raw-download URLs to the real `legacy/...` path. Git checkouts on
-Linux and macOS follow the compatibility links normally.
+## Behavior corrected during migration
 
-The migration extracts package manager operations from bulk lists and separates
-them from unrelated effects such as cloning dotfiles, installing Homebrew,
-creating Java symlinks, and replacing Git configuration. Cask options are attached
-to their package instead of being treated as another entry in an array.
-Known historical or ambiguous recipes remain references. Most personal setup
-scripts have not been rewritten; their manual-review status is explicit.
+- Cross-package workflows use canonical paths and the shared CLI. Bulk package
+  profiles use the catalog instead of maintaining duplicate package arrays.
+- The default workstation profile selects core tools explicitly; broad historical
+  package lists remain explicitly named `run` workflows.
+- Bash/Zsh initialization preserves existing files. Zsh does not change the login
+  shell or invoke an installer that replaces `.zshrc`.
+- Fish uses Fisher's current install interface and standard curl, removing the
+  dependency on personal proxy shell functions. See the
+  [upstream Fisher instructions](https://github.com/jorgebucaran/fisher#installation).
+- Git, Vim, and tmux script entry points delegate to their narrower built-in
+  configuration recipes.
+- Samba, fstab mounts, certificate setup, Coursera credentials, and Zotero profile
+  setup take explicit account/path inputs instead of silently using fixed values.
+- Cron preserves existing jobs and does not disable system updates. Lid settings
+  use a logind drop-in. ImageMagick retains policy restrictions for other coders.
+- APT mirror setup preserves release suites and unrelated repositories. Proxy
+  configuration handles Homebrew's prefix and keeps a backup.
+- Package-owned helpers stay beside their callers. Shell recipes stop after command
+  failures; a failed installation prevents its following configuration phase.
 
-No package installations, real setup scripts, service changes, or remote downloads
-are needed to validate the new CLI. Tests use fake package managers, mocked
-network operations, and temporary configuration files.
+Some specialized historical scripts still have release-specific downloads, hardware
+assumptions, native root requirements, or upstream compatibility limitations. Their
+source and effects are exposed in `show`; migration does not certify that every
+upstream installer works on every current OS release. No real package installation
+or system-changing recipe was run to validate this change.
+
+OpenWrt scripts retain their shell interpreter. Running the CLI on an OpenWrt host
+requires Python 3.9+ already installed; the migration does not bootstrap it.

@@ -1,0 +1,31 @@
+{
+  "name": "expect",
+  "description": "a language that talks with your interactive programs or scripts that require user interaction",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "expect"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "expect"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "expect"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

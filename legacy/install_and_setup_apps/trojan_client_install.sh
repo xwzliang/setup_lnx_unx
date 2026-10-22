@@ -1,12 +1,1 @@
-#!/usr/bin/env bash
-
-if [ "$(uname)" == "Darwin" ]; then
-	# MacOS
-	HOMEBREW_NO_AUTO_UPDATE=1 brew tap trojan-gfw/homebrew-trojan
-	HOMEBREW_NO_AUTO_UPDATE=1 brew install trojan
-else
-	# Ubuntu
-	# sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/trojan-gfw/trojan-quickstart/master/trojan-quickstart.sh)"
-	# Ubuntu >= 19.04
-	sudo apt-get install trojan
-fi
+../../packages/trojan/scripts/apps/trojan_client_install.sh

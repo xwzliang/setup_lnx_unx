@@ -1,0 +1,35 @@
+{
+  "name": "cron",
+  "description": "Cron",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/cron/scripts/config/cron_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "cron-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/cron/scripts/config/cron_setup.sh",
+      "interpreter": "bash",
+      "description": "cron setup",
+      "effects": "Adds Dropbox autostart if absent; preserves existing crontab and system update settings.",
+      "requires": [
+        "crontab"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "cron-setup"
+    }
+  }
+}

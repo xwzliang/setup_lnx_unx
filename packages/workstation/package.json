@@ -1,0 +1,101 @@
+{
+  "name": "workstation",
+  "description": "Workstation",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/workstation/scripts/workflows/setup_Ubuntu_Mac.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "brew-packages-unx-lnx-install": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/workstation/scripts/install/brew_packages_unx_lnx_install.sh",
+      "interpreter": "bash",
+      "description": "brew packages unx lnx install",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {}
+    },
+    "go-packages-install": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/workstation/scripts/install/go_packages_install.sh",
+      "interpreter": "bash",
+      "description": "go packages install",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {}
+    },
+    "npm-packages-install": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/workstation/scripts/install/npm_packages_install.sh",
+      "interpreter": "bash",
+      "description": "npm packages install",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {}
+    },
+    "python3-modules-install": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/workstation/scripts/install/python3_modules_install.sh",
+      "interpreter": "bash",
+      "description": "python3 modules install",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {}
+    },
+    "system-packages-install": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/workstation/scripts/install/system_packages_install.sh",
+      "interpreter": "bash",
+      "description": "system packages install",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {},
+      "bash_min_version": 4
+    },
+    "setup-ubuntu-mac": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/workstation/scripts/workflows/setup_Ubuntu_Mac.sh",
+      "interpreter": "bash",
+      "description": "setup ubuntu mac",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {}
+    }
+  }
+}

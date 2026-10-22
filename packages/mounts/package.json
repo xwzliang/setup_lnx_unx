@@ -1,0 +1,41 @@
+{
+  "name": "mounts",
+  "description": "Mounts",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/mounts/scripts/config/hard_drive_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "hard-drive-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/mounts/scripts/config/hard_drive_setup.sh",
+      "interpreter": "bash",
+      "description": "hard drive setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "python3",
+        "sudo"
+      ],
+      "parameters": {
+        "FSTAB_FILE": {
+          "description": "Absolute path to a reviewed fstab file containing only the mounts to add",
+          "required": true
+        }
+      }
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "hard-drive-setup"
+    }
+  }
+}

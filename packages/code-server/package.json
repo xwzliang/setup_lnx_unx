@@ -1,0 +1,43 @@
+{
+  "name": "code-server",
+  "description": "Code server",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/code-server/scripts/macos/code-server/docker-compose.yml",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/code-server/scripts/macos/setup_code_server.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "setup-code-server": {
+      "action": "configure",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/code-server/scripts/macos/setup_code_server.sh",
+      "interpreter": "bash",
+      "description": "setup code server",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "curl",
+        "brew"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "macos": "setup-code-server"
+    }
+  }
+}

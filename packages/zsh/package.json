@@ -1,0 +1,85 @@
+{
+  "name": "zsh",
+  "description": "Zsh is a shell designed for interactive use, although it is also a powerful scripting language",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "zsh"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "zsh"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "zsh"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/zsh/scripts/config/zsh_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    },
+    {
+      "path": "packages/zsh/scripts/linux/zsh_setup.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "zsh-setup": {
+      "action": "configure",
+      "os": [
+        "debian",
+        "macos",
+        "ubuntu"
+      ],
+      "script": "packages/zsh/scripts/config/zsh_setup.sh",
+      "interpreter": "bash",
+      "description": "zsh setup",
+      "effects": "Fetches Oh My Zsh and autosuggestions and appends missing shell initialization. Preserves existing .zshrc and login shell.",
+      "requires": [
+        "git"
+      ],
+      "parameters": {}
+    },
+    "linux-zsh-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/zsh/scripts/linux/zsh_setup.sh",
+      "interpreter": "bash",
+      "description": "zsh setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "debian": "zsh-setup",
+      "macos": "zsh-setup",
+      "ubuntu": "zsh-setup"
+    }
+  }
+}

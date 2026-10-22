@@ -1,0 +1,41 @@
+{
+  "name": "codex-cron",
+  "description": "Schedule Codex jobs with cron",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/codex-cron/scripts/workflows/setup_codex_hi_cron.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "setup-codex-hi-cron": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/codex-cron/scripts/workflows/setup_codex_hi_cron.sh",
+      "interpreter": "bash",
+      "description": "setup codex hi cron (script options accepted after --; inspect --help where supported)",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "curl",
+        "crontab"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "setup-codex-hi-cron",
+      "debian": "setup-codex-hi-cron",
+      "macos": "setup-codex-hi-cron"
+    }
+  }
+}

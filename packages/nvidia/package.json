@@ -1,0 +1,91 @@
+{
+  "name": "nvidia",
+  "description": "Nvidia",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/nvidia/scripts/linux/nvidia_gpu_setup.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/nvidia/scripts/linux/restore_gpu_fan.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/nvidia/scripts/linux/setup_gpu_fan.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "nvidia-gpu-setup": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/nvidia/scripts/linux/nvidia_gpu_setup.sh",
+      "interpreter": "bash",
+      "description": "nvidia gpu setup (script options accepted after --; inspect --help where supported)",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "curl",
+        "conda",
+        "sudo",
+        "systemctl"
+      ],
+      "parameters": {}
+    },
+    "restore-gpu-fan": {
+      "action": "remove",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/nvidia/scripts/linux/restore_gpu_fan.sh",
+      "interpreter": "bash",
+      "description": "restore gpu fan (script options accepted after --; inspect --help where supported)",
+      "effects": "Removes configuration/software or restores system settings; inspect affected paths before applying.",
+      "requires": [
+        "sudo",
+        "systemctl"
+      ],
+      "parameters": {}
+    },
+    "setup-gpu-fan": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/nvidia/scripts/linux/setup_gpu_fan.sh",
+      "interpreter": "bash",
+      "description": "setup gpu fan (script options accepted after --; inspect --help where supported)",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "sudo",
+        "systemctl"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "nvidia-gpu-setup"
+    },
+    "configure": {
+      "ubuntu": "setup-gpu-fan",
+      "debian": "setup-gpu-fan"
+    }
+  }
+}

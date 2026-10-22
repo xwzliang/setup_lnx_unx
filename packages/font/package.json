@@ -1,0 +1,35 @@
+{
+  "name": "font",
+  "description": "Font",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/font/scripts/apps/font_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "font-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/font/scripts/apps/font_install.sh",
+      "interpreter": "bash",
+      "description": "font install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "git"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "font-install"
+    }
+  }
+}

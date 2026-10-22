@@ -1,0 +1,17 @@
+{
+  "name": "glimpse",
+  "description": "A very popular UNIX indexing and query system to search quickly through entire file systems, including agrep",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Historical package name or external repository requirement; review the original script and current upstream instructions for this OS."
+  ]
+}

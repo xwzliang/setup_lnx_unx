@@ -1,4 +1,1 @@
-#!/usr/bin/env bash
-
-sudo mkdir -p /data/db
-sudo chown $USER /data/db
+../../packages/mongodb/scripts/config/mongodb_setup.sh

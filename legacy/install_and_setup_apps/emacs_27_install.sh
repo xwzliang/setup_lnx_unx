@@ -1,5 +1,1 @@
-#!/usr/bin/env bash
-
-sudo add-apt-repository ppa:kelleyk/emacs
-
-sudo apt install emacs27
+../../packages/emacs/scripts/apps/emacs_27_install.sh

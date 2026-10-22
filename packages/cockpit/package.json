@@ -1,0 +1,33 @@
+{
+  "name": "cockpit",
+  "description": "Cockpit",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/cockpit/scripts/workflows/install_cockpit_tools.py",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "install-cockpit-tools": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/cockpit/scripts/workflows/install_cockpit_tools.py",
+      "interpreter": "python3",
+      "description": "install cockpit tools",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "install-cockpit-tools"
+    }
+  }
+}

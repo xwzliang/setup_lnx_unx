@@ -1,0 +1,32 @@
+{
+  "name": "repositories",
+  "description": "Repositories",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/repositories/scripts/workflows/clone_all_my_repos.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "clone-all-my-repos": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/repositories/scripts/workflows/clone_all_my_repos.sh",
+      "interpreter": "bash",
+      "description": "clone all my repos",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "curl"
+      ],
+      "parameters": {}
+    }
+  }
+}

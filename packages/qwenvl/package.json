@@ -1,0 +1,33 @@
+{
+  "name": "qwenvl",
+  "description": "Qwenvl",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/qwenvl/scripts/linux/run_docker_containers/qwenvl.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "qwenvl": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/qwenvl/scripts/linux/run_docker_containers/qwenvl.sh",
+      "interpreter": "bash",
+      "description": "qwenvl",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "docker",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  }
+}

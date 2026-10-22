@@ -1,0 +1,26 @@
+{
+  "name": "python3-lxml",
+  "description": "Python3 lxml",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "python3-lxml"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "python3-lxml"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

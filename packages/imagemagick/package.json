@@ -1,0 +1,60 @@
+{
+  "name": "imagemagick",
+  "description": "Image conversion and processing",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "imagemagick"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "imagemagick"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "imagemagick"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/imagemagick/scripts/config/imagemagick_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "imagemagick-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/imagemagick/scripts/config/imagemagick_setup.sh",
+      "interpreter": "bash",
+      "description": "imagemagick setup",
+      "effects": "Backs up ImageMagick policy and enables PDF read/write; preserves other coder restrictions.",
+      "requires": [
+        "python3",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "imagemagick-setup"
+    }
+  }
+}

@@ -1,99 +1,126 @@
 # Package setup for Linux and macOS
 
-Find a package, choose an operating system, and preview exactly how to install or
-configure it. The CLI uses Python 3.9+ and its standard library; there is nothing
-to install to use this repository.
+Search, install, and configure a package from one place. Each package owns its
+manifest, scripts, and supporting files under `packages/<name>/`. The CLI requires
+Python 3.9+ and only its standard library; no dependency installation is needed.
 
 ```sh
-./setup search tmux
-./setup list --os ubuntu
-./setup show docker --os macos
-./setup install tmux --os ubuntu           # preview; no commands executed
-./setup install tmux --os ubuntu --apply   # install this package on Ubuntu
-./setup configure tmux --os ubuntu        # preview its separate setup recipe
+./setup search zsh
+./setup show zsh --os ubuntu
+./setup setup zsh --os ubuntu           # preview installation AND configuration
+./setup setup zsh --os ubuntu --apply   # execute both on an Ubuntu host
 ```
 
-Start with the [package index](docs/packages.md) if you prefer browsing files.
-Search includes names, aliases (for example `rg`, `chrome`, `sshd`), descriptions,
-and paths to older setup scripts. `show` brings installation and configuration
-information together for one package.
+Nothing runs without `--apply`. Browse the [package index](docs/packages.md) or
+use `./setup show NAME` to see every method, recipe, parameter, and source path.
 
-## Everyday use
+## Install and configure together or separately
 
 | Task | Command |
 | --- | --- |
-| Search for a package on an OS | `./setup search python --os ubuntu` |
-| See the available installation methods and setup scripts | `./setup show git` |
-| See only macOS instructions | `./setup show git --os macos` |
-| Preview a package installation for the current OS | `./setup install git` |
-| Install the selected package | `./setup install git --apply` |
-| Preview configuration separately | `./setup configure git` |
-| Apply configuration separately | `./setup configure git --apply` |
-| Find OpenWrt workflows | `./setup list --os openwrt` |
-| Export search results for another tool | `./setup search editor --json` |
-| Check the catalog without changing the machine | `./setup validate` |
+| Preview both phases | `./setup setup git --os ubuntu` |
+| Install only | `./setup install git --os ubuntu` |
+| Configure only | `./setup configure git --os ubuntu` |
+| List packages for an OS | `./setup list --os macos` |
+| Search names, aliases, descriptions, and source paths | `./setup search chrome` |
+| Inspect configuration alternatives | `./setup show keyboard --os ubuntu` |
+| Choose a configuration variant | `./setup configure keyboard --recipe xmodmap-setup-win-keyboard --os ubuntu` |
+| Inspect a recipe's code | `./setup show zsh --recipe zsh-setup --source` |
+| Select an alternative installer | `./setup install docker --recipe docker-setup --os ubuntu` |
+| Select an alternative in a combined setup | `./setup setup docker --install-recipe docker-setup --os ubuntu` |
+| Preview an explicit workflow | `./setup run mac-server --recipe start-server --os macos` |
+| Preview removal | `./setup remove zotero --recipe zotero-uninstall --os ubuntu` |
 
-`list`, `search`, and `show` default to all OSes. `install` and `configure` default
-to the detected host OS. You can preview any supported OS from any machine, but
-`--apply` requires an exact match. Ubuntu, Debian, and macOS have managed methods;
-OpenWrt workflows are searchable references. Other distributions are not silently
-treated as Ubuntu. Debian mappings are explicitly declared, not inherited from
-Ubuntu.
+Append `--apply` when ready to execute. `--dry-run` explicitly selects the default
+preview behavior. Previewing does not probe package managers, run scripts, write
+configuration, or contact the network.
 
-Installation and configuration are separate actions. A package manager may
-install dependencies of the selected package, but the CLI never invokes a bulk
-installer, installs a missing package manager, updates the system package index,
-or automatically runs personal setup scripts. `--dry-run` is an explicit synonym
-for the default preview behavior, and never probes package managers or contacts
-the network.
+`setup` plans all available install/configure phases before doing anything. It
+uses the package manager method and narrow built-in configuration when available,
+otherwise the manifest's default script. Multiple alternatives without a declared
+default require a recipe choice. Missing phases are skipped, so a configuration-only
+package such as `keyboard` can use `setup` too. Workflows and removal are always
+separate, explicitly selected operations.
 
-The selected package manager must already be available. APT and Snap use `sudo`;
-Homebrew, npm, and Go run as your user. Python package methods use the interpreter
-running the CLI and require an active virtual environment when applying. Activate
-your environment before invoking `./setup`. No `sudo pip`, `--break-system-packages`,
-or automatic environment creation is used.
+## Package-specific inputs
 
-APT, Homebrew, Snap, npm, and plain pip packages skip an already installed package
-in that manager. pip extras/version requirements and Go `@version` requests are
-passed to their respective resolvers rather than skipped based on a possibly
-unrelated executable. Homebrew auto-update is disabled for installation.
+Machine-specific recipes declare their inputs. For example:
 
-## Configuration and older workflows
+```sh
+./setup setup samba --os ubuntu \
+  --set SMB_USER=myuser --set SMB_PATH=/srv/share
 
-Managed configuration currently covers Git aliases, Vim filetype detection, and
-the Tmux Plugin Manager checkout. Git preserves existing aliases and identity;
-Vim uses a dedicated file and refuses conflicting contents; tmux preserves an
-existing matching checkout. `./setup configure NAME` shows the exact scope.
-TPM activation in your tmux configuration remains an explicit manual step.
+./setup configure mounts --os ubuntu \
+  --set FSTAB_FILE=/absolute/path/to/reviewed-fstab-entries
 
-Other setup instructions are linked by `./setup show NAME --os OS`. Entries marked
-`reference` have no managed installation recipe yet. The original workflows are
-preserved under [legacy/](legacy/README.md), including server, Docker, proxy,
-OpenWrt, and personal desktop setup. Some contain pinned old downloads or personal
-paths; inspect them before running. The CLI does not execute these scripts.
+./setup configure zotero --os ubuntu \
+  --set ZOTERO_PROFILE=/absolute/path/to/profile \
+  --set ATTACHMENT_DIR=/absolute/path/to/attachments
+```
 
-The catalog migrates this repository's installation knowledge; it is not a
-guarantee that every package is available on every OS release. Read the notes
-shown by `show`. For a missing package, check that release's repositories or
-update its manifest. Remote installs were not performed to validate this redesign.
+`show` lists required parameters. Missing required values prevent execution of
+**both** phases, including installation. Parameters are passed as namespaced
+`SETUP_*` environment values, never evaluated as shell text. Passwords are prompted
+by the relevant configuration script rather than stored in manifests.
+
+Script arguments go after `--`, preserving the script's native interface:
+
+```sh
+./setup configure proxmox-autologin --os debian \
+  --recipe setup-proxmox-autologin -- --remote root@pve
+```
+
+For `setup`, use repeated `--install-arg=VALUE` and `--configure-arg=VALUE` to select
+the receiving phase. These require a script method; package manager methods do
+not accept arbitrary extra arguments. To execute a script's native `--help`, use
+`--apply -- --help` (the CLI's preview intentionally never executes even help).
+
+## Operating systems and execution
+
+Discovery defaults to all OSes; actions default to the exact detected host OS.
+You may preview another OS but cannot apply it to a mismatched host. Ubuntu,
+Debian, and macOS have package methods and script recipes. OpenWrt has explicit
+shell workflows; running the CLI there still requires an existing Python 3.9+.
+Other distributions are not silently treated as Ubuntu.
+
+Package manager methods install one selected package plus its dependencies.
+APT and Snap use `sudo`; Homebrew, npm, and Go use your account. The manager must
+already exist. Python package methods require an active virtual environment.
+APT, Brew, Snap, npm, and plain pip packages skip installed packages; pip extras
+and Go version requests are resolved by their respective tools.
+
+Custom scripts can install dependencies, fetch plugins, edit system settings,
+restart services, or perform the workflow described in their `effects` field.
+Bash recipes run with error and pipeline failure handling, in their own directory.
+An error stops later phases; changes already made are not automatically rolled
+back. Inputs and OS selection are checked before installation; configuration
+executables are checked again after installation because the package may provide
+them. Scripts that require root retain their native privilege handling; read the
+source or help for specialized administration tasks.
+
+The migration preserves historical installation methods, including some pinned
+versions and upstream downloads. These have not been tested with live installations
+on every OS or checked for current upstream availability. The new structure makes
+those recipes discoverable and maintainable without claiming universal portability.
 
 ## Repository layout
 
 ```text
-setup                   One entry point; run it directly from any working directory
-packages/*.json         One manifest per package or discoverable workflow
-setup_tool/             Catalog validation, CLI, package manager adapters, configuration
-docs/packages.md        Generated package index
-docs/maintaining.md     How to add or update a recipe
-tests/                  Offline tests with fake package managers and temporary files
-legacy/                 Original scripts and assets, with their original relative layout
+setup                           CLI entry point
+packages/<name>/package.json    Install methods, configuration, recipes, parameters
+packages/<name>/scripts/         Package-owned scripts and sibling assets
+setup_tool/                     Planning, validation, execution, manager adapters
+tests/                         Offline tests (no real installations)
+docs/packages.md                Generated package index
+docs/recipe-migration.json      Complete old-path to new-path mapping
+legacy/                         Compatibility symlinks, not implementation files
 ```
 
-Old top-level script and directory names are compatibility symlinks into `legacy/`.
-They keep existing bookmarks and automation paths working; all new work belongs
-in the structure above. See [migration details](docs/migration.md).
+Old top-level paths also remain compatibility links. Edit canonical package files,
+not links. [Migration details](docs/migration.md) explain the behavioral changes;
+[maintaining the catalog](docs/maintaining.md) covers new recipes.
 
-## Development
+## Validation without installing packages
 
 ```sh
 python3 -m unittest discover -s tests -v
@@ -101,6 +128,7 @@ python3 -m unittest discover -s tests -v
 ./setup docs --check
 ```
 
-These checks do not install packages. Add or change a package in one JSON file,
-then regenerate the index with `./setup docs > docs/packages.md`. See the
-[maintainer guide](docs/maintaining.md) for the manifest format and test strategy.
+Tests cover every recipe's preview, syntax, migration coverage, parameter and OS
+checks, ordered execution using temporary fixtures, and configuration preservation.
+No real installer, download, or service-changing workflow is run by these checks.
+After a manifest edit, regenerate the index with `./setup docs > docs/packages.md`.

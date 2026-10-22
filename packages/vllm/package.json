@@ -1,0 +1,32 @@
+{
+  "name": "vllm",
+  "description": "Vllm",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/vllm/scripts/linux/run_docker_containers/vllm.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "vllm": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/vllm/scripts/linux/run_docker_containers/vllm.sh",
+      "interpreter": "bash",
+      "description": "vllm",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "docker"
+      ],
+      "parameters": {}
+    }
+  }
+}

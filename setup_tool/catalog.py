@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SYSTEMS = ("ubuntu", "debian", "macos")
+SYSTEMS = ("ubuntu", "debian", "macos", "openwrt")
 MANAGERS = {"apt", "brew", "pip", "npm", "go", "snap"}
 OPTIONS = {"apt": set(), "brew": {"--cask"}, "pip": set(),
            "npm": set(), "go": set(), "snap": {"--classic", "--edge"}}
@@ -38,16 +38,16 @@ def detect_os():
 def load_catalog(root=ROOT):
     packages = {}
     names = {}
-    for path in sorted((root / "packages").glob("*.json")):
+    for path in sorted((root / "packages").glob("*/package.json")):
         try:
             item = json.loads(path.read_text())
             if not isinstance(item, dict):
                 raise ValueError("manifest must be an object")
-            unknown = set(item) - {"name", "description", "aliases", "install", "configure", "references", "notes"}
+            unknown = set(item) - {"name", "description", "aliases", "install", "configure", "references", "notes", "recipes", "defaults"}
             if unknown:
                 raise ValueError(f"unknown fields: {', '.join(sorted(unknown))}")
             name = item["name"]
-            if name != path.stem or not re.fullmatch(r"[a-z0-9][a-z0-9@._+-]*", name):
+            if name != path.parent.name or not re.fullmatch(r"[a-z0-9][a-z0-9@._+-]*", name):
                 raise ValueError("name must match filename and be a simple lowercase identifier")
             if not isinstance(item["description"], str) or not item["description"]:
                 raise ValueError("description is required")
@@ -90,7 +90,9 @@ def load_catalog(root=ROOT):
             for os_name, config in item.get("configure", {}).items():
                 if os_name not in SYSTEMS or config not in {"git-aliases", "vim-filetypes", "tmux-plugins"}:
                     raise ValueError("unknown configuration recipe")
-            if not any(item.get(key) for key in ("install", "configure", "references")):
+            from .recipes import validate_recipes
+            validate_recipes(item, root)
+            if not any(item.get(key) for key in ("install", "configure", "references", "recipes")):
                 raise ValueError("at least one install method, configuration, or reference is required")
             packages[name] = item
         except (KeyError, TypeError, ValueError, SetupError) as exc:
@@ -109,5 +111,6 @@ def resolve(packages, name):
 
 def supports(item, os_name):
     return (os_name in item.get("install", {}) or os_name in item.get("configure", {})
+            or any(os_name in recipe["os"] for recipe in item.get("recipes", {}).values())
             or any(os_name in ref["os"] or "all" in ref["os"]
                    for ref in item.get("references", [])))

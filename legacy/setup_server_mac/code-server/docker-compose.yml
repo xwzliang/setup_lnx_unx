@@ -1,17 +1,1 @@
----
-services:
-  code-server:
-    image: codercom/code-server:latest
-    container_name: code-server
-    environment:
-      - DOCKER_USER=$USER
-      - TZ=Asia/Shanghai
-      - PASSWORD=${password} #optional
-    volumes:
-      - ~/.config:/home/coder/.config
-      - ~/.local:/home/coder/.local
-      - $PWD:/home/coder/project
-    ports:
-      - 8081:8080
-    restart: unless-stopped
-
+../../../packages/code-server/scripts/macos/code-server/docker-compose.yml

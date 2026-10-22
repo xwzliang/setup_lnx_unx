@@ -1,0 +1,1 @@
+https://github.com/mhajder/iina-jellyfin.git

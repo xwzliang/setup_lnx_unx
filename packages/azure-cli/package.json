@@ -1,0 +1,39 @@
+{
+  "name": "azure-cli",
+  "description": "Azure cli",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/azure-cli/scripts/apps/microsoft_azure_cli_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "aliases": [
+    "az",
+    "microsoft-azure-cli"
+  ],
+  "recipes": {
+    "microsoft-azure-cli-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/azure-cli/scripts/apps/microsoft_azure_cli_install.sh",
+      "interpreter": "bash",
+      "description": "microsoft azure cli install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "microsoft-azure-cli-install"
+    }
+  }
+}

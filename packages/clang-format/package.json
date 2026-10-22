@@ -1,0 +1,31 @@
+{
+  "name": "clang-format",
+  "description": "Tool to format C/C++/Obj-C code",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "clang-format"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "clang-format"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "clang-format"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}
