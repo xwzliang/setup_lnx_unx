@@ -96,21 +96,15 @@ class DiscoveryTests(unittest.TestCase):
     def test_generated_index_is_current(self):
         self.assertEqual((catalog.ROOT / "docs/packages.md").read_text(), cli.index(self.packages))
 
-    def test_all_legacy_scripts_are_discoverable(self):
+    def test_all_package_scripts_are_discoverable(self):
         references = {ref["path"] for item in self.packages.values() for ref in item.get("references", [])}
         for path in (catalog.ROOT / "packages").rglob("*"):
             if path.suffix in {".sh", ".py"} and not path.name.startswith("test_"):
                 self.assertIn(str(path.relative_to(catalog.ROOT)), references)
 
-    def test_compatibility_symlinks_resolve(self):
-        for name in ("install_packages", "install_and_setup_apps", "setup_packages", "setup_server_linux",
-                     "setup_server_mac", "setup_proxy", "setup_openwrt", "openwrt", "minimal_setup.sh",
-                     "setup_Ubuntu_Mac.sh", "setup_codex_hi_cron.sh", "install_cockpit_tools.py",
-                     "setup_agy_ssh_wrapper.sh", "setup_antigravity_ssh_wrapper.sh", "setup_proxmox_autologin.sh"):
-            path = catalog.ROOT / name
-            self.assertTrue(path.is_symlink(), name)
-            self.assertTrue(path.exists(), name)
-            self.assertTrue(path.resolve().is_relative_to(catalog.ROOT), name)
+    def test_repository_uses_only_package_owned_entry_points(self):
+        self.assertFalse((catalog.ROOT / "legacy").exists())
+        self.assertEqual([path.name for path in catalog.ROOT.iterdir() if path.is_symlink()], [])
 
 
 class ValidationTests(unittest.TestCase):

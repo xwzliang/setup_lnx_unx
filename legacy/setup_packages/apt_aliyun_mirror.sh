@@ -1,1 +1,0 @@
-../../packages/apt-mirror/scripts/config/apt_aliyun_mirror.sh

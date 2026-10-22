@@ -1,1 +1,0 @@
-../../../packages/tiv/scripts/install/others/tiv_install.sh

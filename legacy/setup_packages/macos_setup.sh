@@ -1,1 +1,0 @@
-../../packages/macos-settings/scripts/config/macos_setup.sh

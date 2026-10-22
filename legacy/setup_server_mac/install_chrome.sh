@@ -1,1 +1,0 @@
-../../packages/google-chrome/scripts/macos/install_chrome.sh

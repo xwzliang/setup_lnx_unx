@@ -1,1 +1,0 @@
-setup_server_linux/setup_proxmox_autologin.sh

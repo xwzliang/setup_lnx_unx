@@ -1,1 +1,0 @@
-../../packages/phddns/scripts/apps/phddns_install.sh

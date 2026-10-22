@@ -1,1 +1,0 @@
-../../packages/code-server/scripts/macos/setup_code_server.sh

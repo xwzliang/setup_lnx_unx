@@ -1,1 +1,0 @@
-../../packages/vim/scripts/config/vim_setup.sh

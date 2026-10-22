@@ -1,1 +1,0 @@
-../../packages/zotero/scripts/apps/zotero_uninstall.sh

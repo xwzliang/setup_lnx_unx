@@ -1,1 +1,0 @@
-../../packages/workstation/scripts/install/go_packages_install.sh

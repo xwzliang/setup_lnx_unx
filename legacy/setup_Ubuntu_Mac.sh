@@ -1,1 +1,0 @@
-../packages/workstation/scripts/workflows/setup_Ubuntu_Mac.sh

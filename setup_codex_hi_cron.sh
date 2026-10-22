@@ -1,1 +1,0 @@
-legacy/setup_codex_hi_cron.sh

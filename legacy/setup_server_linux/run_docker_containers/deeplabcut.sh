@@ -1,1 +1,0 @@
-../../../packages/deeplabcut/scripts/linux/run_docker_containers/deeplabcut.sh

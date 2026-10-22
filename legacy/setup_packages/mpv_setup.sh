@@ -1,1 +1,0 @@
-../../packages/mpv/scripts/config/mpv_setup.sh

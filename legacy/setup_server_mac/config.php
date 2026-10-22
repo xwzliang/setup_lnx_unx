@@ -1,1 +1,0 @@
-../../packages/mac-server/scripts/macos/config.php

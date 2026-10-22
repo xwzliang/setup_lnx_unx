@@ -1,1 +1,0 @@
-../../packages/openwrt-certificate/scripts/openwrt/https_cert.sh

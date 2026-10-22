@@ -1,1 +1,0 @@
-../../packages/nvidia/scripts/linux/nvidia_gpu_setup.sh

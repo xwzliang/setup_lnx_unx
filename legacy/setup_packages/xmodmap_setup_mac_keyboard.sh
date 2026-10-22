@@ -1,1 +1,0 @@
-../../packages/keyboard/scripts/config/xmodmap_setup_mac_keyboard.sh

@@ -1,1 +1,0 @@
-../../../packages/iina/scripts/macos/iina/install-iina-plugins.sh

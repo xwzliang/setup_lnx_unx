@@ -1,1 +1,0 @@
-../../../packages/qwenvl/scripts/linux/run_docker_containers/qwenvl.sh

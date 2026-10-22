@@ -1,1 +1,0 @@
-../../packages/minikube/scripts/config/minikube_setup.sh

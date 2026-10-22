@@ -1,1 +1,0 @@
-../../packages/conda/scripts/install/conda_install.sh

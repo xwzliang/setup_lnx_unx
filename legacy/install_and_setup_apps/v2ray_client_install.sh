@@ -1,1 +1,0 @@
-../../packages/v2ray/scripts/apps/v2ray_client_install.sh

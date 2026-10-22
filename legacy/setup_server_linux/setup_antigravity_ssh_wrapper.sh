@@ -1,1 +1,0 @@
-../../packages/antigravity-ssh/scripts/linux/setup_antigravity_ssh_wrapper.sh

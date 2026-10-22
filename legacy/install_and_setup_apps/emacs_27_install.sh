@@ -1,1 +1,0 @@
-../../packages/emacs/scripts/apps/emacs_27_install.sh

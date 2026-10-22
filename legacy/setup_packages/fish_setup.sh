@@ -1,1 +1,0 @@
-../../packages/fish/scripts/config/fish_setup.sh

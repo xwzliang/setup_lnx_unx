@@ -1,1 +1,0 @@
-../../packages/imagemagick/scripts/config/imagemagick_setup.sh

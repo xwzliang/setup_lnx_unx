@@ -1,1 +1,0 @@
-../../packages/proxmox-autologin/scripts/linux/setup_proxmox_autologin.sh

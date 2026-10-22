@@ -1,1 +1,0 @@
-../../packages/keyboard/scripts/config/swap_alt_ctrl_key_linux.sh

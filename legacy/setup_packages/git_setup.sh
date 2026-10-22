@@ -1,1 +1,0 @@
-../../packages/git/scripts/config/git_setup.sh

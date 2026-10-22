@@ -1,1 +1,0 @@
-../../packages/tmux/scripts/config/tmux_setup.sh

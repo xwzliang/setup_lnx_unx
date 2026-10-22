@@ -1,1 +1,0 @@
-../../packages/emacs/scripts/config/emacs_setup.sh

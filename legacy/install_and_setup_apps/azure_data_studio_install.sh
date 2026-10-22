@@ -1,1 +1,0 @@
-../../packages/azure-data-studio/scripts/apps/azure_data_studio_install.sh

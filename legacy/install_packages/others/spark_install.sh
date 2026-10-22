@@ -1,1 +1,0 @@
-../../../packages/spark/scripts/install/others/spark_install.sh

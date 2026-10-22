@@ -1,1 +1,0 @@
-../../packages/nvidia/scripts/linux/setup_gpu_fan.sh

@@ -1,1 +1,0 @@
-../../packages/keyboard/scripts/config/xmodmap_setup_win_keyboard.sh

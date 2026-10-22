@@ -1,1 +1,0 @@
-../../../packages/ktransformers/scripts/linux/run_docker_containers/ktransformers.sh

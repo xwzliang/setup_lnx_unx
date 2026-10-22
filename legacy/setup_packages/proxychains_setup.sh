@@ -1,1 +1,0 @@
-../../packages/proxychains/scripts/config/proxychains_setup.sh

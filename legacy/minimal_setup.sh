@@ -1,1 +1,0 @@
-../packages/minimal-workstation/scripts/workflows/minimal_setup.sh

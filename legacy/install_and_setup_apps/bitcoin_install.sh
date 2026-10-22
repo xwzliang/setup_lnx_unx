@@ -1,1 +1,0 @@
-../../packages/bitcoin/scripts/apps/bitcoin_install.sh

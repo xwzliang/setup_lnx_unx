@@ -1,1 +1,0 @@
-../../packages/mongodb-compass/scripts/apps/mongodb_compass_install.sh

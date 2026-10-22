@@ -1,1 +1,0 @@
-../../packages/nix/scripts/install/nix_packages_install.sh

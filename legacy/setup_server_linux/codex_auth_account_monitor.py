@@ -1,1 +1,0 @@
-../../packages/codex-account-monitor/scripts/linux/codex_auth_account_monitor.py

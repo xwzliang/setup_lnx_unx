@@ -1,1 +1,0 @@
-../../packages/mac-server/scripts/apps/mac_brew_cask_install.sh

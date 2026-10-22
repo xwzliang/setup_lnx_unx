@@ -1,1 +1,0 @@
-../../../packages/bashdb/scripts/install/others/bashdb_install.sh

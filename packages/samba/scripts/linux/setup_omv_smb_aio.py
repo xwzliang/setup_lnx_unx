@@ -3,16 +3,16 @@
 
 QUICK START FROM YOUR LINUX CLIENT
     Show this help locally; no SSH, sudo, or OMV installation is needed:
-        python3 /home/broliang/git/setup_lnx_unx/setup_server_linux/setup_omv_smb_aio.py --help
+        python3 /home/broliang/git/setup_lnx_unx/packages/samba/scripts/linux/setup_omv_smb_aio.py --help
 
     Change to the repository for the shorter commands below:
         cd /home/broliang/git/setup_lnx_unx
 
     1. Preview the change on OMV (read-only; no backups or restarts):
-        ssh omv 'sudo -n python3 - --share omv --dry-run' < setup_server_linux/setup_omv_smb_aio.py
+        ssh omv 'sudo -n python3 - --share omv --dry-run' < packages/samba/scripts/linux/setup_omv_smb_aio.py
 
     2. When SMB transfers are idle, apply the change:
-        ssh omv 'sudo -n python3 - --share omv' < setup_server_linux/setup_omv_smb_aio.py
+        ssh omv 'sudo -n python3 - --share omv' < packages/samba/scripts/linux/setup_omv_smb_aio.py
 
     These commands read the script from your client and execute it ON OMV.
     The dash after python3 means "read Python source from standard input".
@@ -27,8 +27,8 @@ CHOOSING THE SERVER AND SHARE
     The script selects one existing enabled SMB share; it does not create one.
 
     Example: configure the media share on the same server:
-        ssh omv 'sudo -n python3 - --share media --dry-run' < setup_server_linux/setup_omv_smb_aio.py
-        ssh omv 'sudo -n python3 - --share media' < setup_server_linux/setup_omv_smb_aio.py
+        ssh omv 'sudo -n python3 - --share media --dry-run' < packages/samba/scripts/linux/setup_omv_smb_aio.py
+        ssh omv 'sudo -n python3 - --share media' < packages/samba/scripts/linux/setup_omv_smb_aio.py
 
     If --share is omitted, it defaults to omv. Names are case-sensitive.
     Quote names containing spaces, e.g. --share "Family Media" when running
@@ -38,7 +38,7 @@ IF SUDO REQUIRES A PASSWORD
     The streamed commands use sudo -n, which fails instead of prompting.
     Do not remove -n and try to share standard input with a password prompt.
     Instead upload the script, then log in interactively:
-        scp setup_server_linux/setup_omv_smb_aio.py omv:~/setup_omv_smb_aio.py
+        scp packages/samba/scripts/linux/setup_omv_smb_aio.py omv:~/setup_omv_smb_aio.py
         ssh -t omv
 
     In that OMV shell, run (sudo can now prompt for your password):

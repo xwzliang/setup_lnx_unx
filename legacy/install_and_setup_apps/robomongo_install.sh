@@ -1,1 +1,0 @@
-../../packages/robomongo/scripts/apps/robomongo_install.sh

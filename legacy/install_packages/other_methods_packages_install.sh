@@ -1,1 +1,0 @@
-../../packages/node/scripts/install/other_methods_packages_install.sh

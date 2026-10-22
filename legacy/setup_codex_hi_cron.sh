@@ -1,1 +1,0 @@
-../packages/codex-cron/scripts/workflows/setup_codex_hi_cron.sh

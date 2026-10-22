@@ -1,1 +1,0 @@
-../../packages/workstation/scripts/install/npm_packages_install.sh

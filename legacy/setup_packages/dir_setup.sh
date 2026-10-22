@@ -1,1 +1,0 @@
-../../packages/directories/scripts/config/dir_setup.sh

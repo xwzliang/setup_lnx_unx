@@ -1,1 +1,0 @@
-../../packages/azure-cli/scripts/apps/microsoft_azure_cli_install.sh

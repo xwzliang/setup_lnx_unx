@@ -1,1 +1,0 @@
-../../packages/keyboard/scripts/config/evdev_setup_mac_keyboard.sh

@@ -1,1 +1,0 @@
-../../packages/zsh/scripts/config/zsh_setup.sh

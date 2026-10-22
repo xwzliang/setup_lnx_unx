@@ -35,10 +35,9 @@ class MigratedCatalogTests(unittest.TestCase):
         mapping = json.loads((catalog.ROOT / "docs/recipe-migration.json").read_text())
         for old, new in mapping.items():
             with self.subTest(old=old):
-                original, destination = catalog.ROOT / old, catalog.ROOT / new
-                self.assertTrue(original.is_symlink())
+                destination = catalog.ROOT / new
                 self.assertTrue(destination.is_file())
-                self.assertEqual(original.resolve(), destination.resolve())
+                self.assertFalse(destination.is_symlink())
                 self.assertTrue(destination.resolve().is_relative_to(catalog.ROOT / "packages"))
         scripts = {r["script"] for item in self.packages.values() for r in item.get("recipes", {}).values()}
         for old, new in mapping.items():

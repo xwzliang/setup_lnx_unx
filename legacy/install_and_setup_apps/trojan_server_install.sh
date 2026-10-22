@@ -1,1 +1,0 @@
-../../packages/trojan/scripts/apps/trojan_server_install.sh

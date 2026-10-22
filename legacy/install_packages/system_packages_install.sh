@@ -1,1 +1,0 @@
-../../packages/workstation/scripts/install/system_packages_install.sh

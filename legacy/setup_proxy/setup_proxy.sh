@@ -1,1 +1,0 @@
-../../packages/proxy/scripts/workflows/setup_proxy.sh

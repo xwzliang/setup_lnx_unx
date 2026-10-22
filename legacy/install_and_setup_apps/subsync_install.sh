@@ -1,1 +1,0 @@
-../../packages/subsync/scripts/apps/subsync_install.sh

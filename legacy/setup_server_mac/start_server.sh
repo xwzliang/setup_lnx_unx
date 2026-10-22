@@ -1,1 +1,0 @@
-../../packages/mac-server/scripts/macos/start_server.sh

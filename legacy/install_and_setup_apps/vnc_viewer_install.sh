@@ -1,1 +1,0 @@
-../../packages/vnc-viewer/scripts/apps/vnc_viewer_install.sh

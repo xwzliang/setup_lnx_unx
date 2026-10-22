@@ -1,1 +1,0 @@
-../../../packages/zshdb/scripts/install/others/zshdb_install.sh

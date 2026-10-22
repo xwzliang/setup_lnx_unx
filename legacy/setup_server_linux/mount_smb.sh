@@ -1,1 +1,0 @@
-../../packages/samba/scripts/linux/mount_smb.sh

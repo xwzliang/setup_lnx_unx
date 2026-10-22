@@ -1,1 +1,0 @@
-../packages/llm/scripts/workflows/llm_setup.sh

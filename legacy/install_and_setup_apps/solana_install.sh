@@ -1,1 +1,0 @@
-../../packages/solana/scripts/apps/solana_install.sh

@@ -1,1 +1,0 @@
-../../packages/systemd/scripts/config/systemd_setup.sh

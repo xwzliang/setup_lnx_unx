@@ -1,1 +1,0 @@
-../../packages/font/scripts/apps/font_install.sh

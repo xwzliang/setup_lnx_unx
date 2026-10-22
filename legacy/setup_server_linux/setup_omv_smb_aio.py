@@ -1,1 +1,0 @@
-../../packages/samba/scripts/linux/setup_omv_smb_aio.py

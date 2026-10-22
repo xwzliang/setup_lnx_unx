@@ -1,7 +1,7 @@
 # Migration to package-owned recipes
 
-The initial catalog redesign is committed as `4d99aa9`. The next migration moves
-all remaining implementation files out of `legacy/`: 129 files, including 119
+The initial catalog redesign is committed as `4d99aa9`. The migration checkpoint
+is `6f4f6d1`, which moved all implementation files out of `legacy/`: 129 files, including 119
 executable recipes and their helper files/assets. Every package now owns a
 `packages/<name>/package.json` manifest and a `scripts/` tree. The complete mapping
 is [recipe-migration.json](recipe-migration.json).
@@ -12,11 +12,19 @@ configuration. Either phase can be selected alone, and `--recipe` (or
 `--install-recipe`/`--configure-recipe`) selects alternatives. All commands preview
 unless `--apply` is present.
 
-Old top-level paths and paths beneath `legacy/` are compatibility symlinks to the
-canonical files. They retain script filenames and executable permissions, but now
-follow the updated implementations described below. For an exact historical copy,
-use the initial redesign commit. Raw GitHub downloads must use canonical package
-paths because raw endpoints return a symlink's text rather than following it.
+The legacy folder and root compatibility links have now been removed. Use `./setup`
+and the canonical package files for all current workflows. The path map retains
+historical keys for locating files in earlier commits; those paths are not expected
+to exist in the current checkout.
+
+To inspect an original script without changing the working tree:
+
+```sh
+git show 4d99aa9:legacy/setup_packages/zsh_setup.sh
+```
+
+Commit `6f4f6d1` preserves the completed migration with compatibility links. For
+raw GitHub downloads, use the canonical `packages/<name>/scripts/...` path.
 
 ## Behavior corrected during migration
 

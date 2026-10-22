@@ -1,1 +1,0 @@
-../../packages/codex-account-monitor/scripts/linux/setup_codex_account_restart.sh

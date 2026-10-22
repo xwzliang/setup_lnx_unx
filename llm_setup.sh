@@ -1,1 +1,0 @@
-legacy/llm_setup.sh

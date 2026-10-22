@@ -1,1 +1,0 @@
-../../packages/workstation/scripts/install/python3_modules_install.sh

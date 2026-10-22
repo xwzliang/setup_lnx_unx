@@ -1,1 +1,0 @@
-../../packages/dropbox/scripts/apps/dropboxd_setup.sh

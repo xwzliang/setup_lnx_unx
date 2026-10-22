@@ -1,1 +1,0 @@
-legacy/minimal_setup.sh

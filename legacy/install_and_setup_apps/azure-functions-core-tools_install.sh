@@ -1,1 +1,0 @@
-../../packages/azure-functions-core-tools/scripts/apps/azure-functions-core-tools_install.sh

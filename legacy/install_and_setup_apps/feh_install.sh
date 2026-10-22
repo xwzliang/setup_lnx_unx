@@ -1,1 +1,0 @@
-../../packages/feh/scripts/apps/feh_install.sh

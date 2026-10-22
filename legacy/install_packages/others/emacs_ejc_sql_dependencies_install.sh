@@ -1,1 +1,0 @@
-../../../packages/emacs/scripts/install/others/emacs_ejc_sql_dependencies_install.sh

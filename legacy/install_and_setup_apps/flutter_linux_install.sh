@@ -1,1 +1,0 @@
-../../packages/flutter/scripts/apps/flutter_linux_install.sh

@@ -1,1 +1,0 @@
-../../packages/proxy/scripts/workflows/install_client.sh

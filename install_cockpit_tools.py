@@ -1,1 +1,0 @@
-legacy/install_cockpit_tools.py

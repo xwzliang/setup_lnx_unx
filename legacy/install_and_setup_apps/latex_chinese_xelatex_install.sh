@@ -1,1 +1,0 @@
-../../packages/latex/scripts/apps/latex_chinese_xelatex_install.sh

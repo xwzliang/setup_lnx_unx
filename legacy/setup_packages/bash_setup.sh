@@ -1,1 +1,0 @@
-../../packages/bash/scripts/config/bash_setup.sh

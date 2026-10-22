@@ -1,1 +1,0 @@
-../../packages/mongodb/scripts/config/mongodb_setup.sh

@@ -1,1 +1,0 @@
-../../packages/samba/scripts/apps/samba_install_and_setup.sh

@@ -1,1 +1,0 @@
-../../../packages/fluxgym/scripts/linux/run_docker_containers/fluxgym.sh

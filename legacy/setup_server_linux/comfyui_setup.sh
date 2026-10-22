@@ -1,1 +1,0 @@
-../../packages/comfyui/scripts/linux/comfyui_setup.sh

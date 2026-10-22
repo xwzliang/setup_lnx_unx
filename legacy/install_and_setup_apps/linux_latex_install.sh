@@ -1,1 +1,0 @@
-../../packages/latex/scripts/apps/linux_latex_install.sh

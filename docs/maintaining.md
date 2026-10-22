@@ -95,10 +95,11 @@ python3 -m unittest discover -s tests -v
 
 Tests must not install software. Use fixture executables, temporary configurations,
 and mocked downloads. The suite previews every catalog recipe without allowing
-subprocesses, parses shell/Python code, checks migration links and complete script
+subprocesses, parses shell/Python code, checks migration destinations and complete script
 coverage, and exercises phase ordering and failure handling with temporary scripts.
 
-The complete relocation map is `docs/recipe-migration.json`. Keep compatibility
-symlinks and their map entries current when moving files. Preserve sibling helper
+The historical relocation map is `docs/recipe-migration.json`. Keep its destination
+paths current when moving files; its old paths exist only in Git history. Preserve sibling helper
 files (such as account-monitor tests and IINA's repository list). New implementation
-work belongs under the package; `legacy/` now contains only compatibility paths.
+work belongs under the package. Do not reintroduce the removed legacy folder or
+root compatibility links; use commits `6f4f6d1` and `4d99aa9` for historical inspection.

@@ -1,1 +1,0 @@
-../../../packages/n8n/scripts/macos/run_docker_containers/n8n.sh

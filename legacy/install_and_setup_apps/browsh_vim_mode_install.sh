@@ -1,1 +1,0 @@
-../../packages/browsh/scripts/apps/browsh_vim_mode_install.sh

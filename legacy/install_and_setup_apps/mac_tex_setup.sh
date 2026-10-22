@@ -1,1 +1,0 @@
-../../packages/basictex/scripts/apps/mac_tex_setup.sh

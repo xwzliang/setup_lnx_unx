@@ -1,1 +1,0 @@
-../../../packages/metals/scripts/install/others/metals-emacs_install.sh

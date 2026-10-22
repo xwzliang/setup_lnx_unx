@@ -1,1 +1,0 @@
-../../packages/mac-server/scripts/macos/server_packages_mac_install.sh

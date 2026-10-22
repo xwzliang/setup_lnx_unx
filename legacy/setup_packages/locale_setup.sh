@@ -1,1 +1,0 @@
-../../packages/locale/scripts/config/locale_setup.sh

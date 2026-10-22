@@ -1,1 +1,0 @@
-../../packages/passwall/scripts/openwrt/ensure_passwall.sh

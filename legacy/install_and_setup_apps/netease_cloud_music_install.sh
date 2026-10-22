@@ -1,1 +1,0 @@
-../../packages/netease-cloud-music/scripts/apps/netease_cloud_music_install.sh

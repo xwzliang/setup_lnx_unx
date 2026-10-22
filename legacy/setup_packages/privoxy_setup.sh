@@ -1,1 +1,0 @@
-../../packages/privoxy/scripts/config/privoxy_setup.sh

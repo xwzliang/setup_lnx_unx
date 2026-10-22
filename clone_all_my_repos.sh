@@ -1,1 +1,0 @@
-legacy/clone_all_my_repos.sh

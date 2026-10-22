@@ -107,17 +107,18 @@ those recipes discoverable and maintainable without claiming universal portabili
 
 ```text
 setup                           CLI entry point
-packages/<name>/package.json    Install methods, configuration, recipes, parameters
+packages/<name>/package.json     Install methods, configuration, recipes, parameters
 packages/<name>/scripts/         Package-owned scripts and sibling assets
 setup_tool/                     Planning, validation, execution, manager adapters
-tests/                         Offline tests (no real installations)
+tests/                          Offline tests (no real installations)
 docs/packages.md                Generated package index
-docs/recipe-migration.json      Complete old-path to new-path mapping
-legacy/                         Compatibility symlinks, not implementation files
+docs/recipe-migration.json       Historical old-path to current-path mapping
 ```
 
-Old top-level paths also remain compatibility links. Edit canonical package files,
-not links. [Migration details](docs/migration.md) explain the behavioral changes;
+Use `./setup` and the package-owned files; the legacy folder and root compatibility
+links have been removed. The migration checkpoint is commit `6f4f6d1`, and the
+original scripts are preserved in `4d99aa9` under `legacy/`.
+[Migration details](docs/migration.md) explain the behavioral changes;
 [maintaining the catalog](docs/maintaining.md) covers new recipes.
 
 ## Validation without installing packages

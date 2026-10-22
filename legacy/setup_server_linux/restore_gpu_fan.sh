@@ -1,1 +1,0 @@
-../../packages/nvidia/scripts/linux/restore_gpu_fan.sh

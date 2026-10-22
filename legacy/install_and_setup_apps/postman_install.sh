@@ -1,1 +1,0 @@
-../../packages/postman/scripts/apps/postman_install.sh

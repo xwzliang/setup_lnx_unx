@@ -1,1 +1,0 @@
-legacy/setup_Ubuntu_Mac.sh

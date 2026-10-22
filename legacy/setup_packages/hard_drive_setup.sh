@@ -1,1 +1,0 @@
-../../packages/mounts/scripts/config/hard_drive_setup.sh

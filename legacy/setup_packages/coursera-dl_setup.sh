@@ -1,1 +1,0 @@
-../../packages/coursera-dl/scripts/config/coursera-dl_setup.sh

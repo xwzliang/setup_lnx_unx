@@ -1,1 +1,0 @@
-../../packages/etcher/scripts/apps/etcher_install.sh

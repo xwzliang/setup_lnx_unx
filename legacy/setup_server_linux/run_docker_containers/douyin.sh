@@ -1,1 +1,0 @@
-../../../packages/douyin/scripts/linux/run_docker_containers/douyin.sh

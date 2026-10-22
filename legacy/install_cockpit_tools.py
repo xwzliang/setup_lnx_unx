@@ -1,1 +1,0 @@
-../packages/cockpit/scripts/workflows/install_cockpit_tools.py

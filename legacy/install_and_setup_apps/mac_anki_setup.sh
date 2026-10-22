@@ -1,1 +1,0 @@
-../../packages/anki/scripts/apps/mac_anki_setup.sh

@@ -1,1 +1,0 @@
-../../packages/flutter/scripts/apps/flutter_mac_install.sh

@@ -1,1 +1,0 @@
-../../packages/cron/scripts/config/cron_setup.sh

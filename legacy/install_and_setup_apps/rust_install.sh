@@ -1,1 +1,0 @@
-../../packages/rust/scripts/apps/rust_install.sh

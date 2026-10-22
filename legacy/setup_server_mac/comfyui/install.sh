@@ -1,1 +1,0 @@
-../../../packages/comfyui/scripts/macos/comfyui/install.sh
