@@ -51,7 +51,7 @@ def http_url(value, label):
     return value
 
 
-def settings(env, names, all_names):
+def settings(env, names, all_names, require_urls=True):
     identifiers = env.get("SUBSCRIPTIONS", "").split()
     if not identifiers or len(set(identifiers)) != len(identifiers) or any(not IDENT.fullmatch(n) for n in identifiers):
         raise ValueError("SUBSCRIPTIONS must contain unique identifiers: letters, digits and underscores")
@@ -69,8 +69,8 @@ def settings(env, names, all_names):
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", filename) or filename in configs.values():
             raise ValueError("Subscription CONFIG names must be unique safe filenames, without .yaml")
         configs[name] = filename
-        subscriptions[name] = (filename, http_url(env.get(prefix + "URL", ""), prefix + "URL"),
-                               http_url(env.get(prefix + "TEMPLATE", env.get("TEMPLATE_URL", TEMPLATE)), "Template"))
+        subscriptions[name] = (filename, http_url(env.get(prefix + "URL", ""), prefix + "URL") if require_urls else "",
+                               http_url(env.get(prefix + "TEMPLATE", env.get("TEMPLATE_URL", TEMPLATE)), "Template") if require_urls else "")
     return [(name, *subscriptions[name]) for name in selected], active, configs[active]
 
 
@@ -126,7 +126,7 @@ rollback() {
 }
 trap rollback EXIT
 trap 'exit 1' HUP INT TERM
-for cmd in curl ruby flock uci; do command -v "$cmd" >/dev/null; done
+for cmd in ruby flock uci; do command -v "$cmd" >/dev/null; done
 test -x /etc/openclash/clash
 test -z "$(uci changes openclash)" || { echo 'Uncommitted OpenClash UCI changes'; exit 1; }
 . /lib/functions.sh
@@ -144,10 +144,19 @@ mkdir -p candidates backup
 """
 
 
-def worker(entries, active, active_config, converter_port, check_only=False):
+def worker(entries, active, active_config, converter_port, check_only=False, switch_only=False):
     q = shlex.quote
     parts = [PREAMBLE]
+    if not switch_only:
+        parts.append("command -v curl >/dev/null\n")
     for name, config, url, template in entries:
+        if switch_only:
+            parts.append(f"""
+echo validating-{name} >phase
+test -s /etc/openclash/config/{config}.yaml || {{ echo 'Saved config is missing; use --switch with --update first'; exit 1; }}
+/etc/openclash/clash -t -d /etc/openclash -f /etc/openclash/config/{config}.yaml >validation-{name}.log 2>&1
+""")
+            continue
         parts.append(f"""
 echo converting-{name} >phase
 wanted={q(config)}
@@ -247,12 +256,22 @@ def main():
     choice = parser.add_mutually_exclusive_group(required=True)
     choice.add_argument("--name", nargs="+", help="One or more identifiers from SUBSCRIPTIONS")
     choice.add_argument("--all", action="store_true", help="Update every configured identifier")
+    choice.add_argument("--switch", metavar="IDENTIFIER", help="Activate its saved config without fetching or converting")
+    parser.add_argument("--update", action="store_true", help="With --switch, fetch and convert before activation")
     parser.add_argument("--router", help="Override ROUTER (default 192.168.5.1)")
     parser.add_argument("--port", type=int, help="Override SSH_PORT (default 22)")
-    parser.add_argument("--check-only", action="store_true", help="Convert and validate, without changing OpenClash")
+    parser.add_argument("--check-only", action="store_true", help="Validate the requested operation without changing OpenClash")
     args = parser.parse_args()
+    if args.update and not args.switch:
+        parser.error("--update requires --switch IDENTIFIER")
     env = read_env(args.env)
-    entries, active, active_config = settings(env, args.name or [], args.all)
+    switch_only = bool(args.switch and not args.update)
+    if args.switch:
+        # Override this invocation only; do not rewrite the user's .env.
+        env["ACTIVE_SUBSCRIPTION"] = args.switch
+    entries, active, active_config = settings(
+        env, [args.switch] if args.switch else args.name or [], args.all,
+        require_urls=not switch_only)
     args.router = args.router or env.get("ROUTER", "192.168.5.1")
     args.port = args.port or int(env.get("SSH_PORT", "22"))
     converter_port = int(env.get("SUBCONVERTER_PORT", "15051"))
@@ -260,7 +279,7 @@ def main():
         raise ValueError("Invalid router address or SSH alias")
     if not all(1 <= p <= 65535 for p in (args.port, converter_port)):
         raise ValueError("Ports must be between 1 and 65535")
-    payload = worker(entries, active, active_config, converter_port, args.check_only)
+    payload = worker(entries, active, active_config, converter_port, args.check_only, switch_only)
     with tempfile.TemporaryDirectory(prefix="openclash-sub-") as tmp:
         remote = Installer(args, Path(tmp) / "ssh")
         try:
@@ -270,7 +289,7 @@ def main():
                 raise RuntimeError("Unexpected staging path")
             remote.remote(f"umask 077; cat > {stage}/run.sh", payload)
             remote.remote(f"nohup sh {stage}/run.sh {stage} >/dev/null 2>&1 </dev/null &")
-            print("Converting: " + ", ".join(e[0] for e in entries), flush=True)
+            print(("Switching saved config: " if switch_only else "Converting: ") + ", ".join(e[0] for e in entries), flush=True)
             print("Private router logs and backups: " + stage, flush=True)
             deadline = time.monotonic() + 240 * len(entries) + 360
             last_phase = None

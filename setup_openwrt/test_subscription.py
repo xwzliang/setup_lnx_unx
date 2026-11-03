@@ -23,7 +23,7 @@ class SubscriptionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 sub.settings(env, [], True)
 
-    def run_worker(self, failure='', check_only=False, count=1, activate=False, existing=False):
+    def run_worker(self, failure='', check_only=False, count=1, activate=False, existing=False, switch_only=False):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         root = Path(tmp.name)
@@ -77,8 +77,17 @@ esac
         init = root / 'etc/init.d/openclash'
         init.write_text('#!/bin/sh\nexit 1\n')
         init.chmod(0o755)
-        script = sub.worker(entries, 'ONE' if activate else 'OTHER', 'one' if activate else 'other', 15051, check_only)
-        for prefix in ['/etc/', '/lib/', '/tmp/lock/']:
+        if failure == 'restart_success':
+            init.write_text('#!/bin/sh\nexit 0\n')
+            pidof = root / 'bin/pidof'
+            pidof.write_text('#!/bin/sh\necho 123\n')
+            pidof.chmod(0o755)
+            (root / 'proc/123').mkdir(parents=True)
+            (root / 'proc/123/cmdline').write_bytes(b'clash\0-f\0' + str(root / 'etc/openclash/one.yaml').encode() + b'\0')
+            uci = root / 'bin/uci'
+            uci.write_text(uci.read_text().replace('echo /different.yaml', 'echo ' + str(root / 'etc/openclash/config/one.yaml')))
+        script = sub.worker(entries, 'ONE' if activate else 'OTHER', 'one' if activate else 'other', 15051, check_only, switch_only)
+        for prefix in ['/etc/', '/lib/', '/tmp/lock/', '/proc/']:
             script = script.replace(prefix, str(root) + prefix)
         run = root / 'stage/run.sh'
         run.write_text(script)
@@ -125,6 +134,44 @@ esac
         self.assertEqual((root / 'agents').read_text().splitlines()[:2], ['Clash', 'Quantumultx'])
         self.assertFalse(list((root / 'etc/openclash/config').glob('.subscription-fetch.*')))
         self.assertIn('/data/${fetch_dir##*/}/source.yaml', (root / 'stage/run.sh').read_text())
+
+    def test_switch_only_needs_no_urls(self):
+        entries, active, config = sub.settings(
+            {'SUBSCRIPTIONS': 'ONE TWO', 'ACTIVE_SUBSCRIPTION': 'TWO'},
+            ['TWO'], False, require_urls=False)
+        self.assertEqual(entries, [('TWO', 'TWO', '', '')])
+        self.assertEqual(active, 'TWO')
+
+    def test_switch_only_validation_skips_fetch_and_conversion(self):
+        root, result = self.run_worker(check_only=True, activate=True, switch_only=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertFalse((root / 'agents').exists())
+        self.assertEqual((root / 'etc/openclash/config/one.yaml').read_text(), 'original one')
+        self.assertFalse((root / 'batch').exists())
+
+    def test_switch_only_success_preserves_yaml_and_backs_up_settings(self):
+        root, result = self.run_worker('restart_success', activate=True, switch_only=True)
+        self.assertEqual(result.returncode, 0, (root / 'stage/worker.log').read_text())
+        self.assertEqual((root / 'stage/result').read_text().strip(), 'installed')
+        self.assertEqual((root / 'stage/backup/openclash').read_text(), 'original uci')
+        self.assertEqual((root / 'etc/openclash/config/one.yaml').read_text(), 'original one')
+        self.assertFalse((root / 'agents').exists())
+
+    def test_switch_only_invalid_config_leaves_settings(self):
+        root, result = self.run_worker('core', activate=True, switch_only=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((root / 'batch').exists())
+        self.assertEqual((root / 'etc/config/openclash').read_text(), 'original uci')
+
+    def test_switch_only_restart_failure_restores_settings(self):
+        root, result = self.run_worker(activate=True, switch_only=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((root / 'agents').exists())
+        self.assertEqual((root / 'etc/config/openclash').read_text(), 'original uci')
+        self.assertEqual((root / 'etc/openclash/config/one.yaml').read_text(), 'original one')
+        batch = (root / 'batch').read_text()
+        self.assertIn('config.config_path=', batch)
+        self.assertNotIn('.address=', batch)
 
     def test_check_only_does_not_write(self):
         root, result = self.run_worker(check_only=True)

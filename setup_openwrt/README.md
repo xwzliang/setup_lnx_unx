@@ -352,3 +352,28 @@ all existing configs untouched. Logs remain private because converter/core error
 may contain credentials. No URLs are printed or passed in the SSH command line.
 
 Tests: `python3 -m unittest test_subscription test_installer test_subconverter -v`.
+
+
+### Switching the active subscription
+
+```sh
+# Activate an already installed config: no download and no subconverter call.
+./install_openclash_subscription.py --switch MY_PROVIDER
+# Fetch and convert fresh data first, then activate it (provider window applies).
+./install_openclash_subscription.py --switch MY_PROVIDER --update
+# Validate the saved config without switching or restarting.
+./install_openclash_subscription.py --switch MY_PROVIDER --check-only
+```
+
+The identifier must appear in `SUBSCRIPTIONS`; its optional `CONFIG` value selects
+which saved YAML to activate. Switching without `--update` does not require URL
+or template values, a running subconverter, or an open provider download window.
+The saved file must already exist and pass the Clash core's config check.
+OpenClash restarts to activate it; the kill switch may briefly interrupt internet
+access. The script backs up the previous UCI settings and restores them if
+activation fails. Saved YAML files are not replaced in this mode.
+
+`--switch` overrides `ACTIVE_SUBSCRIPTION` for this invocation and saves the active
+selection on the router. It does not edit `.env`. Set `ACTIVE_SUBSCRIPTION` there
+as well if you want subsequent `--all` updates to keep that selection. `--switch`
+cannot be combined with `--name` or `--all`; `--update` requires `--switch`.
