@@ -433,10 +433,29 @@ and reloads the firewall to test fail-closed behavior. A file-based recovery job
 on the router starts OpenClash again after 25 seconds, independently of SSH.
 Local router HTTP and SSH must remain accessible throughout.
 
-The installer pins official Mihomo **v1.19.33** and verifies SHA-256 before upload.
+The installer defaults to pinned official Mihomo **v1.19.33** and verifies SHA-256
+before upload. Choose a release explicitly or resolve the latest stable release:
+
+```sh
+./install_mihomo.py --version 1.19.33
+./install_mihomo.py --version v1.19.33
+./install_mihomo.py --version latest
+```
+
+`latest` is resolved once using the official GitHub Releases API, then that concrete
+version is used for download and running-core verification. Non-default releases
+use the asset's published SHA-256 digest. Older assets without a digest require
+`--sha256 <trusted-sha256>`; verification is never silently skipped. A supplied
+checksum must agree with the published/pinned checksum when one is available.
+The selected version, URL and hash are retained in the router's `release.txt`.
+The default pinned release still works without an API lookup, including when
+`--archive` supplies its download locally. Other versions need API access even
+with `--archive`, to resolve and verify the selected asset. New/older releases
+still must pass config and live-routing checks; version selection does not imply
+compatibility with every OpenClash version.
 It selects `amd64-compatible` on x86-64 or `arm64` on aarch64; other architectures
 are rejected. `--archive /path/to/official.gz` avoids downloading again but still
-requires the pinned checksum. Checksum values come from the official GitHub release.
+requires the checksum for the selected version. Checksum values come from the official GitHub release.
 Before writing the upload, it estimates free space needed for the binary and two
 compressed backups, plus a reserve; insufficient space aborts without mutation.
 Old upgrade directories can be sizable: archive them privately before removing

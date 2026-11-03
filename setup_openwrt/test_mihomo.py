@@ -1,4 +1,5 @@
 import gzip
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -38,6 +39,41 @@ class UpgradeTests(unittest.TestCase):
             probe('server', '192.168.5.103', 'https://example.com/')
             self.assertEqual(ssh.call_args.args[0], 'server')
             self.assertIn('--interface 192.168.5.103', ssh.call_args.args[1])
+
+    def release_response(self, digest='sha256:' + 'a'*64, version='1.20.0'):
+        name = f'mihomo-linux-amd64-compatible-v{version}.gz'
+        return SimpleNamespace(stdout=json.dumps({'tag_name': 'v'+version, 'assets': [{
+            'name': name, 'digest': digest,
+            'browser_download_url': f'https://github.com/MetaCubeX/mihomo/releases/download/v{version}/{name}',
+        }]}))
+
+    def test_default_version_is_pinned_and_offline(self):
+        with patch('install_mihomo.subprocess.run') as run:
+            self.assertEqual(m.resolve_release('x86_64')[0], m.VERSION)
+            self.assertEqual(m.resolve_release('x86_64', 'v'+m.VERSION)[0], m.VERSION)
+            run.assert_not_called()
+
+    def test_latest_resolves_concrete_version_and_checksum(self):
+        with patch('install_mihomo.subprocess.run', return_value=self.release_response()) as run:
+            version, url, digest = m.resolve_release('x86_64', 'latest')
+            self.assertEqual(version, '1.20.0')
+            self.assertIn('/v1.20.0/', url)
+            self.assertEqual(digest, 'a'*64)
+            self.assertTrue(run.call_args.args[0][-1].endswith('/latest'))
+
+    def test_explicit_version_and_missing_digest(self):
+        with patch('install_mihomo.subprocess.run', return_value=self.release_response(None)) as run:
+            with self.assertRaisesRegex(ValueError, 'no published SHA-256'):
+                m.resolve_release('x86_64', '1.20.0')
+            self.assertEqual(m.resolve_release('x86_64', 'v1.20.0', 'b'*64)[2], 'b'*64)
+            self.assertTrue(run.call_args.args[0][-1].endswith('/tags/v1.20.0'))
+        with patch('install_mihomo.subprocess.run', return_value=self.release_response()):
+            with self.assertRaisesRegex(ValueError, 'conflicts'):
+                m.resolve_release('x86_64', '1.20.0', 'b'*64)
+            with self.assertRaisesRegex(ValueError, 'unexpected release'):
+                m.resolve_release('x86_64', '1.21.0')
+        with self.assertRaises(ValueError):
+            m.normalize_version('../../bad')
 
     def exercise(self, failure=False):
         temp = tempfile.TemporaryDirectory()

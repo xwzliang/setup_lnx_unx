@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Upgrade legacy fw3 OpenClash to pinned Mihomo, with LAN tests and rollback."""
+"""Upgrade legacy fw3 OpenClash to Mihomo, with LAN tests and rollback."""
 import argparse
 import hashlib
 import gzip
 import ipaddress
+import json
 import os
 from pathlib import Path
 import re
@@ -96,12 +97,67 @@ def release(arch):
     return f'https://github.com/MetaCubeX/mihomo/releases/download/v{VERSION}/mihomo-linux-{asset}-v{VERSION}.gz', digest
 
 
+def normalize_version(value):
+    if value == 'latest':
+        return value
+    value = value.removeprefix('v')
+    if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?', value):
+        raise ValueError('Version must be latest or a release version, e.g. 1.19.33')
+    return value
+
+
+def resolve_release(arch, requested=VERSION, checksum=None):
+    requested = normalize_version(requested)
+    if checksum and not re.fullmatch(r'[0-9a-fA-F]{64}', checksum):
+        raise ValueError('--sha256 must contain 64 hexadecimal characters')
+    checksum = checksum.lower() if checksum else None
+    # Keep the default reproducible and usable offline with --archive.
+    pinned_url, pinned_hash = release(arch)
+    if requested == VERSION:
+        if checksum and checksum != pinned_hash:
+            raise ValueError('Provided SHA-256 conflicts with pinned release checksum')
+        return VERSION, pinned_url, pinned_hash
+    endpoint = 'latest' if requested == 'latest' else 'tags/v' + requested
+    response = subprocess.run([
+        'curl', '-fsSL', '--connect-timeout', '10', '--max-time', '30',
+        '-H', 'Accept: application/vnd.github+json',
+        'https://api.github.com/repos/MetaCubeX/mihomo/releases/' + endpoint,
+    ], check=True, capture_output=True, text=True)
+    data = json.loads(response.stdout)
+    resolved = normalize_version(data.get('tag_name', ''))
+    if resolved == 'latest' or data.get('draft') or (requested == 'latest' and data.get('prerelease')):
+        raise ValueError('GitHub did not return a published stable release')
+    if requested != 'latest' and resolved != requested:
+        raise ValueError('GitHub returned an unexpected release version')
+    asset_name = f'mihomo-linux-{RELEASES[arch][0]}-v{resolved}.gz'
+    asset = next((a for a in data.get('assets', []) if a.get('name') == asset_name), None)
+    if asset is None:
+        raise ValueError(f'Release v{resolved} has no compatible asset: {asset_name}')
+    url = f'https://github.com/MetaCubeX/mihomo/releases/download/v{resolved}/{asset_name}'
+    if asset.get('browser_download_url') != url:
+        raise ValueError('Unexpected release asset download URL')
+    published = asset.get('digest') or ''
+    if re.fullmatch(r'sha256:[0-9a-fA-F]{64}', published):
+        digest = published.split(':', 1)[1].lower()
+    elif resolved == VERSION:
+        digest = pinned_hash
+    elif checksum:
+        digest = checksum
+    else:
+        raise ValueError('Release has no published SHA-256 digest; supply --sha256 from a trusted source')
+    if checksum and checksum != digest:
+        raise ValueError('Provided SHA-256 conflicts with the published digest')
+    return resolved, url, digest
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--router', default='192.168.5.1')
     parser.add_argument('--port', type=int, default=22)
     parser.add_argument('--client', help='SSH alias for a separate Linux LAN client (default: this machine)')
     parser.add_argument('--client-ip', type=ipaddress.IPv4Address, help='Required with --client; otherwise detected from router SSH')
+    parser.add_argument('--version', default=VERSION, type=normalize_version, help=f'Release version or latest (default: {VERSION})')
+    parser.add_argument('--sha256', help='Trusted asset checksum, required for older releases without a published digest')
     parser.add_argument('--archive', type=Path, help='Use an already downloaded official .gz (checksum still verified)')
     parser.add_argument('--validate-config', help='Additional existing router YAML to check before switching')
     parser.add_argument('--backup-dir', type=Path, default=Path.home()/'.local/state/mihomo-upgrade')
@@ -129,7 +185,8 @@ def main():
             route = remote.remote(f'ip -4 route get {args.client_ip}')
             if not re.search(r'\bdev br-lan\b', route):
                 raise RuntimeError('Outage-test client must be reachable through br-lan')
-            url, digest = release(remote.remote('uname -m'))
+            selected_version, url, digest = resolve_release(remote.remote('uname -m'), args.version, args.sha256)
+            print(f'Selected Mihomo v{selected_version}; SHA-256: {digest}', flush=True)
             archive = args.archive or Path(tmp)/'core.gz'
             if not args.archive:
                 subprocess.run(['curl','-fL','--connect-timeout','15','--max-time','180',url,'-o',str(archive)], check=True)
@@ -151,7 +208,7 @@ def main():
                 raise RuntimeError('Unexpected staging directory')
             with archive.open('rb') as stream:
                 subprocess.run(remote.ssh + ['-o','BatchMode=yes',remote.target,f'umask 077; cat >{stage}/core.gz'], stdin=stream, check=True)
-            for name, source in [('upgrade.sh',UPGRADE),('restore.sh',RESTORE),('watch.sh',WATCH),('validate-path',args.validate_config or '')]:
+            for name, source in [('upgrade.sh',UPGRADE),('restore.sh',RESTORE),('watch.sh',WATCH),('validate-path',args.validate_config or ''),('release.txt', f'version={selected_version}\nurl={url}\nsha256={digest}\n')]:
                 remote.remote(f'umask 077; cat >{stage}/{name}', source)
             print('Private router backup and logs: '+stage, flush=True)
             remote.remote(f'nohup sh {stage}/upgrade.sh {stage} >/dev/null 2>&1 </dev/null &')
@@ -165,7 +222,7 @@ def main():
             print('Mihomo started; verifying LAN routing and firewall guard.', flush=True)
             remote.script(VERIFY)
             version = remote.remote('/etc/openclash/clash -v')
-            if f'Meta v{VERSION}' not in version:
+            if not re.search(r'\bMeta v' + re.escape(selected_version) + r'(?:\s|$)', version):
                 raise RuntimeError('Running core version does not match expected release')
             remote.remote('test "$(readlink /etc/openclash/clash)" = /etc/openclash/core/clash_meta')
             route = remote.remote(f'ip -4 route get 1.1.1.1 from {args.client_ip} iif br-lan')
@@ -194,7 +251,7 @@ def main():
             # Serialize confirmation with the independent rollback decision.
             remote.remote(f'cd {stage}; exec 8>decision.lock; flock -x 8; test "$(cat result)" = ready && test -f pending && rm pending && echo confirmed >result')
             confirmed = True
-            print('Verified and confirmed Mihomo '+VERSION+'. Local backup: '+str(backup))
+            print('Verified and confirmed Mihomo '+selected_version+'. Local backup: '+str(backup))
             print(f'Rollback: ssh {remote.target} "nohup sh {stage}/restore.sh {stage} force >/dev/null 2>&1 </dev/null &"')
         finally:
             if stage and not confirmed:
