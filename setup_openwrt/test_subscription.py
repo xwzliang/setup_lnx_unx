@@ -23,6 +23,24 @@ class SubscriptionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 sub.settings(env, [], True)
 
+    def test_case_insensitive_selection_preserves_configured_spelling(self):
+        env = {'SUBSCRIPTIONS': 'WGETCLOUD Shadowsocks',
+               'ACTIVE_SUBSCRIPTION': 'shadowsocks',
+               'SUB_WGETCLOUD_URL': 'https://one.example/sub',
+               'SUB_Shadowsocks_URL': 'https://two.example/sub',
+               'SUB_Shadowsocks_CONFIG': 'existing_config'}
+        entries, active, config = sub.settings(env, ['SHADOWSOCKS', 'shadowsocks', 'wgetcloud'], False)
+        self.assertEqual([e[0] for e in entries], ['Shadowsocks', 'WGETCLOUD'])
+        self.assertEqual(active, 'Shadowsocks')
+        self.assertEqual(config, 'existing_config')
+        entries, active, config = sub.settings(env, ['shadowsocks'], False, require_urls=False)
+        self.assertEqual(entries, [('Shadowsocks', 'existing_config', '', '')])
+        self.assertEqual([e[0] for e in sub.settings(env, [], True)[0]], ['WGETCLOUD', 'Shadowsocks'])
+
+    def test_case_collisions_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'unique ignoring case'):
+            sub.settings({'SUBSCRIPTIONS': 'ONE one', 'ACTIVE_SUBSCRIPTION': 'ONE'}, [], True, require_urls=False)
+
     def run_worker(self, failure='', check_only=False, count=1, activate=False, existing=False, switch_only=False):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)

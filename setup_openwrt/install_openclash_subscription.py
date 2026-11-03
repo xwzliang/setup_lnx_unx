@@ -53,14 +53,21 @@ def http_url(value, label):
 
 def settings(env, names, all_names, require_urls=True):
     identifiers = env.get("SUBSCRIPTIONS", "").split()
-    if not identifiers or len(set(identifiers)) != len(identifiers) or any(not IDENT.fullmatch(n) for n in identifiers):
+    if not identifiers or any(not IDENT.fullmatch(n) for n in identifiers):
         raise ValueError("SUBSCRIPTIONS must contain unique identifiers: letters, digits and underscores")
-    active = env.get("ACTIVE_SUBSCRIPTION", "")
-    if active not in identifiers:
-        raise ValueError("ACTIVE_SUBSCRIPTION must name an entry in SUBSCRIPTIONS")
-    selected = identifiers if all_names else list(dict.fromkeys(names))
-    if any(n not in identifiers for n in selected):
-        raise ValueError("Unknown subscription identifier")
+    canonical = {name.casefold(): name for name in identifiers}
+    if len(canonical) != len(identifiers):
+        raise ValueError("SUBSCRIPTIONS identifiers must be unique ignoring case")
+    active = canonical.get(env.get("ACTIVE_SUBSCRIPTION", "").casefold())
+    if active is None:
+        raise ValueError("ACTIVE_SUBSCRIPTION / --switch must name an entry in SUBSCRIPTIONS (case-insensitive)")
+    selected = []
+    for name in identifiers if all_names else names:
+        resolved = canonical.get(name.casefold())
+        if resolved is None:
+            raise ValueError("Unknown subscription identifier; choose from: " + ", ".join(identifiers))
+        if resolved not in selected:
+            selected.append(resolved)
     configs = {}
     subscriptions = {}
     for name in identifiers:
@@ -254,9 +261,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--env", type=Path, default=HERE / ".env", help="Default: .env next to this script")
     choice = parser.add_mutually_exclusive_group(required=True)
-    choice.add_argument("--name", nargs="+", help="One or more identifiers from SUBSCRIPTIONS")
+    choice.add_argument("--name", nargs="+", help="One or more identifiers from SUBSCRIPTIONS (case-insensitive)")
     choice.add_argument("--all", action="store_true", help="Update every configured identifier")
-    choice.add_argument("--switch", metavar="IDENTIFIER", help="Activate its saved config without fetching or converting")
+    choice.add_argument("--switch", metavar="IDENTIFIER", help="Activate its saved config without fetching or converting (case-insensitive identifier)")
     parser.add_argument("--update", action="store_true", help="With --switch, fetch and convert before activation")
     parser.add_argument("--router", help="Override ROUTER (default 192.168.5.1)")
     parser.add_argument("--port", type=int, help="Override SSH_PORT (default 22)")

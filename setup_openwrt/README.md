@@ -304,7 +304,9 @@ chmod 600 .env
 ./install_openclash_subscription.py --env /path/to/router.env --router 192.168.8.1 --all
 ```
 
-`SUBSCRIPTIONS` lists case-sensitive identifiers separated by spaces. Each needs
+`SUBSCRIPTIONS` lists identifiers separated by spaces. `--name`, `--switch`, and
+`ACTIVE_SUBSCRIPTION` match them case-insensitively; names must be unique ignoring
+case. Keep the listed spelling in `SUB_<IDENTIFIER>_*` keys. Each needs
 `SUB_<IDENTIFIER>_URL`; optional `SUB_<IDENTIFIER>_CONFIG` controls the LuCI name and
 YAML filename (without `.yaml`). Config names must be unique. `TEMPLATE_URL` is the
 shared conversion template; `SUB_<IDENTIFIER>_TEMPLATE` overrides it for one entry.
