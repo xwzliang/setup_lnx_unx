@@ -52,6 +52,19 @@ begin
   %w[nameserver-policy proxy-server-nameserver-policy fallback fallback-filter].each { |k| d.delete(k) }
   # Preserve fake-IP exclusions for application compatibility. Their real lookups
   # use the proxied default; DIRECT connections subsequently resolve domestically.
+  # Apps using cached IPs or HTTPDNS still need domain-based routing. Recover
+  # HTTP Host/TLS SNI/QUIC names for rule matching, without changing the chosen IP.
+  sniffer = c['sniffer'] ||= {}
+  sniffer['enable'] = true
+  sniffer['parse-pure-ip'] = true
+  sniffer['force-dns-mapping'] = false
+  sniffer['override-destination'] = false
+  sniff = sniffer['sniff'] ||= {}
+  {'HTTP'=>[80, 8080], 'TLS'=>[443, 8443], 'QUIC'=>[443, 8443]}.each do |protocol, ports|
+    entry = sniff[protocol] ||= {}
+    entry['ports'] = (Array(entry['ports']) + ports).uniq
+    entry['override-destination'] = false
+  end
   c['ipv6'] = false
   c['mode'] = 'rule'
   File.write(path, c.to_yaml)

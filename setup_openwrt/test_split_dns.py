@@ -59,6 +59,23 @@ class SplitDNS(unittest.TestCase):
         c['proxy-groups'][0]['proxies']=['SG']
         self.assertNotEqual(self.transform(c)[0],0)
 
+    def test_ip_only_apps_get_domain_routing_without_destination_override(self):
+        c=self.config()
+        c['sniffer']={'enable':False, 'skip-domain':['Mijia Cloud'],
+                      'sniff':{'HTTP':{'ports':[8888],'override-destination':True}}}
+        rc,c=self.transform(c)
+        self.assertEqual(rc,0)
+        s=c['sniffer']
+        self.assertTrue(s['enable'])
+        self.assertTrue(s['parse-pure-ip'])
+        self.assertFalse(s['override-destination'])
+        self.assertFalse(s['force-dns-mapping'])
+        self.assertEqual(s['skip-domain'],['Mijia Cloud'])
+        self.assertIn(8888,s['sniff']['HTTP']['ports'])
+        for protocol in ['HTTP','TLS','QUIC']:
+            self.assertFalse(s['sniff'][protocol]['override-destination'])
+        self.assertEqual(c['rules'][-1],'MATCH,SG')
+
     def test_workers_shell_syntax(self):
         for script in [worker(),worker(True),RESTORE,WATCH,HOOK_TEXT]:
             subprocess.run(['sh','-n'],input=script,text=True,check=True)

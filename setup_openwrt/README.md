@@ -606,3 +606,15 @@ For a disruptive stopped-core check with automatic recovery:
 ```
 
 Tests: `python3 -m unittest test_split_dns test_installer test_mihomo test_rules`.
+
+### Apps with cached IPs or their own DNS
+
+The split-DNS hook enables HTTP/TLS/QUIC hostname sniffing for domain-based routing
+of connections that arrive without a DNS hostname. It uses visible HTTP Host / TLS
+SNI / QUIC handshake information; it does not decrypt HTTPS application content.
+`override-destination: false` preserves the destination IP chosen by the app.
+HTTP ports 80/8080 and TLS/QUIC ports 443/8443 are included, and existing sniffing
+ports and exclusions are preserved. Existing domain rules still decide DIRECT vs
+proxy; unidentifiable traffic retains the proxy fallback. This cannot classify
+traffic without an exposed hostname, including some encrypted-client-hello flows.
+Rerun the installer to apply this improvement, with a fresh backup and verification.
