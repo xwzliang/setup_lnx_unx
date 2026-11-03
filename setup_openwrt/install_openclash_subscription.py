@@ -255,6 +255,8 @@ validate_core "$PWD/candidates/{config}.yaml" {name}
     else:
         # Refreshing the current file also needs a restart.
         parts.append('current=$(uci -q get openclash.config.config_path || :)\nif grep -Fx "$current" manifest >/dev/null; then restart_needed=1; fi\n')
+    # Inactive saved subscriptions may supply native fallback nodes too.
+    parts.append("if test -f /etc/openclash/split-dns/settings.yaml && grep -q provider_failover /etc/openclash/split-dns/settings.yaml; then restart_needed=1; fi\n")
     parts.append(r"""
 phase installing
 log "Backing up settings and configs to $PWD/backup"

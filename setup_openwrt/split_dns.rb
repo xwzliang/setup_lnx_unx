@@ -1,10 +1,14 @@
 #!/usr/bin/env ruby
 # Applied last to each generated OpenClash config; no network requests here.
 require 'yaml'
-path, settings = ARGV
+path, settings, active_config = ARGV
 c = YAML.load_file(path)
 begin
   options = YAML.load_file(settings)
+  if options['provider_failover']
+    require_relative 'provider_failover'
+    ProviderFailover.apply(c, options.fetch('provider_failover'), active_config)
+  end
   group = options.fetch('proxy_group')
   groups = c.fetch('proxy-groups', []).map { |g| [g.fetch('name'), g] }.to_h
   nodes = c.fetch('proxies', []).map { |g| [g.fetch('name'), g] }.to_h

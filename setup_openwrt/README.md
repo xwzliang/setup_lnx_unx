@@ -682,3 +682,75 @@ An inventory with `"devices": []` clears IoT routing exceptions, not reservation
 IP reservations are operational identification, not protection against IP/MAC spoofing.
 
 Tests: `python3 -m unittest test_iot test_split_dns test_installer test_rules test_mihomo`.
+
+## Native regional provider failover
+
+After installing split DNS and saving at least two converted subscriptions on the
+router, enable combined-provider fallback:
+
+```sh
+./install_openclash_split_dns.py --enable-provider-failover --check-only
+./install_openclash_split_dns.py --enable-provider-failover
+# Another router / .env:
+./install_openclash_split_dns.py --router 192.168.1.1 --env-file .env --enable-provider-failover
+```
+
+The installer reads `SUBSCRIPTIONS` and `SUB_<ID>_CONFIG` from `.env`. It does not
+fetch subscription URLs or reconvert files. All listed saved configurations must
+exist. The **currently active router subscription**, not `ACTIVE_SUBSCRIPTION` in
+`.env`, determines preference at installation. Subsequent ordinary split-DNS
+installs preserve the enabled provider mapping and IoT exceptions. Rerun with
+`--enable-provider-failover` to refresh the mapping after adding a subscription.
+
+The persistent overwrite hook imports namespaced nodes from the saved configs.
+Shared regional groups (`新加坡`, `美国`, `日本`, and existing load-balance groups)
+become native Mihomo fallback groups, with the preferred provider first. Each
+provider has its own node-selection subgroup. Generic proxy-only `Proxy`/`Auto`
+groups are also protected where present. Existing DIRECT selectors, individual
+node selections and routing rules are preserved; explicit individual-node routes
+do not gain failover. A generic mixed-country group can still change country.
+Regional groups stay within the regions defined by the subscription templates.
+
+Mihomo performs health checks every 60 seconds using
+`https://www.gstatic.com/generate_204` (expected HTTP 204), including inactive backup
+nodes. It uses the backup if the preferred regional subgroup fails and returns
+when it becomes healthy. Nested checks may take multiple intervals to converge;
+existing connections are not migrated. This checks connectivity, not provider
+quota or availability of every service. All providers failing causes proxy
+requests to fail; there is no DIRECT fallback. DNS through `新加坡` benefits from
+this fallback too. Mainland DIRECT rules, IoT exceptions, disabled IPv6 and the
+forwarding kill switch remain enforced.
+
+Choose your preferred provider using the existing subscription switch:
+
+```sh
+./install_openclash_subscription.py --switch shadowsocks
+# Or update it first:
+./install_openclash_subscription.py --switch WGETCLOUD --update
+```
+
+Switching the saved subscription changes its routing rules and rebuilds fallback
+priority. Automatic failover itself only changes the outbound provider, does not
+switch subscription files/rules, and does not restart OpenClash. Avoid manually
+pinning members of the generated fallback groups in a dashboard: Mihomo clears
+that pin on failure, so it does not represent durable provider preference.
+Updating a saved backup through the installer also restarts OpenClash to reload
+its nodes when failover is enabled. Keep `ACTIVE_SUBSCRIPTION` aligned with your
+choice if you use `--all`, which retains its existing activation behavior.
+
+Installation backs up the old hook/settings/runtime, validates the candidate with
+the installed core, and arms automatic rollback until LAN, mainland/proxy access
+and kill-switch checks pass. It prints private router/local backup paths and an
+explicit rollback command. Saved subscriptions themselves are not rewritten.
+
+Validation:
+
+```sh
+python3 -m unittest test_provider_failover test_split_dns test_subscription test_iot
+python3 test_native_failover.py
+```
+
+The second command tests the installed router core in an isolated process using
+local simulated HTTP proxies: one preferred node failing, all preferred nodes
+failing, then recovery. It does not interrupt the live core or contact the Internet.
+Native behavior: https://wiki.metacubex.one/en/config/proxy-groups/fallback/

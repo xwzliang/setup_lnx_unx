@@ -13,7 +13,7 @@ import sys
 import tempfile
 import time
 from install_openclash_killswitch import Installer, VERIFY
-from install_openclash_subscription import PREAMBLE
+from install_openclash_subscription import PREAMBLE, read_env, settings as subscription_settings
 
 HERE = Path(__file__).resolve().parent
 
@@ -48,7 +48,7 @@ set -e
 if [ -f /etc/openclash/split-dns/previous-overwrite.sh ]; then
     sh /etc/openclash/split-dns/previous-overwrite.sh "$@" || echo "Previous overwrite failed; enforcing split DNS anyway" >&2
 fi
-exec ruby /etc/openclash/split-dns/split_dns.rb "$1" /etc/openclash/split-dns/settings.yaml
+exec ruby /etc/openclash/split-dns/split_dns.rb "$1" /etc/openclash/split-dns/settings.yaml "$(uci -q get openclash.config.config_path)"
 '''
 VALIDATE = r'''
 phase split-dns-preflight
@@ -59,14 +59,14 @@ raw=$(uci -q get openclash.config.config_path)
 runtime="/etc/openclash/${raw##*/}"
 if [ -f iot_devices.json ]; then ruby iot_reservations.rb iot_devices.json check; fi
 cp "$runtime" candidate.yaml
-ruby split_dns.rb candidate.yaml settings.yaml
+ruby split_dns.rb candidate.yaml settings.yaml "$raw"
 validate_core "$PWD/candidate.yaml" split-dns
 '''
 APPLY = r'''
 phase backup
 cp /etc/config/openclash backup/openclash
 mkdir -p /etc/openclash/split-dns
-for file in /etc/openclash/custom/openclash_custom_overwrite.sh /etc/openclash/split-dns/previous-overwrite.sh /etc/openclash/split-dns/split_dns.rb /etc/openclash/split-dns/settings.yaml "$runtime"; do
+for file in /etc/openclash/custom/openclash_custom_overwrite.sh /etc/openclash/split-dns/previous-overwrite.sh /etc/openclash/split-dns/split_dns.rb /etc/openclash/split-dns/provider_failover.rb /etc/openclash/split-dns/settings.yaml "$runtime"; do
     printf '%s\n' "$file" >>manifest
     mkdir -p "backup${file%/*}"
     if [ -f "$file" ]; then cp -p "$file" "backup$file"; fi
@@ -91,7 +91,7 @@ fi
 if ! grep -q '^# setup_openclash_split_dns:' /etc/openclash/custom/openclash_custom_overwrite.sh; then
     cp -p /etc/openclash/custom/openclash_custom_overwrite.sh /etc/openclash/split-dns/previous-overwrite.sh
 fi
-cp split_dns.rb settings.yaml /etc/openclash/split-dns/
+cp split_dns.rb provider_failover.rb settings.yaml /etc/openclash/split-dns/
 cp hook.sh /etc/openclash/custom/openclash_custom_overwrite.sh
 chmod 755 /etc/openclash/custom/openclash_custom_overwrite.sh
 uci set openclash.config.enable_custom_domain_dns_server=0
@@ -105,7 +105,7 @@ pidof clash >/dev/null
 validate_core "$runtime" live
 # Transform is deterministic: generated config must already contain the policy.
 cp "$runtime" verify.yaml
-ruby split_dns.rb verify.yaml settings.yaml
+ruby split_dns.rb verify.yaml settings.yaml "$raw"
 ruby -ryaml -e 'abort "Runtime does not match split DNS policy" unless YAML.load_file(ARGV[0]) == YAML.load_file("verify.yaml")' "$runtime"
 /usr/sbin/openclash-killswitch apply
 trap - EXIT HUP INT TERM
@@ -152,6 +152,8 @@ def main():
     parser.add_argument('--port', type=int, default=22)
     parser.add_argument('--proxy-group', default='新加坡', help='Proxy-only group for unmatched traffic and default DNS')
     parser.add_argument('--iot-inventory', type=Path, help='Confirmed MAC/IP inventory from discover_iot.py; omitted preserves installed IoT exceptions')
+    parser.add_argument('--enable-provider-failover', action='store_true', help='Load saved subscriptions from .env and enable native regional fallback/failback')
+    parser.add_argument('--env-file', type=Path, default=HERE/'.env')
     parser.add_argument('--check-only', action='store_true')
     args = parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', args.router) or not 1 <= args.port <= 65535:
@@ -159,6 +161,11 @@ def main():
     if not args.proxy_group or any(c in args.proxy_group for c in '\r\n,#&'):
         parser.error('Invalid proxy group name')
     settings = {'proxy_group': args.proxy_group}
+    if args.enable_provider_failover:
+        entries, _, _ = subscription_settings(read_env(args.env_file), [], True, require_urls=False)
+        if len(entries) < 2:
+            raise ValueError('Failover requires at least two saved subscriptions')
+        settings['provider_failover'] = {name: config for name, config, *_ in entries}
     inventory = None
     if args.iot_inventory:
         inventory = json.loads(args.iot_inventory.read_text())
@@ -179,10 +186,23 @@ def main():
             if inventory is None:
                 saved = remote.remote("if test -f /etc/openclash/split-dns/settings.yaml; then ruby -ryaml -e 'puts YAML.load_file(ARGV[0]).fetch(\"iot_clients\", []).join(\" \")' /etc/openclash/split-dns/settings.yaml; fi")
                 settings['iot_clients'] = [str(ipaddress.IPv4Address(ip)) for ip in saved.split()]
+            if not args.enable_provider_failover:
+                saved_failover = remote.remote("if test -f /etc/openclash/split-dns/settings.yaml; then ruby -ryaml -e 'puts YAML.dump(YAML.load_file(ARGV[0])[\"provider_failover\"])' /etc/openclash/split-dns/settings.yaml; fi")
+                # Read only the non-secret identifier mapping from installed settings.
+                if saved_failover.strip() and saved_failover.strip() != '---':
+                    mapping = {}
+                    for line in saved_failover.splitlines():
+                        if ': ' in line:
+                            key, value = line.split(': ', 1)
+                            if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*', key) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]*', value):
+                                raise ValueError('Invalid installed failover mapping')
+                            mapping[key] = value
+                    if mapping:
+                        settings['provider_failover'] = mapping
             stage = remote.remote('umask 077; mktemp -d /root/openclash-split-dns.XXXXXX')
             if not re.fullmatch(r'/root/openclash-split-dns\.[A-Za-z0-9]+', stage):
                 raise RuntimeError('Unexpected staging directory')
-            for name, content in [('split_dns.rb', (HERE/'split_dns.rb').read_text()), ('settings.yaml', json.dumps(settings, ensure_ascii=False)),
+            for name, content in [('provider_failover.rb', (HERE/'provider_failover.rb').read_text()), ('split_dns.rb', (HERE/'split_dns.rb').read_text()), ('settings.yaml', json.dumps(settings, ensure_ascii=False)),
                                   ('hook.sh', HOOK_TEXT), ('restore.sh', RESTORE), ('watch.sh', WATCH),
                                   ('run.sh', worker(args.check_only))]:
                 remote.remote(f'umask 077; cat >{stage}/{name}', content)
