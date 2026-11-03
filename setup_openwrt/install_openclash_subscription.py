@@ -151,8 +151,9 @@ mkdir -p candidates backup
 """
 
 
-def worker(entries, active, active_config, converter_port, check_only=False, switch_only=False):
+def worker(entries, active, active_config, converter_port, check_only=False, switch_only=False, user_agents=None):
     q = shlex.quote
+    user_agents = user_agents or {}
     parts = [PREAMBLE]
     if not switch_only:
         parts.append("command -v curl >/dev/null\n")
@@ -182,7 +183,7 @@ echo fetching-{name} >phase
 fetch_dir=$(mktemp -d /etc/openclash/config/.subscription-fetch.XXXXXX)
 ruby -e 'puts "url = " + File.read(ARGV[0]).dump' source-url >fetch.curl
 status=000
-for user_agent in Clash Quantumultx; do
+for user_agent in {" ".join(q(agent) for agent in dict.fromkeys([user_agents.get(name, ""), "Clash", "Quantumultx"]) if agent)}; do
     status=$(curl --noproxy '*' -sS -L --connect-timeout 10 --max-time 60 \
         -K fetch.curl -A "$user_agent" -o "$fetch_dir/source.yaml" \
         -w '%{{http_code}}') || status=000
@@ -286,7 +287,8 @@ def main():
         raise ValueError("Invalid router address or SSH alias")
     if not all(1 <= p <= 65535 for p in (args.port, converter_port)):
         raise ValueError("Ports must be between 1 and 65535")
-    payload = worker(entries, active, active_config, converter_port, args.check_only, switch_only)
+    user_agents = {name: env.get(f"SUB_{name}_USER_AGENT", "") for name, *_ in entries}
+    payload = worker(entries, active, active_config, converter_port, args.check_only, switch_only, user_agents)
     with tempfile.TemporaryDirectory(prefix="openclash-sub-") as tmp:
         remote = Installer(args, Path(tmp) / "ssh")
         try:

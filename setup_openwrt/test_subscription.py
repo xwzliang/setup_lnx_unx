@@ -41,7 +41,7 @@ class SubscriptionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'unique ignoring case'):
             sub.settings({'SUBSCRIPTIONS': 'ONE one', 'ACTIVE_SUBSCRIPTION': 'ONE'}, [], True, require_urls=False)
 
-    def run_worker(self, failure='', check_only=False, count=1, activate=False, existing=False, switch_only=False):
+    def run_worker(self, failure='', check_only=False, count=1, activate=False, existing=False, switch_only=False, user_agents=None):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         root = Path(tmp.name)
@@ -104,7 +104,7 @@ esac
             (root / 'proc/123/cmdline').write_bytes(b'clash\0-f\0' + str(root / 'etc/openclash/one.yaml').encode() + b'\0')
             uci = root / 'bin/uci'
             uci.write_text(uci.read_text().replace('echo /different.yaml', 'echo ' + str(root / 'etc/openclash/config/one.yaml')))
-        script = sub.worker(entries, 'ONE' if activate else 'OTHER', 'one' if activate else 'other', 15051, check_only, switch_only)
+        script = sub.worker(entries, 'ONE' if activate else 'OTHER', 'one' if activate else 'other', 15051, check_only, switch_only, user_agents)
         for prefix in ['/etc/', '/lib/', '/tmp/lock/', '/proc/']:
             script = script.replace(prefix, str(root) + prefix)
         run = root / 'stage/run.sh'
@@ -190,6 +190,12 @@ esac
         batch = (root / 'batch').read_text()
         self.assertIn('config.config_path=', batch)
         self.assertNotIn('.address=', batch)
+
+    def test_custom_user_agent_is_one_argument_and_used_first(self):
+        agent = 'Shadowrocket/2615 CFNetwork/3860.600.12 Darwin/25.5.0 iPhone16,2'
+        root, result = self.run_worker(user_agents={'ONE': agent})
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual((root / 'agents').read_text().splitlines()[0], agent)
 
     def test_check_only_does_not_write(self):
         root, result = self.run_worker(check_only=True)

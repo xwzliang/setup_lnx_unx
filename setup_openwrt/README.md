@@ -379,3 +379,14 @@ activation fails. Saved YAML files are not replaced in this mode.
 selection on the router. It does not edit `.env`. Set `ACTIVE_SUBSCRIPTION` there
 as well if you want subsequent `--all` updates to keep that selection. `--switch`
 cannot be combined with `--name` or `--all`; `--update` requires `--switch`.
+
+
+A provider that requires a specific client version can use a per-subscription
+User-Agent. For example (match your identifier's spelling):
+
+```dotenv
+SUB_SHADOWSOCKS_USER_AGENT="Shadowrocket/2615 CFNetwork/3860.600.12 Darwin/25.5.0 iPhone16,2"
+```
+
+The installer tries this exact value first, followed by `Clash` and `Quantumultx`
+if fetching fails. Without this option, the existing defaults remain unchanged.
