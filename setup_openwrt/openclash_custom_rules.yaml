@@ -1,0 +1,84 @@
+## Windows Steam
+#- SRC-IP-CIDR,192.168.5.238/32,DIRECT
+#- SRC-IP-CIDR,192.168.5.164/32,日本
+#- SRC-IP-CIDR,192.168.5.210/32,新加坡
+- DOMAIN-SUFFIX,wgetcloud.online,新加坡
+- DOMAIN-SUFFIX,wbsg8v.xyz,新加坡
+- DOMAIN-KEYWORD,bnbstatic,新加坡
+- DOMAIN-KEYWORD,binance,loadbalance
+- DOMAIN-KEYWORD,moustachemailboxdesirable,新加坡
+- DOMAIN-KEYWORD,libgen,新加坡
+- DOMAIN-KEYWORD,booksdl,新加坡
+- DOMAIN-KEYWORD,patreon,新加坡
+- DOMAIN-KEYWORD,huggingface,新加坡
+- DOMAIN-KEYWORD,rockstargames,美国
+- DOMAIN-KEYWORD,nintendo,美国
+- DOMAIN-SUFFIX,fast.com,美国
+- DOMAIN-KEYWORD,nflx,美国
+- DOMAIN-KEYWORD,netflix,美国
+- DOMAIN-KEYWORD,tiktok,美国
+- DOMAIN-KEYWORD,ultramobile,美国
+- DOMAIN-KEYWORD,paypal,美国
+- DOMAIN-KEYWORD,steam,新加坡
+- DOMAIN-KEYWORD,suno,新加坡
+- DOMAIN-KEYWORD,pexels,新加坡
+- DOMAIN-SUFFIX,opus.pro,新加坡
+- DOMAIN-SUFFIX,ap-east-1.token.awswaf.com,新加坡
+- DOMAIN-KEYWORD,comfyai,新加坡
+- DOMAIN-KEYWORD,pexels,新加坡
+- DOMAIN-KEYWORD,sora,新加坡
+- DOMAIN-KEYWORD,chatgpt,新加坡loadbalance
+- DOMAIN-KEYWORD,openai,新加坡loadbalance
+- DOMAIN-KEYWORD,runpod,新加坡
+- DOMAIN-KEYWORD,openart,新加坡
+- DOMAIN-KEYWORD,aliyun,DIRECT
+- DOMAIN-KEYWORD,ccb,DIRECT
+- DOMAIN-SUFFIX,googleapis.cn,美国
+- DOMAIN-SUFFIX,googleapis.com,美国
+- DOMAIN-KEYWORD,google,美国
+- DOMAIN-KEYWORD,googleapis,美国
+- DOMAIN-KEYWORD,googleusercontent,美国
+- DOMAIN-KEYWORD,twitter,新加坡
+- DOMAIN-KEYWORD,twimg,新加坡
+- DOMAIN-KEYWORD,gemini,新加坡
+- DOMAIN-KEYWORD,antigravity,新加坡
+- DOMAIN-KEYWORD,lovart,新加坡
+- DOMAIN-KEYWORD,claude,新加坡
+- DOMAIN-KEYWORD,anthropic,新加坡
+- DOMAIN-KEYWORD,muse,美国
+- DOMAIN-SUFFIX,bore.pub,新加坡
+##- DOMAIN-SUFFIX,google.com,Proxy 匹配域名后缀(交由Proxy代理服务器组)
+##- DOMAIN-KEYWORD,google,Proxy 匹配域名关键字(交由Proxy代理服务器组)
+##- DOMAIN,google.com,Proxy 匹配域名(交由Proxy代理服务器组)
+##- DOMAIN-SUFFIX,ad.com,REJECT 匹配域名后缀(拒绝)
+##- IP-CIDR,127.0.0.0/8,DIRECT 匹配数据目标IP(直连)
+##- SRC-IP-CIDR,192.168.1.201/32,DIRECT 匹配数据发起IP(直连)
+##- DST-PORT,80,DIRECT 匹配数据目标端口(直连)
+##- SRC-PORT,7777,DIRECT 匹配数据源端口(直连)
+
+##排序在上的规则优先生效,如添加（去除规则前的#号）：
+##IP段：192.168.1.2-192.168.1.200 直连
+##- SRC-IP-CIDR,192.168.1.2/31,DIRECT
+##- SRC-IP-CIDR,192.168.1.4/30,DIRECT
+##- SRC-IP-CIDR,192.168.1.8/29,DIRECT
+##- SRC-IP-CIDR,192.168.1.16/28,DIRECT
+##- SRC-IP-CIDR,192.168.1.32/27,DIRECT
+##- SRC-IP-CIDR,192.168.1.64/26,DIRECT
+##- SRC-IP-CIDR,192.168.1.128/26,DIRECT
+##- SRC-IP-CIDR,192.168.1.192/29,DIRECT
+##- SRC-IP-CIDR,192.168.1.200/32,DIRECT
+
+##IP段：192.168.1.202-192.168.1.255 直连
+##- SRC-IP-CIDR,192.168.1.202/31,DIRECT
+##- SRC-IP-CIDR,192.168.1.204/30,DIRECT
+##- SRC-IP-CIDR,192.168.1.208/28,DIRECT
+##- SRC-IP-CIDR,192.168.1.224/27,DIRECT
+
+##此时IP为192.168.1.1和192.168.1.201的客户端流量走代理（策略），其余客户端不走代理
+##因为Fake-IP模式下，IP地址为192.168.1.1的路由器自身流量可走代理（策略），所以需要排除
+
+##仅设置路由器自身直连：
+##- SRC-IP-CIDR,192.168.1.1/32,DIRECT
+##- SRC-IP-CIDR,198.18.0.1/32,DIRECT
+
+##在线IP段转CIDR地址：http://ip2cidr.com

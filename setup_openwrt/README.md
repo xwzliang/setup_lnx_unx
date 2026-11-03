@@ -492,3 +492,44 @@ Tests: `python3 -m unittest test_mihomo -v` covers preflight rejection and execu
 upgrade/rollback transactions with simulated router tools. Live verification on the
 router additionally confirmed stopped-core blocking, firewall-reload persistence,
 local management access, automatic recovery, and AnyTLS config validation.
+
+## Manage OpenClash priority custom rules
+
+Edit `openclash_custom_rules.yaml` in this folder. It was initialized from the
+router's existing priority custom-rules field, preserving all rules and comments.
+Use a YAML list, matching the LuCI editor; earlier rules take priority:
+
+```yaml
+- DOMAIN-KEYWORD,lovart,新加坡
+- DOMAIN-KEYWORD,claude,新加坡
+```
+
+Apply from any working directory (the default file is next to the script):
+
+```sh
+./update_openclash_rules.py --check-only
+./update_openclash_rules.py
+./update_openclash_rules.py --router 192.168.8.1 --file /path/to/rules.yaml
+```
+
+This replaces `/etc/openclash/custom/openclash_custom_rules.list`, the **priority**
+`*自定义规则` field under 覆写设置 → 规则设置. It enables custom rules and restarts
+OpenClash to apply them; it does not replace the separate extended-rules field.
+The local file is the source of truth: edits made in LuCI are overwritten by the
+next sync unless copied back locally. Use `[]` to explicitly clear the list.
+Rules' target proxy/group names must exist in the currently active subscription.
+
+The updater validates YAML and checks a candidate config with the installed core
+before changing anything. It saves previous rules and OpenClash UCI settings under
+`/root/openclash-rules.XXXXXX/backup`, then atomically replaces the rule file.
+Restart/verification failures restore the old rules/settings and attempt to restart
+the previous configuration. A detached worker survives loss of SSH; inspect its
+`result` and private `worker.log` before retrying. As with the subscription updater,
+this command-level rollback does not cover power loss or disk failure.
+If the same rules are already stored, enabled and present in the generated runtime
+config, the updater skips the restart. `--check-only` never saves or restarts.
+
+A changed ruleset briefly interrupts internet access while OpenClash restarts;
+the existing kill switch remains installed. No subscription download or subconverter
+request is needed. You can refresh the LuCI page after syncing to see the new text.
+Tests: `python3 -m unittest test_rules -v` (requires Ruby for YAML parsing).
