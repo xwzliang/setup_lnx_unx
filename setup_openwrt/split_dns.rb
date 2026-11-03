@@ -26,7 +26,8 @@ begin
   visit.call(group, [])
   # Keep explicit subscription/custom routing, including foreign DIRECT rules.
   # Do not classify previously unknown destinations as direct from their IP country.
-  rules = c.fetch('rules').reject { |r| r.start_with?('GEOIP,CN,', 'MATCH,', 'FINAL,', 'GEOSITE,cn,') }
+  old_iot_rules = c.delete('x-setup-iot-rules') || []
+  rules = c.fetch('rules').reject { |r| old_iot_rules.include?(r) || r.start_with?('GEOIP,CN,', 'MATCH,', 'FINAL,', 'GEOSITE,cn,') }
   # IP rules must not cause DNS resolution before the domain-based decision.
   rules.map! do |r|
     if r.match(/\A(?:IP-CIDR6?|IP-ASN|GEOIP),/) && !r.split(',').include?('no-resolve')
@@ -35,7 +36,15 @@ begin
       r
     end
   end
-  c['rules'] = rules + ['GEOSITE,cn,DIRECT', "MATCH,#{group}"]
+  clients = options.fetch('iot_clients', [])
+  raise 'IoT clients must be a list' unless clients.is_a?(Array)
+  iot_rules = clients.uniq.map do |ip|
+    parts = ip.to_s.split('.')
+    raise 'IoT exception requires an exact IPv4 address' unless parts.size == 4 && parts.all?{|p| p.match?(/\A\d{1,3}\z/) && p.to_i <= 255}
+    "AND,((SRC-IP-CIDR,#{ip}/32),(GEOIP,CN,no-resolve)),DIRECT"
+  end
+  c['x-setup-iot-rules'] = iot_rules
+  c['rules'] = rules + ['GEOSITE,cn,DIRECT'] + iot_rules + ["MATCH,#{group}"]
   d = c['dns'] ||= {}
   d['enable'] = true
   d['enhanced-mode'] = 'fake-ip'

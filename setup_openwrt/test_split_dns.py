@@ -18,11 +18,11 @@ class SplitDNS(unittest.TestCase):
                 'rules':['DOMAIN,foreign.example,DIRECT','DOMAIN,protected.example,SG',
                          'IP-CIDR,17.0.0.0/8,DIRECT','GEOIP,CN,DIRECT','MATCH,DIRECT']}
 
-    def transform(self, c, group='SG'):
+    def transform(self, c, group='SG', iot_clients=None):
         with tempfile.TemporaryDirectory() as td:
             path=Path(td)/'config.yaml'
             opts=Path(td)/'settings.yaml'
-            path.write_text(json.dumps(c)); opts.write_text(json.dumps({'proxy_group':group}))
+            path.write_text(json.dumps(c)); opts.write_text(json.dumps({'proxy_group':group, 'iot_clients':iot_clients or []}))
             r=subprocess.run(['ruby',str(HERE/'split_dns.rb'),str(path),str(opts)],capture_output=True,text=True)
             data=subprocess.check_output(['ruby','-ryaml','-rjson','-e','puts JSON.generate(YAML.load_file(ARGV[0]))',str(path)],text=True)
             return r.returncode,json.loads(data)
@@ -75,6 +75,27 @@ class SplitDNS(unittest.TestCase):
         for protocol in ['HTTP','TLS','QUIC']:
             self.assertFalse(s['sniff'][protocol]['override-destination'])
         self.assertEqual(c['rules'][-1],'MATCH,SG')
+
+    def test_iot_scope_order_idempotence_and_removal(self):
+        ips=['192.168.5.135','192.168.5.204']
+        rc,c=self.transform(self.config(),iot_clients=ips)
+        self.assertEqual(rc,0)
+        exceptions=c['x-setup-iot-rules']
+        self.assertEqual(len(exceptions),2)
+        self.assertEqual(exceptions[0],'AND,((SRC-IP-CIDR,192.168.5.135/32),(GEOIP,CN,no-resolve)),DIRECT')
+        self.assertEqual(c['rules'][-3:-1],exceptions)
+        self.assertEqual(c['rules'][-1],'MATCH,SG')
+        self.assertLess(c['rules'].index('DOMAIN,protected.example,SG'),c['rules'].index(exceptions[0]))
+        self.assertEqual(self.transform(c,iot_clients=ips),(0,c))
+        rc,removed=self.transform(c)
+        self.assertTrue(all(r not in removed['rules'] for r in exceptions))
+        self.assertEqual(removed['rules'][-1],'MATCH,SG')
+
+    def test_iot_subnet_or_invalid_address_fails_closed(self):
+        for ip in ['192.168.5.0/24','999.1.1.1','1.1.1.1),MATCH,DIRECT']:
+            rc,c=self.transform(self.config(),iot_clients=[ip])
+            self.assertNotEqual(rc,0)
+            self.assertEqual(c['rules'],['MATCH,REJECT'])
 
     def test_workers_shell_syntax(self):
         for script in [worker(),worker(True),RESTORE,WATCH,HOOK_TEXT]:

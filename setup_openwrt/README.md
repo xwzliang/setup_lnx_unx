@@ -618,3 +618,67 @@ ports and exclusions are preserved. Existing domain rules still decide DIRECT vs
 proxy; unidentifiable traffic retains the proxy fallback. This cannot classify
 traffic without an exposed hostname, including some encrypted-client-hello flows.
 Rerun the installer to apply this improvement, with a fresh backup and verification.
+
+## Identify IoT hardware, reserve DHCP addresses, and allow mainland IPs
+
+Run on the router's LAN, with SSH access to both the router and Home Assistant:
+
+```sh
+./discover_iot.py --router 192.168.5.1 --ha ha --refresh-cloud
+./install_openclash_split_dns.py --iot-inventory iot_devices.json --check-only
+./install_openclash_split_dns.py --iot-inventory iot_devices.json
+```
+
+Discovery reads Home Assistant's Xiaomi integration cache and, with
+`--refresh-cloud`, reads the current Xiaomi inventory using that integration's
+existing authentication **on the HA host**. Authentication is sent only to Xiaomi;
+credentials, tokens, nested device records and Wi-Fi configuration are not exported.
+The SSH account needs read access to `/config/.storage` and the installed Xiaomi
+integration. This is currently Xiaomi-specific; SwitchBot or other integrations
+are not automatically included. No appliances are switched or actuated.
+
+The tool sends a read-only miIO hello to DHCP clients and matches returned device
+IDs to the inventory. Where a Wi-Fi device does not answer hello, an exact cloud
+MAC-to-active-DHCP-MAC match is accepted. A hostname or manufacturer guess alone is
+never enough. Network routers are excluded. The output `iot_devices.json` is mode
+600 and Git-ignored; it contains names, models, rooms, MACs, current IPs and evidence.
+Review it before applying, especially after changing homes/accounts. Each discovery
+replaces that file with the devices currently identified. Devices that are offline
+or cannot be matched remain listed as unresolved and receive no new exception.
+
+Bluetooth/mesh sensors and IR virtual appliances do not receive DHCP reservations.
+IR `parent_id` mappings identify their controlling speaker's IP. Bluetooth gateway
+associations missing from the API are reported as unknown, not inferred from room
+names. Reserve the actual central gateway/speakers instead. Home Assistant itself,
+phones and computers are not automatically placed in the IoT list.
+
+The installer keeps current IPs and adds `dhcp` host sections named `iot_<MAC>`.
+It validates subnet membership, duplicate IPs/MACs, live lease conflicts, existing
+reservations and uncommitted DHCP changes **before any reservation is written**.
+Matching existing reservations are preserved; conflicting ones abort installation.
+It restarts dnsmasq and OpenClash but does not force devices to reconnect or move IPs.
+DHCP config is included in both immediate rollback and the router-local watchdog.
+
+For each reserved IP, the generated rule is equivalent to:
+
+```yaml
+- AND,((SRC-IP-CIDR,192.168.5.135/32),(GEOIP,CN,no-resolve)),DIRECT
+```
+
+These rules follow all existing explicit subscription/custom rules and the known
+mainland-domain rule, immediately before MATCH. They only allow direct connections
+for a listed source **and an already-known mainland destination IP**; they do not
+resolve unknown domains domestically or make every IoT destination DIRECT. Other
+clients keep the proxy fallback. The forwarding kill switch remains active, so
+OpenClash stopping still blocks these devices' internet access. Resolver failures
+or foreign cloud endpoints can still cause device outages; this is not an
+unconditional availability guarantee.
+
+IoT IPs persist in `/etc/openclash/split-dns/settings.yaml` and are reapplied on
+subscription changes. Running the split-DNS installer without `--iot-inventory`
+preserves the installed list. Supplying a new inventory replaces the routing list;
+old DHCP reservations are retained to avoid reallocating addresses unexpectedly.
+An inventory with `"devices": []` clears IoT routing exceptions, not reservations.
+IP reservations are operational identification, not protection against IP/MAC spoofing.
+
+Tests: `python3 -m unittest test_iot test_split_dns test_installer test_rules test_mihomo`.

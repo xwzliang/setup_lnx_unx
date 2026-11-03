@@ -1,3 +1,6 @@
 .DS_Store
 */nextcloud/config/
 .env
+
+# Private Home Assistant / DHCP inventory
+setup_openwrt/iot_devices.json

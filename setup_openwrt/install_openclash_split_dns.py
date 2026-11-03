@@ -2,6 +2,8 @@
 """Install persistent split DNS on an existing Mihomo/OpenClash + kill switch router."""
 import argparse
 import hashlib
+import ipaddress
+import json
 import os
 from pathlib import Path
 import re
@@ -33,6 +35,7 @@ while IFS= read -r file; do
     fi
 done <manifest
 cp backup/openclash /etc/config/openclash
+if [ -f backup/etc/config/dhcp ]; then uci revert dhcp; /etc/init.d/dnsmasq restart; fi
 rm -f pending
 /etc/init.d/openclash restart 9>&- 7>&-
 /usr/sbin/openclash-killswitch apply
@@ -54,6 +57,7 @@ test -x /usr/sbin/openclash-killswitch
 test -s /etc/openclash/GeoSite.dat
 raw=$(uci -q get openclash.config.config_path)
 runtime="/etc/openclash/${raw##*/}"
+if [ -f iot_devices.json ]; then ruby iot_reservations.rb iot_devices.json check; fi
 cp "$runtime" candidate.yaml
 ruby split_dns.rb candidate.yaml settings.yaml
 validate_core "$PWD/candidate.yaml" split-dns
@@ -67,13 +71,23 @@ for file in /etc/openclash/custom/openclash_custom_overwrite.sh /etc/openclash/s
     mkdir -p "backup${file%/*}"
     if [ -f "$file" ]; then cp -p "$file" "backup$file"; fi
 done
+if [ -f iot_devices.json ]; then
+    mkdir -p backup/etc/config
+    cp -p /etc/config/dhcp backup/etc/config/dhcp
+    echo /etc/config/dhcp >>manifest
+fi
 # Full configuration snapshot, no core binaries or credentials printed.
-tar -czf config-backup.tar.gz -C / etc/config/openclash etc/config/dhcp etc/config/network etc/config/firewall etc/openclash/custom "${raw#/}" "${runtime#/}" etc/openclash-killswitch
+tar -czf config-backup.tar.gz -C / etc/config/openclash etc/config/dhcp etc/config/network etc/config/firewall etc/openclash/custom etc/openclash/split-dns "${raw#/}" "${runtime#/}" etc/openclash-killswitch
 touch pending
 nohup sh "$PWD/watch.sh" "$PWD" >watch.log 2>&1 8>&- 9>&- </dev/null &
 mutated=1
 restart_needed=1
 phase install-split-dns
+if [ -f iot_devices.json ]; then
+    ruby iot_reservations.rb iot_devices.json apply
+    /etc/init.d/dnsmasq restart
+    pidof dnsmasq >/dev/null
+fi
 if ! grep -q '^# setup_openclash_split_dns:' /etc/openclash/custom/openclash_custom_overwrite.sh; then
     cp -p /etc/openclash/custom/openclash_custom_overwrite.sh /etc/openclash/split-dns/previous-overwrite.sh
 fi
@@ -86,6 +100,7 @@ uci set openclash.config.proxy_mode=rule
 uci commit openclash
 restart_core
 phase verify-split-dns
+if [ -f iot_devices.json ]; then ruby iot_reservations.rb iot_devices.json verify; fi
 pidof clash >/dev/null
 validate_core "$runtime" live
 # Transform is deterministic: generated config must already contain the policy.
@@ -100,7 +115,16 @@ echo ready >result
 
 
 def worker(check_only=False):
-    return PREAMBLE.replace("echo rolled-back >result", "rm -f pending\n        echo rolled-back >result") + VALIDATE + ("trap - EXIT HUP INT TERM\necho validated >result\n" if check_only else APPLY)
+    preamble = PREAMBLE.replace(
+        'cp backup/openclash /etc/config/openclash',
+        'cp backup/openclash /etc/config/openclash\n        uci revert dhcp || :',
+    ).replace(
+        'if [ "$restart_needed" = 1 ]; then restart_core || :; fi',
+        'if [ -f backup/etc/config/dhcp ]; then /etc/init.d/dnsmasq restart || :; fi\n'
+        '        if [ "$restart_needed" = 1 ]; then restart_core || :; fi',
+    ).replace('echo rolled-back >result', 'rm -f pending\n        echo rolled-back >result')
+    tail = "trap - EXIT HUP INT TERM\necho validated >result\n" if check_only else APPLY
+    return preamble + VALIDATE + tail
 
 
 def save_backup(remote, stage):
@@ -127,15 +151,23 @@ def main():
     parser.add_argument('--router', default='192.168.5.1')
     parser.add_argument('--port', type=int, default=22)
     parser.add_argument('--proxy-group', default='新加坡', help='Proxy-only group for unmatched traffic and default DNS')
+    parser.add_argument('--iot-inventory', type=Path, help='Confirmed MAC/IP inventory from discover_iot.py; omitted preserves installed IoT exceptions')
     parser.add_argument('--check-only', action='store_true')
     args = parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', args.router) or not 1 <= args.port <= 65535:
         parser.error('Invalid router or SSH port')
     if not args.proxy_group or any(c in args.proxy_group for c in '\r\n,#&'):
         parser.error('Invalid proxy group name')
-    # YAML double quoted scalar, JSON escaping is valid YAML here.
-    import json
-    settings = 'proxy_group: ' + json.dumps(args.proxy_group, ensure_ascii=False) + '\n'
+    settings = {'proxy_group': args.proxy_group}
+    inventory = None
+    if args.iot_inventory:
+        inventory = json.loads(args.iot_inventory.read_text())
+        devices = inventory.get('devices')
+        if not isinstance(devices, list):
+            raise ValueError('Inventory must contain a devices list')
+        settings['iot_clients'] = [str(ipaddress.IPv4Address(d['ip'])) for d in devices]
+        if len(set(settings['iot_clients'])) != len(devices):
+            raise ValueError('Duplicate IoT addresses')
     with tempfile.TemporaryDirectory(prefix='oc-dns-', dir='/tmp') as temp:
         remote = Installer(args, Path(temp)/'ssh')
         stage = None
@@ -144,13 +176,19 @@ def main():
             route = remote.remote('ip -4 route get '+remote.client_ip)
             if 'dev br-lan' not in route.splitlines()[0]:
                 raise RuntimeError('Run this installer from a router LAN client (br-lan)')
+            if inventory is None:
+                saved = remote.remote("if test -f /etc/openclash/split-dns/settings.yaml; then ruby -ryaml -e 'puts YAML.load_file(ARGV[0]).fetch(\"iot_clients\", []).join(\" \")' /etc/openclash/split-dns/settings.yaml; fi")
+                settings['iot_clients'] = [str(ipaddress.IPv4Address(ip)) for ip in saved.split()]
             stage = remote.remote('umask 077; mktemp -d /root/openclash-split-dns.XXXXXX')
             if not re.fullmatch(r'/root/openclash-split-dns\.[A-Za-z0-9]+', stage):
                 raise RuntimeError('Unexpected staging directory')
-            for name, content in [('split_dns.rb', (HERE/'split_dns.rb').read_text()), ('settings.yaml', settings),
+            for name, content in [('split_dns.rb', (HERE/'split_dns.rb').read_text()), ('settings.yaml', json.dumps(settings, ensure_ascii=False)),
                                   ('hook.sh', HOOK_TEXT), ('restore.sh', RESTORE), ('watch.sh', WATCH),
                                   ('run.sh', worker(args.check_only))]:
                 remote.remote(f'umask 077; cat >{stage}/{name}', content)
+            if inventory is not None:
+                remote.remote(f'umask 077; cat >{stage}/iot_devices.json', json.dumps(inventory, ensure_ascii=False))
+                remote.remote(f'umask 077; cat >{stage}/iot_reservations.rb', (HERE/'iot_reservations.rb').read_text())
             print('Private router configuration backup and logs: '+stage, flush=True)
             remote.remote(f'nohup sh {stage}/run.sh {stage} >/dev/null 2>&1 </dev/null &')
             deadline = time.monotonic()+360
