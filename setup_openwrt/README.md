@@ -217,3 +217,64 @@ ImmortalWrt. Protected ingress: `br-lan`, `wireguard`, and `docker0`.
 
 Backups remain private on the router and in the operator's local state directory;
 no credentials, subscriptions, or backup archives belong in this repository.
+
+## Subconverter Docker container
+
+Run the local installer to reproduce the router's existing deployment:
+
+```sh
+./install_subconverter.sh
+./install_subconverter.sh --router 192.168.8.1
+```
+
+Defaults, verified against the running router on 2026-11-03:
+
+| Setting | Value |
+| --- | --- |
+| Image | `xwzliang/subconverter-custom:0.0.2` |
+| Container name | `subconverter` |
+| Published TCP port | `0.0.0.0:15051` → container `25500` |
+| Persistent bind mount | `/etc/openclash/config` → `/data`, read/write |
+| Restart policy | `always` |
+| Network | Docker bridge |
+| Health check | HTTP `/version` |
+
+Docker must already be installed and running on the router, with `curl` available.
+The installer pulls the image only if missing, creates the bind directory when
+needed, starts the container, and waits for the service to respond. It uses SSH
+without requiring SCP/SFTP. A matching running container is left alone; a stopped
+matching container is started. A conflicting image, port, mount, restart policy,
+privileged mode, or network causes an error without replacing the container or
+its files. It does not reset additional configuration on an existing container.
+
+Optional overrides:
+
+```sh
+./install_subconverter.sh --router 192.168.8.1 --ssh-port 2222 \
+  --image xwzliang/subconverter-custom:0.0.2 \
+  --name subconverter --port 15051 \
+  --bind-address 192.168.8.1 --config-dir /etc/openclash/config
+```
+
+The default all-interface port binding reproduces the existing container. Use
+`--bind-address` to bind only a specific router address. This installer does not
+add WAN firewall permissions or modify OpenClash subscription settings. It also
+does not install Docker itself. Install the container before the kill switch on
+a new router so its `docker0` client interface can be discovered and protected.
+For an already-installed kill switch, ensure `docker0` is in its protected
+interface list; the current router already includes it.
+
+The image contains its own defaults. Files bind-mounted from `/etc/openclash/config`
+remain router-specific and are not copied from another router by this script.
+A full setup on another supported router with Docker and OpenClash ready is:
+
+```sh
+./install_subconverter.sh --router 192.168.8.1
+./install_openclash_killswitch.py --router 192.168.8.1
+```
+
+Non-network deployment tests:
+
+```sh
+python3 -m unittest discover -s . -p test_subconverter.py -v
+```
