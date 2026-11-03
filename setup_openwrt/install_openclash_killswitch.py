@@ -64,7 +64,7 @@ fi
 for p in /proc/sys/net/ipv6/conf/*/disable_ipv6; do test "$(cat "$p")" = 1; done
 raw=$(uci -q get openclash.config.config_path)
 active="/etc/openclash/${raw##*/}"
-ruby -ryaml -e 'c=YAML.load_file(ARGV[0]); abort "Missing CN DIRECT rule" unless c.fetch("rules").include?("GEOIP,CN,DIRECT"); abort "IPv6 enabled" unless c["ipv6"] == false' "$active"
+ruby -ryaml -e 'c=YAML.load_file(ARGV[0]); abort "Missing CN DIRECT rule" unless (c.fetch("rules").include?("GEOIP,CN,DIRECT") || c.fetch("rules").include?("GEOSITE,cn,DIRECT")); abort "IPv6 enabled" unless c["ipv6"] == false' "$active"
 """
 
 

@@ -533,3 +533,76 @@ A changed ruleset briefly interrupts internet access while OpenClash restarts;
 the existing kill switch remains installed. No subscription download or subconverter
 request is needed. You can refresh the LuCI page after syncing to see the new text.
 Tests: `python3 -m unittest test_rules -v` (requires Ruby for YAML parsing).
+
+## Split DNS and default-to-proxy routing
+
+Requires an already working Mihomo core, installed kill switch, TUN/fake-IP mode,
+Ruby, and `/etc/openclash/GeoSite.dat` containing `cn`. Run from a LAN client:
+
+```sh
+./install_openclash_split_dns.py --check-only
+./install_openclash_split_dns.py
+./install_openclash_split_dns.py --router 192.168.8.1 --proxy-group '新加坡'
+```
+
+The proxy group must exist in every subscription you activate and contain only
+explicit proxy nodes/groups, with no DIRECT/PASS options or provider-based dynamic
+membership. The default is `新加坡`. Preflight rejects unsafe or missing groups.
+
+Policy, applied after the existing overwrite hook on each config regeneration:
+
+- Preserve explicit custom and subscription rules, including foreign services
+  intentionally routed DIRECT. Existing rule priority is retained.
+- Replace the broad `GEOIP,CN` rule with `GEOSITE,cn,DIRECT`, using the installed
+  mainland-domain dataset. An unknown domain does not become DIRECT merely because
+  its IP is Chinese. Existing explicit IP exceptions remain, with `no-resolve` so
+  they cannot trigger DNS lookups before a domain-routing decision.
+- Replace MATCH/FINAL with the specified proxy-only group.
+- Default real DNS lookups use `https://1.1.1.1/dns-query` **through that group**.
+  This DNS group is fixed even when a destination's explicit rule chooses another
+  region. Proxy protocols may also resolve destination domains on the proxy server.
+- DIRECT connections use `https://223.5.5.5/dns-query` directly, for domestic CDN
+  selection. This includes intentional foreign DIRECT exceptions.
+- Proxy-node hostname bootstrap uses that domestic encrypted resolver directly.
+  Resolver endpoints use literal IPs, avoiding an extra plaintext bootstrap lookup.
+- Replace inherited DNS policy/fallback entries so they cannot bypass this default.
+  Keep fake-IP exclusions for compatibility: an excluded domain's initial lookup
+  uses the proxied resolver; a DIRECT connection is then re-resolved domestically.
+  Such exclusions can therefore depend on a working proxy. Fake-IP A/AAAA responses
+  otherwise avoid upstream lookups until a connection needs them. Other query types
+  use the proxied default; this is not an all-query domestic DNS allowlist.
+- Preserve the forwarding kill switch and disabled IPv6. If OpenClash is stopped,
+  mainland access is blocked too. Direct DoH still reveals the router's public IP
+  and queried names to the domestic resolver; it encrypts them against transit ISPs.
+
+The script disables OpenClash's separate dnsmasq custom-domain upstream feature.
+It does not control an application's own DoH settings or independently configured
+DNS daemons. A selected group's failure cannot fall back to a direct default DNS
+connection. Explicit DIRECT subscription rules remain intentional exceptions.
+
+Files on the router are `/etc/openclash/split-dns/{split_dns.rb,settings.yaml,previous-overwrite.sh}`
+and the custom overwrite wrapper. Install the kill switch **before** this feature.
+Run this installer again to change the proxy group or update the transform.
+Subscription regeneration and custom-rule updates reapply the policy automatically.
+If the transform encounters an invalid group, it writes a reject-all candidate
+because older OpenClash versions ignore hook exit status.
+
+Each run saves the previous hook, policy, generated config and OpenClash settings
+under `/root/openclash-split-dns.XXXXXX/backup`; `config-backup.tar.gz` also snapshots
+network, DHCP, firewall and custom settings. A checksum-verified copy is saved to
+`~/.local/state/openclash-split-dns/<router-ip>/` with mode 600. A detached worker and ten-minute
+router-local watchdog restore unconfirmed changes. Validation checks both the
+candidate and regenerated runtime, forwarding protection, IPv6, and LAN-client
+access to Baidu, example.com and the router. No Claude/Anthropic test requests are
+made. Keep the router powered on until installation completes; the watchdog does
+not survive a reboot. The printed rollback command restores the old OpenClash
+files and reapplies the guard without overwriting later network/firewall changes.
+Private logs may include subscription secrets; do not publish them.
+
+For a disruptive stopped-core check with automatic recovery:
+
+```sh
+./test_outage.py --reload-firewall
+```
+
+Tests: `python3 -m unittest test_split_dns test_installer test_mihomo test_rules`.
