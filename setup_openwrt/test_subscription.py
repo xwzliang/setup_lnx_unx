@@ -41,11 +41,15 @@ class SubscriptionTests(unittest.TestCase):
             'flock': '#!/bin/sh\nexit 0\n',
             'ruby': '#!/bin/sh\n[ "$FAIL" != validation ]\n',
             'curl': '''#!/bin/sh
+agent=
 while [ "$#" -gt 0 ]; do
+  if [ "$1" = -A ]; then shift; agent=$1; fi
   if [ "$1" = -o ]; then shift; out=$1; fi
   shift
 done
+printf "%s\n" "$agent" >>"$TEST_ROOT/agents"
 printf converted >"$out"
+if [ "$FAIL" = fallback ] && [ "$agent" = Clash ]; then printf 403; exit 0; fi
 if [ "$FAIL" = fetch ] || { [ "$FAIL" = second ] && [ "$out" = candidates/two.yaml ]; }; then printf 403; else printf 200; fi
 ''',
             'uci': '''#!/bin/sh
@@ -114,6 +118,13 @@ esac
         self.assertEqual((root / 'etc/openclash/config/one.yaml').read_text(), 'original one')
         self.assertEqual((root / 'etc/config/openclash').read_text(), 'original uci')
         self.assertEqual((root / 'stage/result').read_text().strip(), 'rolled-back')
+
+    def test_user_agent_fallback_and_cleanup(self):
+        root, result = self.run_worker('fallback')
+        self.assertEqual(result.returncode, 0, (root / 'stage/worker.log').read_text())
+        self.assertEqual((root / 'agents').read_text().splitlines()[:2], ['Clash', 'Quantumultx'])
+        self.assertFalse(list((root / 'etc/openclash/config').glob('.subscription-fetch.*')))
+        self.assertIn('/data/${fetch_dir##*/}/source.yaml', (root / 'stage/run.sh').read_text())
 
     def test_check_only_does_not_write(self):
         root, result = self.run_worker(check_only=True)

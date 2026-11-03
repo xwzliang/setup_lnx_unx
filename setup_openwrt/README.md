@@ -283,8 +283,9 @@ python3 -m unittest discover -s . -p test_subconverter.py -v
 ## Named subscription conversion and installation
 
 `install_openclash_subscription.py` reads `.env` next to the script (regardless
-of your current working directory). It uses the router's subconverter to fetch
-each source URL and apply the template, validates the YAML and runs the installed
+of your current working directory). It fetches each source URL with `User-Agent: Clash` and retries with
+`Quantumultx` if the fetch fails, then passes the private downloaded file to the
+router's subconverter to apply the template, validates the YAML and runs the installed
 Clash core's configuration check, then installs the converted configs in OpenClash.
 It needs Python 3.9+ and SSH locally, and the existing OpenClash, curl, Ruby, flock,
 and subconverter deployment on the router. Run `./install_subconverter.sh` first
@@ -319,8 +320,12 @@ is preserved; its core is restarted only if its own file was refreshed. `--all`
 updates every listed entry and activates `ACTIVE_SUBSCRIPTION`; it does not merge
 subscriptions. Other LuCI subscriptions and update schedules are preserved.
 The old disabled `wgetcloud_update` entry and intermediate `wgetcloud_new.yaml`
-are no longer needed by this flow and are left untouched. Future LuCI subscription
-updates use the saved remote URL and the local converter directly.
+are no longer needed by this flow and are left untouched. LuCI subscription
+updates still use the saved remote URL and the local converter directly; they do
+not use this installer's user-agent fallback. For providers that require it, run
+this installer to refresh configs. Enable any provider download window immediately
+before running it. The converter must have the default mount
+`/etc/openclash/config:/data`; temporary raw files there are removed after conversion.
 
 All selected conversions must pass before anything is replaced. Before installation,
 the script creates a private `/root/openclash-subscription.XXXXXX` directory with:

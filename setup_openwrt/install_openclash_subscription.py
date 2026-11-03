@@ -87,6 +87,7 @@ exec 8>/tmp/lock/openclash_subs.lock
 flock -n 8 || { echo busy >result; exit 1; }
 mutated=0
 restart_needed=0
+fetch_dir=
 restart_core() {
     /etc/init.d/openclash restart >restart.log 2>&1 8>&- 9>&- &
     restart_pid=$!
@@ -104,6 +105,7 @@ restart_core() {
 rollback() {
     rc=$?
     trap - EXIT HUP INT TERM
+    if [ -n "$fetch_dir" ]; then rm -rf "$fetch_dir"; fi
     if [ "$mutated" = 1 ]; then
         uci revert openclash || :
         cp backup/openclash /etc/config/openclash
@@ -158,13 +160,31 @@ if [ -z "$matched_section" ]; then
 fi
 printf %s {q(url)} >source-url
 printf %s {q(template)} >template-url
+echo fetching-{name} >phase
+# The default Docker deployment mounts /etc/openclash/config at /data.
+# Keep the temporary raw subscription private and remove it after conversion.
+fetch_dir=$(mktemp -d /etc/openclash/config/.subscription-fetch.XXXXXX)
+ruby -e 'puts "url = " + File.read(ARGV[0]).dump' source-url >fetch.curl
+status=000
+for user_agent in Clash Quantumultx; do
+    status=$(curl --noproxy '*' -sS -L --connect-timeout 10 --max-time 60 \
+        -K fetch.curl -A "$user_agent" -o "$fetch_dir/source.yaml" \
+        -w '%{{http_code}}') || status=000
+    echo "Source fetch ($user_agent): HTTP $status"
+    if [ "$status" = 200 ] && [ -s "$fetch_dir/source.yaml" ]; then break; fi
+done
+[ "$status" = 200 ] && [ -s "$fetch_dir/source.yaml" ] || exit 1
+printf %s "/data/${{fetch_dir##*/}}/source.yaml" >converter-source
+echo converting-{name} >phase
 status=$(curl --noproxy '*' -sS --connect-timeout 15 --max-time 180 -G \
-    --data-urlencode url@source-url --data-urlencode config@template-url \
+    --data-urlencode url@converter-source --data-urlencode config@template-url \
     --data target=clash --data new_name=true --data emoji=false --data list=false \
     --data sort=false --data scv=false --data append_type=false --data fdn=true \
     -o candidates/{config}.yaml -w '%{{http_code}}' \
     http://127.0.0.1:{converter_port}/sub) || exit 1
 if [ "$status" != 200 ]; then echo "Conversion HTTP $status"; exit 1; fi
+rm -rf "$fetch_dir"
+fetch_dir=
 ruby -ryaml -e 'c=YAML.load_file(ARGV[0]); abort "Invalid subscription" unless c.is_a?(Hash) && c["proxies"].is_a?(Array) && !c["proxies"].empty? && c["proxy-groups"].is_a?(Array) && c["rules"].is_a?(Array)' candidates/{config}.yaml
 /etc/openclash/clash -t -d /etc/openclash -f "$PWD/candidates/{config}.yaml" >validation-{name}.log 2>&1
 """)
@@ -176,7 +196,7 @@ ruby -ryaml -e 'c=YAML.load_file(ARGV[0]); abort "Invalid subscription" unless c
             # Quote once for UCI syntax, then again for the shell printf argument.
             parts.append(f"printf 'set openclash.%s.{key}=%s\\n' \"$matched_section\" {q(q(value))} >>updates\n")
         parts.append(f"printf '%s\\n' /etc/openclash/config/{config}.yaml /etc/openclash/backup/{config}.yaml >>manifest\n")
-    parts.append("rm -f source-url template-url\n")
+    parts.append("rm -f source-url template-url fetch.curl converter-source\n")
     if check_only:
         parts.append("trap - EXIT HUP INT TERM\necho validated >result\nexit 0\n")
         return "".join(parts)
