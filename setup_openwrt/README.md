@@ -32,7 +32,62 @@ client using another LAN device/router-local proxy as an alternate gateway. All
 client ingress interfaces must be listed. Additional WANs, tunnels, firewall
 packages, or changes to OpenClash's TUN/table behavior require revalidation.
 
-## Install
+## Install from your computer (recommended)
+
+Run from an IPv4 LAN computer with Python **3.9+**, OpenSSH, and curl. OpenClash
+must already be configured and working in the supported legacy fw3/TUN mode.
+The installer uses normal SSH authentication and host-key verification; it does
+not require SFTP or SCP support on the router.
+
+```sh
+# Default router: root@192.168.5.1
+./install_openclash_killswitch.py
+
+# Different router / SSH alias
+./install_openclash_killswitch.py --router 192.168.8.1
+
+# Explicit interfaces and a different SSH port
+./install_openclash_killswitch.py --router 192.168.8.1 --port 2222 \
+  --interfaces br-lan wireguard docker0
+```
+
+The script detects the devices in the `lan` and `docker` firewall zones (including
+WireGuard when it belongs to `lan`). For additional/custom zones, it requires an
+explicit `--interfaces` list rather than silently leaving clients unprotected.
+List **all** trusted client ingress interfaces; do not include WAN.
+
+The complete workflow is automatic:
+
+1. Check IPv4 LAN SSH access and working external HTTPS endpoints.
+2. Upload the sibling `openclash-killswitch.sh` and launch it in a detached
+   router-local script, so SSH/internet interruptions do not terminate setup.
+3. Wait for installation and verify policy routing, firewall guards, startup
+   hooks, IPv6/offloading settings, the China DIRECT rule, router HTTP access,
+   and external HTTPS access from the installing computer.
+4. Download and validate a private backup under
+   `~/.local/state/openclash-killswitch/<router-ip>/` (override with `--backup-dir`).
+5. Confirm installation automatically, cancelling the router's rollback timer.
+
+If installation, checks, or backup fail, it **does not confirm**. Once the router
+installer has armed rollback, that timer remains independent of your computer.
+The command exits nonzero and prints the remote installation-log location when
+available. Verification can wait up to two minutes for OpenClash to become ready.
+Run from the LAN without another VPN/proxy redirecting the computer's traffic;
+the script disables HTTP proxy environment variables for its curl checks.
+
+Running it again with an identical installed script verifies and backs up the
+existing installation **without restarting OpenClash**. A different installed
+version or interface list is refused rather than overwritten implicitly.
+The wrapper does not automatically run the disruptive stop/recovery tests below;
+those remain available as separate validation commands.
+
+For local, non-network safety tests:
+
+```sh
+python3 -m unittest discover -s . -p test_installer.py -v
+```
+
+## Manual router-side installation
 
 Inspect and back up your router before proceeding. Have IPv4 LAN SSH access; do
 not perform this through an IPv6-only management connection. Allow time for a
