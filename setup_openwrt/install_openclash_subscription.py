@@ -88,6 +88,23 @@ set -e
 umask 077
 cd "$1"
 exec >worker.log 2>&1
+log() { printf '[%s] %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$*"; }
+phase() { printf '%s\n' "$1" >phase; log "Stage: $1"; }
+validate_core() {
+    phase "core-validation-$2"
+    log "Core version: $(/etc/openclash/clash -v 2>&1)"
+    log "Checking config: $1; detailed output: validation-$2.log"
+    if /etc/openclash/clash -t -d /etc/openclash -f "$1" >"validation-$2.log" 2>&1; then
+        cat "validation-$2.log"
+        log "Core validation passed: $2"
+    else
+        validation_rc=$?
+        cat "validation-$2.log"
+        log "ERROR: Core validation failed: $2 (exit $validation_rc)"
+        return "$validation_rc"
+    fi
+}
+log "Subscription worker started; private directory: $PWD"
 exec 9>/tmp/lock/setup-openclash-subscription.lock
 flock -n 9 || { echo busy >result; exit 1; }
 exec 8>/tmp/lock/openclash_subs.lock
@@ -96,6 +113,7 @@ mutated=0
 restart_needed=0
 fetch_dir=
 restart_core() {
+    log "Restarting OpenClash; detailed output: restart.log"
     /etc/init.d/openclash restart >restart.log 2>&1 8>&- 9>&- &
     restart_pid=$!
     n=0
@@ -103,17 +121,28 @@ restart_core() {
         n=$((n+1))
         if [ "$n" -ge 120 ]; then
             kill "$restart_pid" 2>/dev/null || :
+            cat restart.log
+            log "ERROR: OpenClash restart timed out"
             return 1
         fi
         sleep 1
     done
-    wait "$restart_pid"
+    if wait "$restart_pid"; then
+        log "OpenClash restart command completed"
+    else
+        restart_rc=$?
+        cat restart.log
+        log "ERROR: OpenClash restart failed (exit $restart_rc)"
+        return "$restart_rc"
+    fi
 }
 rollback() {
     rc=$?
+    log "ERROR: Worker exited with code $rc during $(cat phase 2>/dev/null || echo preflight)"
     trap - EXIT HUP INT TERM
     if [ -n "$fetch_dir" ]; then rm -rf "$fetch_dir"; fi
     if [ "$mutated" = 1 ]; then
+        log "Restoring previous settings and config files from $PWD/backup"
         uci revert openclash || :
         cp backup/openclash /etc/config/openclash
         while IFS= read -r file; do
@@ -125,8 +154,10 @@ rollback() {
             fi
         done <manifest
         if [ "$restart_needed" = 1 ]; then restart_core || :; fi
+        log "Previous settings and config files restored"
         echo rolled-back >result
     else
+        log "Stopped before installation; existing settings and configs unchanged"
         echo failed-before-install >result
     fi
     exit "$rc"
@@ -160,13 +191,13 @@ def worker(entries, active, active_config, converter_port, check_only=False, swi
     for name, config, url, template in entries:
         if switch_only:
             parts.append(f"""
-echo validating-{name} >phase
+phase validating-{name}
 test -s /etc/openclash/config/{config}.yaml || {{ echo 'Saved config is missing; use --switch with --update first'; exit 1; }}
-/etc/openclash/clash -t -d /etc/openclash -f /etc/openclash/config/{config}.yaml >validation-{name}.log 2>&1
+validate_core /etc/openclash/config/{config}.yaml {name}
 """)
             continue
         parts.append(f"""
-echo converting-{name} >phase
+phase converting-{name}
 wanted={q(config)}
 matched_section=
 config_foreach find_section config_subscribe
@@ -177,7 +208,7 @@ if [ -z "$matched_section" ]; then
 fi
 printf %s {q(url)} >source-url
 printf %s {q(template)} >template-url
-echo fetching-{name} >phase
+phase fetching-{name}
 # The default Docker deployment mounts /etc/openclash/config at /data.
 # Keep the temporary raw subscription private and remove it after conversion.
 fetch_dir=$(mktemp -d /etc/openclash/config/.subscription-fetch.XXXXXX)
@@ -192,18 +223,20 @@ for user_agent in {" ".join(q(agent) for agent in dict.fromkeys([user_agents.get
 done
 [ "$status" = 200 ] && [ -s "$fetch_dir/source.yaml" ] || exit 1
 printf %s "/data/${{fetch_dir##*/}}/source.yaml" >converter-source
-echo converting-{name} >phase
+phase converting-{name}
 status=$(curl --noproxy '*' -sS --connect-timeout 15 --max-time 180 -G \
     --data-urlencode url@converter-source --data-urlencode config@template-url \
     --data target=clash --data new_name=true --data emoji=false --data list=false \
     --data sort=false --data scv=false --data append_type=false --data fdn=true \
     -o candidates/{config}.yaml -w '%{{http_code}}' \
     http://127.0.0.1:{converter_port}/sub) || exit 1
-if [ "$status" != 200 ]; then echo "Conversion HTTP $status"; exit 1; fi
+log "Conversion HTTP $status; output: candidates/{config}.yaml ($(wc -c <candidates/{config}.yaml) bytes)"
+if [ "$status" != 200 ]; then log "ERROR: Conversion failed; response retained in candidates/{config}.yaml"; exit 1; fi
+phase yaml-validation-{name}
 rm -rf "$fetch_dir"
 fetch_dir=
 ruby -ryaml -e 'c=YAML.load_file(ARGV[0]); abort "Invalid subscription" unless c.is_a?(Hash) && c["proxies"].is_a?(Array) && !c["proxies"].empty? && c["proxy-groups"].is_a?(Array) && c["rules"].is_a?(Array)' candidates/{config}.yaml
-/etc/openclash/clash -t -d /etc/openclash -f "$PWD/candidates/{config}.yaml" >validation-{name}.log 2>&1
+validate_core "$PWD/candidates/{config}.yaml" {name}
 """)
         values = {"name": config, "enabled": "1", "address": url, "sub_convert": "1",
                   "convert_address": f"http://127.0.0.1:{converter_port}/sub", "template": "0",
@@ -223,7 +256,8 @@ ruby -ryaml -e 'c=YAML.load_file(ARGV[0]); abort "Invalid subscription" unless c
         # Refreshing the current file also needs a restart.
         parts.append('current=$(uci -q get openclash.config.config_path || :)\nif grep -Fx "$current" manifest >/dev/null; then restart_needed=1; fi\n')
     parts.append(r"""
-echo installing >phase
+phase installing
+log "Backing up settings and configs to $PWD/backup"
 cp /etc/config/openclash backup/openclash
 while IFS= read -r file; do
     mkdir -p "backup${file%/*}"
@@ -238,7 +272,7 @@ done <manifest
 uci batch <updates
 uci commit openclash
 if [ "$restart_needed" = 1 ]; then
-    echo restarting >phase
+    phase restarting
     restart_core
     raw=$(uci -q get openclash.config.config_path)
     runtime="/etc/openclash/${raw##*/}"
@@ -253,6 +287,7 @@ if [ "$restart_needed" = 1 ]; then
     [ "$ready" = 1 ]
 fi
 trap - EXIT HUP INT TERM
+log "Installation and activation checks completed successfully"
 echo installed >result
 """)
     return "".join(parts)
@@ -300,7 +335,7 @@ def main():
             remote.remote(f"nohup sh {stage}/run.sh {stage} >/dev/null 2>&1 </dev/null &")
             print(("Switching saved config: " if switch_only else "Converting: ") + ", ".join(e[0] for e in entries), flush=True)
             print("Private router logs and backups: " + stage, flush=True)
-            deadline = time.monotonic() + 240 * len(entries) + 360
+            deadline = time.monotonic() + 360 * len(entries) + 360
             last_phase = None
             while time.monotonic() < deadline:
                 result = remote.remote(f"cat {stage}/result 2>/dev/null || true")

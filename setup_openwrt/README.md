@@ -390,3 +390,12 @@ SUB_SHADOWSOCKS_USER_AGENT="Shadowrocket/2615 CFNetwork/3860.600.12 Darwin/25.5.
 
 The installer tries this exact value first, followed by `Clash` and `Quantumultx`
 if fetching fails. Without this option, the existing defaults remain unchanged.
+
+
+`worker.log` includes timestamped stages, conversion HTTP status and output size,
+the installed core version, complete core validation output, backup location, and
+restart/rollback outcomes. Validation output is also retained in `validation-*.log`;
+restart failures include `restart.log` output. These logs stay in the private router
+directory and may contain sensitive config details; the local CLI prints only
+progress and log paths. An unsupported protocol error is a core compatibility
+failure, even when fetching and conversion both succeeded.

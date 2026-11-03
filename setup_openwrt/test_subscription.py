@@ -87,7 +87,7 @@ esac
             path.write_text(script)
             path.chmod(0o755)
         core = root / 'etc/openclash/clash'
-        core.write_text('#!/bin/sh\n[ "$FAIL" != core ]\n')
+        core.write_text('#!/bin/sh\nif [ "$FAIL" = core ]; then echo "unsupport proxy type: anytls"; exit 1; fi\n')
         core.chmod(0o755)
         entries = [('ONE', 'one', "https://one.example/sub?a='x'&b=$(touch PWNED)", sub.TEMPLATE)]
         if count == 2:
@@ -196,6 +196,16 @@ esac
         root, result = self.run_worker(user_agents={'ONE': agent})
         self.assertEqual(result.returncode, 0)
         self.assertEqual((root / 'agents').read_text().splitlines()[0], agent)
+
+    def test_worker_log_includes_validation_failure_and_stage(self):
+        root, result = self.run_worker('core')
+        self.assertNotEqual(result.returncode, 0)
+        log = (root / 'stage/worker.log').read_text()
+        self.assertIn('Stage: core-validation-ONE', log)
+        self.assertIn('Conversion HTTP 200', log)
+        self.assertIn('unsupport proxy type: anytls', log)
+        self.assertIn('Core validation failed: ONE (exit 1)', log)
+        self.assertIn('Stopped before installation', log)
 
     def test_check_only_does_not_write(self):
         root, result = self.run_worker(check_only=True)
