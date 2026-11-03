@@ -278,3 +278,72 @@ Non-network deployment tests:
 ```sh
 python3 -m unittest discover -s . -p test_subconverter.py -v
 ```
+
+
+## Named subscription conversion and installation
+
+`install_openclash_subscription.py` reads `.env` next to the script (regardless
+of your current working directory). It uses the router's subconverter to fetch
+each source URL and apply the template, validates the YAML and runs the installed
+Clash core's configuration check, then installs the converted configs in OpenClash.
+It needs Python 3.9+ and SSH locally, and the existing OpenClash, curl, Ruby, flock,
+and subconverter deployment on the router. Run `./install_subconverter.sh` first
+when setting up another router. No new Docker image is needed.
+
+```sh
+cd /Users/broliang/git/setup_lnx_unx/setup_openwrt
+cp env.example .env
+chmod 600 .env
+# Edit .env: set your private URLs, identifiers, and ACTIVE_SUBSCRIPTION.
+./install_openclash_subscription.py --name WGETCLOUD --check-only
+./install_openclash_subscription.py --name WGETCLOUD
+./install_openclash_subscription.py --all
+# Multiple selected identifiers, or another router/env file:
+./install_openclash_subscription.py --name WGETCLOUD SECONDARY
+./install_openclash_subscription.py --env /path/to/router.env --router 192.168.8.1 --all
+```
+
+`SUBSCRIPTIONS` lists case-sensitive identifiers separated by spaces. Each needs
+`SUB_<IDENTIFIER>_URL`; optional `SUB_<IDENTIFIER>_CONFIG` controls the LuCI name and
+YAML filename (without `.yaml`). Config names must be unique. `TEMPLATE_URL` is the
+shared conversion template; `SUB_<IDENTIFIER>_TEMPLATE` overrides it for one entry.
+The example uses your existing custom template and preserves the
+`wgetcloud_local_subconvert.yaml` name. Remove the example SECONDARY entry if you
+only use one subscription. Values are literal, optionally quoted; shell commands,
+variable expansion, multiline values, and inline comments are not supported.
+The repository ignores `.env`; never commit private subscription URLs.
+
+OpenClash runs **one** config at a time. If the selected identifiers include
+`ACTIVE_SUBSCRIPTION`, that config is activated. Otherwise the running selection
+is preserved; its core is restarted only if its own file was refreshed. `--all`
+updates every listed entry and activates `ACTIVE_SUBSCRIPTION`; it does not merge
+subscriptions. Other LuCI subscriptions and update schedules are preserved.
+The old disabled `wgetcloud_update` entry and intermediate `wgetcloud_new.yaml`
+are no longer needed by this flow and are left untouched. Future LuCI subscription
+updates use the saved remote URL and the local converter directly.
+
+All selected conversions must pass before anything is replaced. Before installation,
+the script creates a private `/root/openclash-subscription.XXXXXX` directory with:
+
+- `backup/openclash`: previous `/etc/config/openclash` settings.
+- `backup/etc/openclash/config/`: previous source YAML files.
+- `backup/etc/openclash/backup/`: previous OpenClash backup YAML files.
+- `manifest`: target paths, including files that did not previously exist.
+- `worker.log`, validation logs, `phase`, and `result`: private diagnostics.
+
+The directory is printed by the installer and retained after success. It contains
+subscription credentials; keep it private and copy it off the router if desired.
+Config replacements use a temporary file and rename. Installation/restart failures
+restore the previous settings and files and attempt to restart the old config.
+The router worker continues independently if SSH disconnects; inspect its `result`
+file before retrying. This protects against command failures, not power loss or
+storage failure midway through installation. Rollback cannot guarantee that an
+already unhealthy core will start. The existing kill switch stays in place during
+restarts, so an internet interruption is expected; local router access is retained.
+
+`--check-only` fetches, converts and validates without changing subscriptions or
+restarting OpenClash. A rejected/expired source URL or failed conversion leaves
+all existing configs untouched. Logs remain private because converter/core errors
+may contain credentials. No URLs are printed or passed in the SSH command line.
+
+Tests: `python3 -m unittest test_subscription test_installer test_subconverter -v`.
