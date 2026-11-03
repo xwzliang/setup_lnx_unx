@@ -399,3 +399,67 @@ restart failures include `restart.log` output. These logs stay in the private ro
 directory and may contain sensitive config details; the local CLI prints only
 progress and log paths. An unsupported protocol error is a core compatibility
 failure, even when fetching and conversion both succeeded.
+
+
+## Upgrade legacy OpenClash to Mihomo
+
+`install_mihomo.py` upgrades the core while preserving the current active subscription.
+It supports the legacy fw3/OpenClash layout used here, with this directory's kill
+switch already installed, an existing `core/clash_meta`, persistent core storage,
+and a Linux LAN test client on `br-lan`. It currently supports router SSH port 22.
+Run from the router's LAN. Do not edit router config concurrently with the upgrade.
+
+```sh
+./install_mihomo.py --router 192.168.5.1 --client server --client-ip 192.168.5.103
+# Optional: validate another router-side YAML before changing anything.
+./install_mihomo.py --client server --client-ip 192.168.5.103 \
+  --validate-config /etc/openclash/config/another.yaml
+```
+
+`--client` is a local SSH alias/address for a Linux machine behind the target
+router, with curl available; `--client-ip` is that machine's LAN IPv4 address.
+Use values appropriate to each router. The script intentionally stops OpenClash
+and reloads the firewall to test fail-closed behavior. A file-based recovery job
+on the router starts OpenClash again after 25 seconds, independently of SSH.
+Local router HTTP and SSH must remain accessible throughout.
+
+The installer pins official Mihomo **v1.19.33** and verifies SHA-256 before upload.
+It selects `amd64-compatible` on x86-64 or `arm64` on aarch64; other architectures
+are rejected. `--archive /path/to/official.gz` avoids downloading again but still
+requires the pinned checksum. Checksum values come from the official GitHub release.
+Before writing the upload, it estimates free space needed for the binary and two
+compressed backups, plus a reserve; insufficient space aborts without mutation.
+Old upgrade directories can be sizable: archive them privately before removing
+any, and retain the backup needed for rollback.
+
+Before activation, it backs up `/etc/openclash` (including both old cores), UCI
+OpenClash settings, and `/etc/init.d/openclash`. The full backup also includes
+network/firewall/DHCP settings and the kill-switch configuration. Both the active
+source and generated runtime configs must pass the new core's validation.
+
+For this older OpenClash release, the installer adds a narrowly scoped
+`SAFE_PATHS=/usr/share/openclash/ui` export to its init script, allowing Mihomo to
+serve the existing dashboard. OpenClash package upgrades may replace this init
+script; review that integration when upgrading OpenClash itself. Meta TUN retains
+OpenClash's `utun` interface and route table 354; automatic route generation remains
+under OpenClash's existing configuration.
+
+It enables the Meta core, restarts, checks routing, IPv6 disablement and the firewall
+guard, probes public and mainland-China sites, then runs `test_outage.py` with
+`--reload-firewall`. A separate router watchdog restores the old core/config after
+15 minutes unless verification completes and confirmation is recorded. Errors after
+mutation request immediate restoration. Do not power off the router during the
+transaction; the watchdog is process-based and does not survive a reboot.
+
+Private router artifacts are in `/root/mihomo-upgrade.XXXXXX`; successful runs
+also copy `full-backup.tar.gz` to
+`~/.local/state/mihomo-upgrade/<router-ip>/mihomo-upgrade.XXXXXX.tar.gz` (mode 600).
+The installer prints a detached manual rollback command. Rollback restores
+OpenClash-owned files and reapplies the existing kill switch; network/firewall/DHCP
+snapshots are reference backups, not automatically restored over unrelated changes.
+Rollback returns to the active config/settings from upgrade time.
+
+Tests: `python3 -m unittest test_mihomo -v` covers preflight rejection and executable
+upgrade/rollback transactions with simulated router tools. Live verification on the
+router additionally confirmed stopped-core blocking, firewall-reload persistence,
+local management access, automatic recovery, and AnyTLS config validation.
