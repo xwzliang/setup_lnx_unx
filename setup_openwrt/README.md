@@ -406,19 +406,29 @@ failure, even when fetching and conversion both succeeded.
 `install_mihomo.py` upgrades the core while preserving the current active subscription.
 It supports the legacy fw3/OpenClash layout used here, with this directory's kill
 switch already installed, an existing `core/clash_meta`, persistent core storage,
-and a Linux LAN test client on `br-lan`. It currently supports router SSH port 22.
+and a test machine on `br-lan` (the local machine by default). It currently supports router SSH port 22.
 Run from the router's LAN. Do not edit router config concurrently with the upgrade.
 
 ```sh
+# Default: use this machine and detect its LAN IP from the router SSH connection.
+./install_mihomo.py
+./install_mihomo.py --router 192.168.8.1
+# Optional: use a separate Linux LAN client.
 ./install_mihomo.py --router 192.168.5.1 --client server --client-ip 192.168.5.103
 # Optional: validate another router-side YAML before changing anything.
 ./install_mihomo.py --client server --client-ip 192.168.5.103 \
   --validate-config /etc/openclash/config/another.yaml
 ```
 
+Without `--client`, curl probes run locally (macOS/Linux), bound to the IPv4
+address observed by the router in `SSH_CONNECTION`. No SSH server is needed on
+the local machine. The router must reach it through `br-lan`; run directly from
+that LAN, not through a jump host, VPN, or a public SSH forwarding endpoint.
+
 `--client` is a local SSH alias/address for a Linux machine behind the target
 router, with curl available; `--client-ip` is that machine's LAN IPv4 address.
-Use values appropriate to each router. The script intentionally stops OpenClash
+Both options are required only when selecting a separate client. Use values
+appropriate to each router. The script intentionally stops OpenClash
 and reloads the firewall to test fail-closed behavior. A file-based recovery job
 on the router starts OpenClash again after 25 seconds, independently of SSH.
 Local router HTTP and SSH must remain accessible throughout.

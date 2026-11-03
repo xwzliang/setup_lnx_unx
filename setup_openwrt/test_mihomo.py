@@ -4,6 +4,9 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
+from test_outage import client_address, probe
 import install_mihomo as m
 
 
@@ -14,6 +17,27 @@ class UpgradeTests(unittest.TestCase):
         self.assertEqual(len(m.release('x86_64')[1]), 64)
         with self.assertRaises(ValueError):
             m.release('mips')
+
+    def test_local_client_address_detection(self):
+        self.assertEqual(client_address(None, None, '192.168.5.22'), '192.168.5.22')
+        self.assertEqual(client_address('server', '192.168.5.103', None), '192.168.5.103')
+        with self.assertRaises(ValueError):
+            client_address(None, '192.168.5.99', '192.168.5.22')
+        with self.assertRaises(ValueError):
+            client_address('server', None, '192.168.5.22')
+
+    def test_local_probe_binds_detected_address_without_ssh(self):
+        with patch('test_outage.subprocess.run', return_value=SimpleNamespace(returncode=0, stdout='200', stderr='')) as run:
+            self.assertEqual(probe(None, '192.168.5.22', 'https://example.com/'), (0, '200', ''))
+            command = run.call_args.args[0]
+            self.assertEqual(command[0], 'curl')
+            self.assertEqual(command[command.index('--interface')+1], '192.168.5.22')
+
+    def test_remote_probe_still_uses_ssh(self):
+        with patch('test_outage.ssh', return_value=SimpleNamespace(returncode=0, stdout='200', stderr='')) as ssh:
+            probe('server', '192.168.5.103', 'https://example.com/')
+            self.assertEqual(ssh.call_args.args[0], 'server')
+            self.assertIn('--interface 192.168.5.103', ssh.call_args.args[1])
 
     def exercise(self, failure=False):
         temp = tempfile.TemporaryDirectory()

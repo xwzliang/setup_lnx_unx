@@ -14,6 +14,7 @@ import tempfile
 import tarfile
 import time
 from install_openclash_killswitch import Installer, VERIFY
+from test_outage import client_address
 
 VERSION = '1.19.33'
 RELEASES = {
@@ -99,16 +100,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--router', default='192.168.5.1')
     parser.add_argument('--port', type=int, default=22)
-    parser.add_argument('--client', required=True, help='SSH alias for a Linux LAN client used for outage tests')
-    parser.add_argument('--client-ip', required=True, type=ipaddress.IPv4Address)
+    parser.add_argument('--client', help='SSH alias for a separate Linux LAN client (default: this machine)')
+    parser.add_argument('--client-ip', type=ipaddress.IPv4Address, help='Required with --client; otherwise detected from router SSH')
     parser.add_argument('--archive', type=Path, help='Use an already downloaded official .gz (checksum still verified)')
     parser.add_argument('--validate-config', help='Additional existing router YAML to check before switching')
     parser.add_argument('--backup-dir', type=Path, default=Path.home()/'.local/state/mihomo-upgrade')
     args = parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', args.router) or not 1 <= args.port <= 65535:
         parser.error('Invalid router/SSH port')
-    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.@-]*', args.client):
+    if args.client and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.@-]*', args.client):
         parser.error('Invalid client SSH alias')
+    if args.client and not args.client_ip:
+        parser.error('--client-ip is required with a separate --client')
     if args.validate_config and not re.fullmatch(r'/[A-Za-z0-9_./-]+', args.validate_config):
         parser.error('Validation config must be an absolute router path without spaces')
     # test_outage currently uses router SSH port 22; avoid silently testing another target.
@@ -120,6 +123,8 @@ def main():
         confirmed = False
         try:
             remote.connect()
+            args.client_ip = client_address(args.client, args.client_ip, remote.client_ip)
+            print(f"Test client: {args.client or 'this machine'} ({args.client_ip})", flush=True)
             remote.script(VERIFY)
             route = remote.remote(f'ip -4 route get {args.client_ip}')
             if not re.search(r'\bdev br-lan\b', route):
@@ -168,9 +173,12 @@ def main():
             for address in ['http://'+remote.router_ip+'/', 'https://example.com/', 'https://www.baidu.com/']:
                 remote.probe(address)
             print('Testing stopped-core + firewall reload, with router-local automatic recovery.', flush=True)
-            subprocess.run([sys.executable,str(Path(__file__).with_name('test_outage.py')),
-                            '--router',remote.target,'--router-ip',remote.router_ip,'--client',args.client,
-                            '--client-ip',str(args.client_ip),'--reload-firewall'], check=True, timeout=180)
+            outage_command = [sys.executable, str(Path(__file__).with_name('test_outage.py')),
+                              '--router', remote.target, '--router-ip', remote.router_ip,
+                              '--client-ip', str(args.client_ip), '--reload-firewall']
+            if args.client:
+                outage_command.extend(['--client', args.client])
+            subprocess.run(outage_command, check=True, timeout=180)
             remote.script(VERIFY)
             folder = args.backup_dir.expanduser()/remote.router_ip
             folder.mkdir(parents=True,exist_ok=True,mode=0o700)

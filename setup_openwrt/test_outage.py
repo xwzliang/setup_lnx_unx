@@ -15,27 +15,53 @@ def ssh(host, command, data=None):
     return result
 
 
+def client_address(client, supplied, detected):
+    if client:
+        if not supplied:
+            raise ValueError("--client-ip is required when using a separate --client")
+        return str(ipaddress.IPv4Address(supplied))
+    address = str(ipaddress.IPv4Address(detected))
+    if supplied and str(ipaddress.IPv4Address(supplied)) != address:
+        raise ValueError("Local --client-ip must match the router-observed SSH source address")
+    return address
+
+
+def probe(client, client_ip, url):
+    command = ["curl", "-4", "--noproxy", "*", "--interface", client_ip,
+               "-sS", "-o", "/dev/null", "-w", "%{http_code}",
+               "--connect-timeout", "3", "--max-time", "4", url]
+    if client:
+        result = ssh(client, shlex.join(command))
+    else:
+        result = subprocess.run(command, text=True, capture_output=True, timeout=10)
+    return result.returncode, result.stdout.strip(), result.stderr.strip()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--router", default="root@192.168.5.1")
-    parser.add_argument("--client", required=True, help="SSH alias for a LAN Linux client")
+    parser.add_argument("--client", help="SSH alias for a separate Linux LAN client (default: this machine)")
     parser.add_argument("--router-ip", default="192.168.5.1")
-    parser.add_argument("--client-ip", required=True)
+    parser.add_argument("--client-ip", help="Separate client LAN address; detected automatically for this machine")
     parser.add_argument("--reload-firewall", action="store_true", help="Also reload fw3 while OpenClash is stopped")
     args = parser.parse_args()
-    for value in (args.router_ip, args.client_ip):
-        ipaddress.IPv4Address(value)
+    ipaddress.IPv4Address(args.router_ip)
+    detected = None
+    if not args.client:
+        connection = ssh(args.router, 'printf "%s\\n" "$SSH_CONNECTION"')
+        if connection.returncode or len(connection.stdout.split()) != 4:
+            raise RuntimeError("Cannot detect this machine's IPv4 address from router SSH")
+        detected = connection.stdout.split()[0]
+    args.client_ip = client_address(args.client, args.client_ip, detected)
+    route = ssh(args.router, "ip -4 route get " + args.client_ip)
+    if route.returncode or "dev br-lan" not in route.stdout.split("\n")[0]:
+        raise RuntimeError("Test client must be reachable through router br-lan")
 
-    def probe(url):
-        command = (
-            "curl -4 --noproxy '*' -sS -o /dev/null -w '%{http_code}' "
-            "--connect-timeout 3 --max-time 4 " + shlex.quote(url)
-        )
-        r = ssh(args.client, command)
-        return r.returncode, r.stdout.strip(), r.stderr.strip()
+    def check_url(url):
+        return probe(args.client, args.client_ip, url)
 
     assert ssh(args.router, "test -f /etc/openclash-killswitch/interfaces").returncode == 0, "Guard not installed"
-    baseline = probe("https://1.1.1.1/")
+    baseline = check_url("https://1.1.1.1/")
     print("Numeric-IP baseline:", baseline, flush=True)
     assert baseline[0] == 0, "Test endpoint must work before outage"
 
@@ -69,9 +95,9 @@ ip -4 route get 1.1.1.1 from CLIENT_IP iif br-lan
             raise RuntimeError("Stop phase timed out; scheduled recovery remains active")
         time.sleep(1)
 
-    offline_ip = probe("https://1.1.1.1/")
-    offline_domain = probe("https://example.com/")
-    local_http = probe("http://" + args.router_ip + "/")
+    offline_ip = check_url("https://1.1.1.1/")
+    offline_domain = check_url("https://example.com/")
+    local_http = check_url("http://" + args.router_ip + "/")
     route = ssh(args.router, "ip -4 route get 1.1.1.1 from " + args.client_ip + " iif br-lan")
     print("Offline public IP:", offline_ip, flush=True)
     print("Offline domain:", offline_domain, flush=True)
@@ -82,7 +108,7 @@ ip -4 route get 1.1.1.1 from CLIENT_IP iif br-lan
     recovered = False
     while time.monotonic() < deadline:
         if ssh(args.router, "test -f /tmp/ks-test-recovered").returncode == 0:
-            if probe("https://1.1.1.1/")[0] == 0:
+            if check_url("https://1.1.1.1/")[0] == 0:
                 recovered = True
                 break
         time.sleep(3)
