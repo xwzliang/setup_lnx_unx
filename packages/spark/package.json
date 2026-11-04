@@ -1,0 +1,39 @@
+{
+  "name": "spark",
+  "description": "Spark",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/spark/scripts/install/others/spark_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "spark-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/spark/scripts/install/others/spark_install.sh",
+      "interpreter": "bash",
+      "description": "spark install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "wget",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "spark-install",
+      "macos": "spark-install"
+    }
+  }
+}

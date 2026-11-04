@@ -1,0 +1,31 @@
+{
+  "name": "pandoc",
+  "description": "Document converter",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "pandoc"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "pandoc"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "pandoc"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

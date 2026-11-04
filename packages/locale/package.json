@@ -1,0 +1,35 @@
+{
+  "name": "locale",
+  "description": "Locale",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/locale/scripts/config/locale_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "locale-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/locale/scripts/config/locale_setup.sh",
+      "interpreter": "bash",
+      "description": "locale setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "locale-setup"
+    }
+  }
+}

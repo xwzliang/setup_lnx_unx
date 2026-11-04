@@ -1,0 +1,110 @@
+{
+  "name": "v2ray",
+  "description": "V2ray",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/v2ray/scripts/apps/v2ray_client_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/v2ray/scripts/apps/v2ray_server_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/v2ray/scripts/apps/v2ray_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/v2ray/scripts/apps/v2ray_uninstall.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Removal script: deletes software or user data. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "v2ray-client-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/v2ray/scripts/apps/v2ray_client_install.sh",
+      "interpreter": "bash",
+      "description": "v2ray client install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {},
+      "arguments": {
+        "minimum": 3,
+        "usage": "HOST PORT UUID [ALTER_ID]"
+      }
+    },
+    "v2ray-server-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/v2ray/scripts/apps/v2ray_server_install.sh",
+      "interpreter": "bash",
+      "description": "v2ray server install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "systemctl"
+      ],
+      "parameters": {}
+    },
+    "v2ray-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/v2ray/scripts/apps/v2ray_setup.sh",
+      "interpreter": "bash",
+      "description": "v2ray setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {},
+      "arguments": {
+        "minimum": 3,
+        "usage": "HOST PORT UUID [ALTER_ID]"
+      }
+    },
+    "v2ray-uninstall": {
+      "action": "remove",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/v2ray/scripts/apps/v2ray_uninstall.sh",
+      "interpreter": "bash",
+      "description": "v2ray uninstall",
+      "effects": "Removes configuration/software or restores system settings; inspect affected paths before applying.",
+      "requires": [
+        "systemctl"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "macos": "v2ray-client-install"
+    },
+    "configure": {
+      "ubuntu": "v2ray-setup",
+      "macos": "v2ray-setup"
+    }
+  }
+}

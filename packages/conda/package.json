@@ -1,0 +1,42 @@
+{
+  "name": "conda",
+  "description": "Conda",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/conda/scripts/install/conda_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "aliases": [
+    "miniconda"
+  ],
+  "recipes": {
+    "conda-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/conda/scripts/install/conda_install.sh",
+      "interpreter": "bash",
+      "description": "conda install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "wget",
+        "conda"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "conda-install",
+      "debian": "conda-install"
+    }
+  }
+}

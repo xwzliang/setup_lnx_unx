@@ -1,0 +1,66 @@
+{
+  "name": "tmux",
+  "description": "Terminal multiplexer",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "tmux"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "tmux"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "tmux"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/tmux/scripts/config/tmux_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "configure": {
+    "ubuntu": "tmux-plugins",
+    "debian": "tmux-plugins",
+    "macos": "tmux-plugins"
+  },
+  "recipes": {
+    "tmux-setup": {
+      "action": "configure",
+      "os": [
+        "debian",
+        "macos",
+        "ubuntu"
+      ],
+      "script": "packages/tmux/scripts/config/tmux_setup.sh",
+      "interpreter": "bash",
+      "description": "tmux setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "tmux-setup",
+      "macos": "tmux-setup"
+    }
+  }
+}

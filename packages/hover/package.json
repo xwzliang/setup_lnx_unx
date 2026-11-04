@@ -1,0 +1,32 @@
+{
+  "name": "hover",
+  "description": "Hover is a simple build tool to create Flutter desktop applications",
+  "install": {
+    "ubuntu": {
+      "manager": "go",
+      "package": "github.com/go-flutter-desktop/hover@latest"
+    },
+    "debian": {
+      "manager": "go",
+      "package": "github.com/go-flutter-desktop/hover@latest"
+    },
+    "macos": {
+      "manager": "go",
+      "package": "github.com/go-flutter-desktop/hover@latest"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/go_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

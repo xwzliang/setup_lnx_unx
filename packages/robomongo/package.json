@@ -1,0 +1,33 @@
+{
+  "name": "robomongo",
+  "description": "Robomongo",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/robomongo/scripts/apps/robomongo_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "robomongo-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/robomongo/scripts/apps/robomongo_install.sh",
+      "interpreter": "bash",
+      "description": "robomongo install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "robomongo-install"
+    }
+  }
+}

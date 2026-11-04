@@ -1,0 +1,32 @@
+{
+  "name": "rollup",
+  "description": "Rollup is a module bundler for JavaScript which compiles small pieces of code into something larger and more complex, such as a library or application",
+  "install": {
+    "ubuntu": {
+      "manager": "npm",
+      "package": "rollup"
+    },
+    "debian": {
+      "manager": "npm",
+      "package": "rollup"
+    },
+    "macos": {
+      "manager": "npm",
+      "package": "rollup"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/npm_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

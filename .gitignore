@@ -1,6 +1,13 @@
 .DS_Store
-*/nextcloud/config/
+**/nextcloud/config/
 .env
 
 # Private Home Assistant / DHCP inventory
 setup_openwrt/iot_devices.json
+# Preserve the already-versioned legacy Compose environment file after relocation.
+!packages/nextcloud/scripts/macos/nextcloud/.env
+__pycache__/
+*.py[cod]
+.venv/
+# Existing local database data stays private after the recipe relocation.
+/setup_server_mac/guacamole/postgres/

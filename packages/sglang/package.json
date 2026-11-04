@@ -1,0 +1,34 @@
+{
+  "name": "sglang",
+  "description": "Sglang",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/sglang/scripts/linux/run_docker_containers/sglang.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "sglang": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/sglang/scripts/linux/run_docker_containers/sglang.sh",
+      "interpreter": "bash",
+      "description": "sglang",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "docker",
+        "python3",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "elinks",
+  "description": "Full-Featured Text web Browser, advanced and well-established feature-rich text mode web browser",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "elinks"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "elinks"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

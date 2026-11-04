@@ -1,0 +1,30 @@
+{
+  "name": "llm",
+  "description": "Llm",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/llm/scripts/workflows/llm_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "llm-setup": {
+      "action": "run",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/llm/scripts/workflows/llm_setup.sh",
+      "interpreter": "bash",
+      "description": "llm setup",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "curl"
+      ],
+      "parameters": {}
+    }
+  }
+}

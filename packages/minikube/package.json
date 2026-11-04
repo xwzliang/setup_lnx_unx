@@ -1,0 +1,61 @@
+{
+  "name": "minikube",
+  "description": "a tool that runs a single-node Kubernetes cluster in a virtual machine on your personal computer",
+  "install": {
+    "ubuntu": {
+      "manager": "brew",
+      "package": "minikube"
+    },
+    "debian": {
+      "manager": "brew",
+      "package": "minikube"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "minikube"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/brew_packages_unx_lnx_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/minikube/scripts/config/minikube_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "minikube-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/minikube/scripts/config/minikube_setup.sh",
+      "interpreter": "bash",
+      "description": "minikube setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "docker",
+        "systemctl"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "minikube-setup"
+    }
+  }
+}

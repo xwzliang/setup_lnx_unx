@@ -1,0 +1,70 @@
+{
+  "name": "mac-server",
+  "description": "Mac server",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/mac-server/scripts/macos/config.php",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/mac-server/scripts/macos/server_packages_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/mac-server/scripts/macos/start_server.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "mac-brew-cask-install": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/mac-server/scripts/apps/mac_brew_cask_install.sh",
+      "interpreter": "bash",
+      "description": "mac brew cask install",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {}
+    },
+    "server-packages-mac-install": {
+      "action": "run",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/mac-server/scripts/macos/server_packages_mac_install.sh",
+      "interpreter": "bash",
+      "description": "server packages mac install",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {}
+    },
+    "start-server": {
+      "action": "run",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/mac-server/scripts/macos/start_server.sh",
+      "interpreter": "bash",
+      "description": "start server",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "docker"
+      ],
+      "parameters": {}
+    }
+  }
+}

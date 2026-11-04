@@ -1,0 +1,32 @@
+{
+  "name": "lux",
+  "description": "Fast and simple video download library and CLI tool written in Go",
+  "install": {
+    "ubuntu": {
+      "manager": "go",
+      "package": "github.com/iawia002/lux@latest"
+    },
+    "debian": {
+      "manager": "go",
+      "package": "github.com/iawia002/lux@latest"
+    },
+    "macos": {
+      "manager": "go",
+      "package": "github.com/iawia002/lux@latest"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/go_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

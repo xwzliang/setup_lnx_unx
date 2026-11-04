@@ -1,0 +1,32 @@
+{
+  "name": "vscode-css-languageserver-bin",
+  "description": "Extracted from vscode tree",
+  "install": {
+    "ubuntu": {
+      "manager": "npm",
+      "package": "vscode-css-languageserver-bin"
+    },
+    "debian": {
+      "manager": "npm",
+      "package": "vscode-css-languageserver-bin"
+    },
+    "macos": {
+      "manager": "npm",
+      "package": "vscode-css-languageserver-bin"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/npm_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

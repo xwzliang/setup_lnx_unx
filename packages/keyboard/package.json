@@ -1,0 +1,87 @@
+{
+  "name": "keyboard",
+  "description": "Keyboard",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/keyboard/scripts/config/evdev_setup_mac_keyboard.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    },
+    {
+      "path": "packages/keyboard/scripts/config/swap_alt_ctrl_key_linux.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    },
+    {
+      "path": "packages/keyboard/scripts/config/xmodmap_setup_mac_keyboard.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    },
+    {
+      "path": "packages/keyboard/scripts/config/xmodmap_setup_win_keyboard.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "evdev-setup-mac-keyboard": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/keyboard/scripts/config/evdev_setup_mac_keyboard.sh",
+      "interpreter": "bash",
+      "description": "evdev setup mac keyboard",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    },
+    "swap-alt-ctrl-key-linux": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/keyboard/scripts/config/swap_alt_ctrl_key_linux.sh",
+      "interpreter": "bash",
+      "description": "swap alt ctrl key linux",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    },
+    "xmodmap-setup-mac-keyboard": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/keyboard/scripts/config/xmodmap_setup_mac_keyboard.sh",
+      "interpreter": "bash",
+      "description": "xmodmap setup mac keyboard",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    },
+    "xmodmap-setup-win-keyboard": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/keyboard/scripts/config/xmodmap_setup_win_keyboard.sh",
+      "interpreter": "bash",
+      "description": "xmodmap setup win keyboard",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  }
+}

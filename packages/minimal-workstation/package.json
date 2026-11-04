@@ -1,0 +1,30 @@
+{
+  "name": "minimal-workstation",
+  "description": "Minimal workstation",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/minimal-workstation/scripts/workflows/minimal_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "minimal-setup": {
+      "action": "run",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/minimal-workstation/scripts/workflows/minimal_setup.sh",
+      "interpreter": "bash",
+      "description": "minimal setup",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "git"
+      ],
+      "parameters": {}
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "solana",
+  "description": "Solana",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/solana/scripts/apps/solana_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "solana-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/solana/scripts/apps/solana_install.sh",
+      "interpreter": "bash",
+      "description": "solana install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "solana-install",
+      "macos": "solana-install"
+    }
+  }
+}

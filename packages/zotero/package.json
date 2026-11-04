@@ -1,0 +1,89 @@
+{
+  "name": "zotero",
+  "description": "Zotero",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/zotero/scripts/apps/zotero_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/zotero/scripts/apps/zotero_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/zotero/scripts/apps/zotero_uninstall.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Removal script: deletes software or user data. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "zotero-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/zotero/scripts/apps/zotero_install.sh",
+      "interpreter": "bash",
+      "description": "zotero install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "wget",
+        "sudo"
+      ],
+      "parameters": {}
+    },
+    "zotero-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/zotero/scripts/apps/zotero_setup.sh",
+      "interpreter": "bash",
+      "description": "zotero setup",
+      "effects": "Creates user.js for the attachment base path; refuses existing conflicting settings and preserves storage and account identity.",
+      "requires": [],
+      "parameters": {
+        "ZOTERO_PROFILE": {
+          "description": "Existing absolute Zotero profile directory",
+          "required": true
+        },
+        "ATTACHMENT_DIR": {
+          "description": "Absolute attachment directory",
+          "required": true
+        }
+      }
+    },
+    "zotero-uninstall": {
+      "action": "remove",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/zotero/scripts/apps/zotero_uninstall.sh",
+      "interpreter": "bash",
+      "description": "zotero uninstall",
+      "effects": "Removes configuration/software or restores system settings; inspect affected paths before applying.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "zotero-install"
+    },
+    "configure": {
+      "ubuntu": "zotero-setup",
+      "macos": "zotero-setup"
+    }
+  }
+}

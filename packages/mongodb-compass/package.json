@@ -1,0 +1,35 @@
+{
+  "name": "mongodb-compass",
+  "description": "Mongodb compass",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/mongodb-compass/scripts/apps/mongodb_compass_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "mongodb-compass-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/mongodb-compass/scripts/apps/mongodb_compass_install.sh",
+      "interpreter": "bash",
+      "description": "mongodb compass install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "mongodb-compass-install"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "deeplabcut",
+  "description": "Deeplabcut",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/deeplabcut/scripts/linux/run_docker_containers/deeplabcut.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "deeplabcut": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/deeplabcut/scripts/linux/run_docker_containers/deeplabcut.sh",
+      "interpreter": "bash",
+      "description": "deeplabcut",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "docker"
+      ],
+      "parameters": {}
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "bashdb",
+  "description": "Bashdb",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/bashdb/scripts/install/others/bashdb_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "bashdb-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/bashdb/scripts/install/others/bashdb_install.sh",
+      "interpreter": "bash",
+      "description": "bashdb install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "wget",
+        "make",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "bashdb-install"
+    }
+  }
+}

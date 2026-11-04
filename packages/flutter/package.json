@@ -1,0 +1,60 @@
+{
+  "name": "flutter",
+  "description": "Flutter",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/flutter/scripts/apps/flutter_linux_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/flutter/scripts/apps/flutter_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "flutter-linux-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/flutter/scripts/apps/flutter_linux_install.sh",
+      "interpreter": "bash",
+      "description": "flutter linux install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "git",
+        "sudo"
+      ],
+      "parameters": {}
+    },
+    "flutter-mac-install": {
+      "action": "install",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/flutter/scripts/apps/flutter_mac_install.sh",
+      "interpreter": "bash",
+      "description": "flutter mac install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "git",
+        "brew",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "flutter-linux-install",
+      "macos": "flutter-mac-install"
+    }
+  }
+}

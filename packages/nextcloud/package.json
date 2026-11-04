@@ -1,0 +1,32 @@
+{
+  "name": "nextcloud",
+  "description": "Nextcloud",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "nextcloud",
+      "options": [
+        "--cask"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "packages/mac-server/scripts/macos/server_packages_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/nextcloud/scripts/macos/nextcloud/docker-compose.yml",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

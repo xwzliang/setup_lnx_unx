@@ -1,0 +1,34 @@
+{
+  "name": "poppler",
+  "description": "PDF rendering library",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "poppler"
+    },
+    "ubuntu": {
+      "manager": "apt",
+      "package": "poppler-utils"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "poppler-utils"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "aliases": [
+    "poppler-utils"
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

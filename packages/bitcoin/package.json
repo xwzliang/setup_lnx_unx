@@ -1,0 +1,35 @@
+{
+  "name": "bitcoin",
+  "description": "Bitcoin",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/bitcoin/scripts/apps/bitcoin_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "bitcoin-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/bitcoin/scripts/apps/bitcoin_install.sh",
+      "interpreter": "bash",
+      "description": "bitcoin install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "make"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "bitcoin-install"
+    }
+  }
+}

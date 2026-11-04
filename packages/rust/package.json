@@ -1,0 +1,38 @@
+{
+  "name": "rust",
+  "description": "Rust",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/rust/scripts/apps/rust_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "rust-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/rust/scripts/apps/rust_install.sh",
+      "interpreter": "bash",
+      "description": "rust install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "curl"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "rust-install",
+      "macos": "rust-install"
+    }
+  }
+}

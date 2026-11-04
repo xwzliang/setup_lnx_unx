@@ -1,0 +1,74 @@
+{
+  "name": "docker",
+  "description": "Container engine and desktop tools",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "docker",
+      "options": [
+        "--cask"
+      ]
+    },
+    "ubuntu": {
+      "manager": "apt",
+      "package": "docker.io"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "docker.io"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/mac-server/scripts/macos/server_packages_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/docker/scripts/linux/docker_setup.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "aliases": [
+    "docker.io"
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "docker-setup": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/docker/scripts/linux/docker_setup.sh",
+      "interpreter": "bash",
+      "description": "docker setup",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "curl",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "docker-setup"
+    }
+  }
+}

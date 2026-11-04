@@ -1,0 +1,32 @@
+{
+  "name": "dotenv",
+  "description": "Dotenv is a zero-dependency module that loads environment variables from a .env file into process.env",
+  "install": {
+    "ubuntu": {
+      "manager": "npm",
+      "package": "dotenv"
+    },
+    "debian": {
+      "manager": "npm",
+      "package": "dotenv"
+    },
+    "macos": {
+      "manager": "npm",
+      "package": "dotenv"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/npm_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

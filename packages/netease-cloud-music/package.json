@@ -1,0 +1,35 @@
+{
+  "name": "netease-cloud-music",
+  "description": "Netease cloud music",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/netease-cloud-music/scripts/apps/netease_cloud_music_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "netease-cloud-music-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/netease-cloud-music/scripts/apps/netease_cloud_music_install.sh",
+      "interpreter": "bash",
+      "description": "netease cloud music install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "netease-cloud-music-install"
+    }
+  }
+}

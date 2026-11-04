@@ -1,0 +1,52 @@
+{
+  "name": "bash",
+  "description": "Bash",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "bash"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/bash/scripts/config/bash_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "bash-setup": {
+      "action": "configure",
+      "os": [
+        "debian",
+        "macos",
+        "ubuntu"
+      ],
+      "script": "packages/bash/scripts/config/bash_setup.sh",
+      "interpreter": "bash",
+      "description": "bash setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "bash-setup",
+      "macos": "bash-setup"
+    }
+  }
+}

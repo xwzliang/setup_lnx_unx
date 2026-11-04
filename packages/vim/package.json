@@ -1,0 +1,66 @@
+{
+  "name": "vim",
+  "description": "Terminal text editor",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "vim"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "vim"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "vim"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/vim/scripts/config/vim_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "configure": {
+    "ubuntu": "vim-filetypes",
+    "debian": "vim-filetypes",
+    "macos": "vim-filetypes"
+  },
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "vim-setup": {
+      "action": "configure",
+      "os": [
+        "debian",
+        "macos",
+        "ubuntu"
+      ],
+      "script": "packages/vim/scripts/config/vim_setup.sh",
+      "interpreter": "bash",
+      "description": "vim setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "vim-setup",
+      "macos": "vim-setup"
+    }
+  }
+}

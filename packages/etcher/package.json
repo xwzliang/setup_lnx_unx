@@ -1,0 +1,36 @@
+{
+  "name": "etcher",
+  "description": "Etcher",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/etcher/scripts/apps/etcher_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "etcher-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/etcher/scripts/apps/etcher_install.sh",
+      "interpreter": "bash",
+      "description": "etcher install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "curl",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "etcher-install"
+    }
+  }
+}

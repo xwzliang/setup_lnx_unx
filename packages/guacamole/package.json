@@ -1,0 +1,14 @@
+{
+  "name": "guacamole",
+  "description": "Guacamole",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/guacamole/scripts/macos/guacamole/docker-compose.yml",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ]
+}

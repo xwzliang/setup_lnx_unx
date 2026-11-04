@@ -1,0 +1,36 @@
+{
+  "name": "antigravity-ssh",
+  "description": "Antigravity SSH wrapper setup",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/antigravity-ssh/scripts/linux/setup_antigravity_ssh_wrapper.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "setup-antigravity-ssh-wrapper": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/antigravity-ssh/scripts/linux/setup_antigravity_ssh_wrapper.sh",
+      "interpreter": "bash",
+      "description": "setup antigravity ssh wrapper (script options accepted after --; inspect --help where supported)",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "setup-antigravity-ssh-wrapper",
+      "debian": "setup-antigravity-ssh-wrapper"
+    }
+  }
+}

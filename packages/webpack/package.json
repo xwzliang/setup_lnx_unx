@@ -1,0 +1,32 @@
+{
+  "name": "webpack",
+  "description": "A bundler for javascript and friends. Packs many modules into a few bundled assets",
+  "install": {
+    "ubuntu": {
+      "manager": "npm",
+      "package": "webpack"
+    },
+    "debian": {
+      "manager": "npm",
+      "package": "webpack"
+    },
+    "macos": {
+      "manager": "npm",
+      "package": "webpack"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/npm_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

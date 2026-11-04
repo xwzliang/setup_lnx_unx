@@ -1,0 +1,28 @@
+{
+  "name": "passwall",
+  "description": "Passwall",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/passwall/scripts/openwrt/ensure_passwall.sh",
+      "os": [
+        "openwrt"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "ensure-passwall": {
+      "action": "run",
+      "os": [
+        "openwrt"
+      ],
+      "script": "packages/passwall/scripts/openwrt/ensure_passwall.sh",
+      "interpreter": "sh",
+      "description": "ensure passwall",
+      "effects": "Continuously checks connectivity and restarts Passwall when unavailable; runs until interrupted.",
+      "requires": [],
+      "parameters": {}
+    }
+  }
+}

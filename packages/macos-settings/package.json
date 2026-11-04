@@ -1,0 +1,33 @@
+{
+  "name": "macos-settings",
+  "description": "Macos settings",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/macos-settings/scripts/config/macos_setup.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "recipes": {
+    "macos-setup": {
+      "action": "configure",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/macos-settings/scripts/config/macos_setup.sh",
+      "interpreter": "bash",
+      "description": "macos setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "macos": "macos-setup"
+    }
+  }
+}

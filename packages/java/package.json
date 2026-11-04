@@ -1,0 +1,31 @@
+{
+  "name": "java",
+  "description": "default Java Development Kit (JDK)",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "default-jdk"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "default-jdk"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "aliases": [
+    "default-jdk"
+  ],
+  "notes": [
+    "Historical package name or external repository requirement; review the original script and current upstream instructions for this OS.",
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

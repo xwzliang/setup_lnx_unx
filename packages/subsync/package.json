@@ -1,0 +1,39 @@
+{
+  "name": "subsync",
+  "description": "Subsync",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/subsync/scripts/apps/subsync_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "subsync-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/subsync/scripts/apps/subsync_install.sh",
+      "interpreter": "bash",
+      "description": "subsync install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "git",
+        "make"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "subsync-install",
+      "macos": "subsync-install"
+    }
+  }
+}

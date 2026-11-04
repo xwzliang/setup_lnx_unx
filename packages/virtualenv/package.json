@@ -1,0 +1,32 @@
+{
+  "name": "virtualenv",
+  "description": "a tool to create isolated Python environments",
+  "install": {
+    "ubuntu": {
+      "manager": "pip",
+      "package": "virtualenv"
+    },
+    "debian": {
+      "manager": "pip",
+      "package": "virtualenv"
+    },
+    "macos": {
+      "manager": "pip",
+      "package": "virtualenv"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/python3_modules_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

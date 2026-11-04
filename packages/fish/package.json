@@ -1,0 +1,64 @@
+{
+  "name": "fish",
+  "description": "fish is a smart and user-friendly command line shell for Linux, macOS, and the rest of the family",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "fish"
+    },
+    "macos": {
+      "manager": "brew",
+      "package": "fish"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "fish"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/fish/scripts/config/fish_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "fish-setup": {
+      "action": "configure",
+      "os": [
+        "debian",
+        "macos",
+        "ubuntu"
+      ],
+      "script": "packages/fish/scripts/config/fish_setup.sh",
+      "interpreter": "bash",
+      "description": "fish setup",
+      "effects": "Installs Fisher and the nvm.fish and directory-jump plugins into Fish configuration. Does not replace config.fish or change the login shell.",
+      "requires": [
+        "fish",
+        "curl"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "fish-setup",
+      "macos": "fish-setup"
+    }
+  }
+}

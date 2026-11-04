@@ -1,0 +1,56 @@
+{
+  "name": "feh",
+  "description": "a fast, lightweight image viewer which uses imlib2. It can be used to set desktop background image",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "feh"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "feh"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/feh/scripts/apps/feh_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "feh-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/feh/scripts/apps/feh_install.sh",
+      "interpreter": "bash",
+      "description": "feh install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "git",
+        "make",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "feh-install"
+    }
+  }
+}

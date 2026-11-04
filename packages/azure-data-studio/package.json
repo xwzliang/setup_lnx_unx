@@ -1,0 +1,36 @@
+{
+  "name": "azure-data-studio",
+  "description": "Azure data studio",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/azure-data-studio/scripts/apps/azure_data_studio_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "azure-data-studio-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/azure-data-studio/scripts/apps/azure_data_studio_install.sh",
+      "interpreter": "bash",
+      "description": "azure data studio install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "wget",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "azure-data-studio-install"
+    }
+  }
+}

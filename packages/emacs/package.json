@@ -1,0 +1,120 @@
+{
+  "name": "emacs",
+  "description": "Extensible text editor",
+  "install": {
+    "ubuntu": {
+      "manager": "snap",
+      "package": "emacs",
+      "options": [
+        "--classic"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/emacs/scripts/apps/emacs_27_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/emacs/scripts/apps/emacs_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/emacs/scripts/install/others/emacs_ejc_sql_dependencies_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/emacs/scripts/config/emacs_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "emacs-27-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/emacs/scripts/apps/emacs_27_install.sh",
+      "interpreter": "bash",
+      "description": "emacs 27 install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    },
+    "emacs-mac-install": {
+      "action": "install",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/emacs/scripts/apps/emacs_mac_install.sh",
+      "interpreter": "bash",
+      "description": "emacs mac install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "brew"
+      ],
+      "parameters": {}
+    },
+    "emacs-ejc-sql-dependencies-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/emacs/scripts/install/others/emacs_ejc_sql_dependencies_install.sh",
+      "interpreter": "bash",
+      "description": "emacs ejc sql dependencies install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {}
+    },
+    "emacs-setup": {
+      "action": "configure",
+      "os": [
+        "debian",
+        "macos",
+        "ubuntu"
+      ],
+      "script": "packages/emacs/scripts/config/emacs_setup.sh",
+      "interpreter": "bash",
+      "description": "emacs setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "make"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "emacs-setup",
+      "macos": "emacs-setup"
+    }
+  }
+}

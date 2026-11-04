@@ -1,0 +1,55 @@
+{
+  "name": "dropbox",
+  "description": "Dropbox",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/dropbox/scripts/apps/dropbox_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/dropbox/scripts/apps/dropboxd_setup.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "dropbox-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/dropbox/scripts/apps/dropbox_install.sh",
+      "interpreter": "bash",
+      "description": "dropbox install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {}
+    },
+    "dropboxd-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/dropbox/scripts/apps/dropboxd_setup.sh",
+      "interpreter": "bash",
+      "description": "dropboxd setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "dropbox-install"
+    },
+    "configure": {
+      "ubuntu": "dropboxd-setup"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "gcloud",
+  "description": "Gcloud",
+  "install": {
+    "ubuntu": {
+      "manager": "snap",
+      "package": "google-cloud-sdk",
+      "options": [
+        "--classic"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "packages/gcloud/scripts/apps/google_cloud_sdk_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "aliases": [
+    "google-cloud-sdk"
+  ],
+  "notes": [
+    "Extracted from the existing script; availability depends on your OS release and configured repositories."
+  ],
+  "recipes": {
+    "google-cloud-sdk-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/gcloud/scripts/apps/google_cloud_sdk_install.sh",
+      "interpreter": "bash",
+      "description": "google cloud sdk install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "google-cloud-sdk-install"
+    }
+  }
+}

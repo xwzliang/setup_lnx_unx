@@ -1,0 +1,53 @@
+{
+  "name": "basictex",
+  "description": "Basictex",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "basictex",
+      "options": [
+        "--cask"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "packages/mac-server/scripts/apps/mac_brew_cask_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/basictex/scripts/apps/mac_tex_setup.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "mac-tex-setup": {
+      "action": "configure",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/basictex/scripts/apps/mac_tex_setup.sh",
+      "interpreter": "bash",
+      "description": "mac tex setup",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [
+        "brew"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "macos": "mac-tex-setup"
+    }
+  }
+}

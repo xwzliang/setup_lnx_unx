@@ -1,0 +1,32 @@
+{
+  "name": "sqls",
+  "description": "An implementation of the Language Server Protocol for SQL",
+  "install": {
+    "ubuntu": {
+      "manager": "go",
+      "package": "github.com/lighttiger2505/sqls@latest"
+    },
+    "debian": {
+      "manager": "go",
+      "package": "github.com/lighttiger2505/sqls@latest"
+    },
+    "macos": {
+      "manager": "go",
+      "package": "github.com/lighttiger2505/sqls@latest"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/go_packages_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

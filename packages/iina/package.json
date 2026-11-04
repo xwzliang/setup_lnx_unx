@@ -1,0 +1,58 @@
+{
+  "name": "iina",
+  "description": "Iina",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "iina",
+      "options": [
+        "--cask"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "packages/mac-server/scripts/macos/server_packages_mac_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/iina/scripts/macos/iina/iina-plugin-repos.txt",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/iina/scripts/macos/iina/install-iina-plugins.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "install-iina-plugins": {
+      "action": "configure",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/iina/scripts/macos/iina/install-iina-plugins.sh",
+      "interpreter": "bash",
+      "description": "install iina plugins (script options accepted after --; inspect --help where supported)",
+      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "macos": "install-iina-plugins"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "proxychains",
+  "description": "Proxychains",
+  "install": {
+    "macos": {
+      "manager": "brew",
+      "package": "proxychains-ng"
+    },
+    "ubuntu": {
+      "manager": "apt",
+      "package": "proxychains"
+    },
+    "debian": {
+      "manager": "apt",
+      "package": "proxychains"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/proxychains/scripts/config/proxychains_setup.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    }
+  ],
+  "aliases": [
+    "proxychains-ng"
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ],
+  "recipes": {
+    "proxychains-setup": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/proxychains/scripts/config/proxychains_setup.sh",
+      "interpreter": "bash",
+      "description": "proxychains setup",
+      "effects": "Backs up the ProxyChains config and replaces its default localhost SOCKS4 endpoint with SOCKS5 port 1080.",
+      "requires": [
+        "python3",
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "proxychains-setup",
+      "macos": "proxychains-setup"
+    }
+  }
+}

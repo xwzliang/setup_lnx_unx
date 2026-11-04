@@ -1,0 +1,59 @@
+{
+  "name": "browsh",
+  "description": "Browsh",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/browsh/scripts/apps/browsh_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/browsh/scripts/apps/browsh_vim_mode_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "browsh-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/browsh/scripts/apps/browsh_install.sh",
+      "interpreter": "bash",
+      "description": "browsh install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    },
+    "browsh-vim-mode-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/browsh/scripts/apps/browsh_vim_mode_install.sh",
+      "interpreter": "bash",
+      "description": "browsh vim mode install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "git",
+        "npm"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "macos": "browsh-vim-mode-install"
+    }
+  }
+}

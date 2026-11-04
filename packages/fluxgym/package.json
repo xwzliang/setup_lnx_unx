@@ -1,0 +1,32 @@
+{
+  "name": "fluxgym",
+  "description": "Fluxgym",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/fluxgym/scripts/linux/run_docker_containers/fluxgym.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "fluxgym": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/fluxgym/scripts/linux/run_docker_containers/fluxgym.sh",
+      "interpreter": "bash",
+      "description": "fluxgym",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [
+        "docker"
+      ],
+      "parameters": {}
+    }
+  }
+}

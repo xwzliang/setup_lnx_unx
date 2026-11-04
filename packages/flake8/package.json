@@ -1,0 +1,32 @@
+{
+  "name": "flake8",
+  "description": "flake8 is a python tool that glues together pep8, pyflakes, mccabe, and third-party plugins to check the style and quality of some python code",
+  "install": {
+    "ubuntu": {
+      "manager": "pip",
+      "package": "flake8"
+    },
+    "debian": {
+      "manager": "pip",
+      "package": "flake8"
+    },
+    "macos": {
+      "manager": "pip",
+      "package": "flake8"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/python3_modules_install.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

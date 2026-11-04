@@ -1,0 +1,35 @@
+{
+  "name": "vnc-viewer",
+  "description": "Vnc viewer",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/vnc-viewer/scripts/apps/vnc_viewer_install.sh",
+      "os": [
+        "ubuntu"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "vnc-viewer-install": {
+      "action": "install",
+      "os": [
+        "ubuntu"
+      ],
+      "script": "packages/vnc-viewer/scripts/apps/vnc_viewer_install.sh",
+      "interpreter": "bash",
+      "description": "vnc viewer install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "sudo"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "vnc-viewer-install"
+    }
+  }
+}

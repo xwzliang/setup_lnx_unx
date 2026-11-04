@@ -1,0 +1,22 @@
+{
+  "name": "appdmg",
+  "description": "Generate beautiful DMG-images for your OS X applications.",
+  "install": {
+    "macos": {
+      "manager": "npm",
+      "package": "appdmg"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/npm_packages_install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
+  ]
+}

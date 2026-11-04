@@ -1,0 +1,44 @@
+{
+  "name": "zshdb",
+  "description": "Zshdb",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "zshdb"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/zshdb/scripts/install/others/zshdb_install.sh",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "notes": [
+    "Extracted from the existing script; availability depends on your OS release and configured repositories."
+  ],
+  "recipes": {
+    "zshdb-install": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "macos"
+      ],
+      "script": "packages/zshdb/scripts/install/others/zshdb_install.sh",
+      "interpreter": "bash",
+      "description": "zshdb install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "zshdb-install",
+      "macos": "zshdb-install"
+    }
+  }
+}

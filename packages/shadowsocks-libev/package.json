@@ -1,0 +1,24 @@
+{
+  "name": "shadowsocks-libev",
+  "description": "Shadowsocks libev",
+  "install": {
+    "ubuntu": {
+      "manager": "apt",
+      "package": "shadowsocks-libev"
+    }
+  },
+  "references": [
+    {
+      "path": "packages/workstation/scripts/install/system_packages_install.sh",
+      "os": [
+        "macos",
+        "ubuntu"
+      ],
+      "note": "Original package list; do not run the entire list to install this package."
+    }
+  ],
+  "notes": [
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign.",
+    "The old bulk script also tried this Linux package name on macOS; that unverified mapping is reference-only."
+  ]
+}

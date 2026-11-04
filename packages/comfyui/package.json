@@ -1,0 +1,80 @@
+{
+  "name": "comfyui",
+  "description": "Node-based generative image workflows",
+  "install": {},
+  "references": [
+    {
+      "path": "packages/comfyui/scripts/linux/comfyui_setup.sh",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/comfyui/scripts/macos/comfyui/install.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    },
+    {
+      "path": "packages/comfyui/scripts/macos/comfyui/verify.py",
+      "os": [
+        "macos"
+      ],
+      "note": "Migrated workflow; inspect prerequisites, pinned versions, paths, and side effects before applying."
+    }
+  ],
+  "recipes": {
+    "comfyui-setup": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/comfyui/scripts/linux/comfyui_setup.sh",
+      "interpreter": "bash",
+      "description": "comfyui setup",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "git",
+        "docker"
+      ],
+      "parameters": {}
+    },
+    "install": {
+      "action": "install",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/comfyui/scripts/macos/comfyui/install.sh",
+      "interpreter": "bash",
+      "description": "install",
+      "effects": "Installs or builds this application and its dependencies; may download code and change system files.",
+      "requires": [
+        "git"
+      ],
+      "parameters": {}
+    },
+    "verify": {
+      "action": "run",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/comfyui/scripts/macos/comfyui/verify.py",
+      "interpreter": "python3",
+      "description": "verify",
+      "effects": "Runs this explicit multi-step workflow; inspect its source for package installs, downloads, and service changes.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "comfyui-setup",
+      "debian": "comfyui-setup",
+      "macos": "install"
+    }
+  }
+}
