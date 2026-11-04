@@ -133,3 +133,13 @@ Tests cover every recipe's preview, syntax, migration coverage, parameter and OS
 checks, ordered execution using temporary fixtures, and configuration preservation.
 No real installer, download, or service-changing workflow is run by these checks.
 After a manifest edit, regenerate the index with `./setup docs > docs/packages.md`.
+
+### Emacs knowledge collection
+
+Emacs uses `~/git/my_zettelkasten` for Org notes (`roam/`), bibliographies
+(`ebib/`), workspace sessions (`persp/`), and `wiki/`. The Emacs setup recipe
+clones `https://github.com/xwzliang/my_zettelkasten.git` when it is absent;
+configure GitHub authentication for this private repository first. Existing
+checkouts and local edits are preserved. No Dropbox directory or symlink is
+required. Credentials belong in `~/.authinfo`, sounds in
+`~/.local/share/sounds/`, and the optional wallpaper at `~/Pictures/WallPaper0.JPG`.

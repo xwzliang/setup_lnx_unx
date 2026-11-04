@@ -104,8 +104,9 @@
       "script": "packages/emacs/scripts/config/emacs_setup.sh",
       "interpreter": "bash",
       "description": "emacs setup",
-      "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
+      "effects": "Clones the private my_zettelkasten repository into ~/git if absent (requires GitHub authentication), creates wiki and persp directories, and runs the dot_emacs Makefile.",
       "requires": [
+        "git",
         "make"
       ],
       "parameters": {}

@@ -16,4 +16,4 @@ cd ~/git/daily_tools
 ./install.sh
 
 cd ~/git/dot_emacs
-make
+bash ./emacs_setup.sh

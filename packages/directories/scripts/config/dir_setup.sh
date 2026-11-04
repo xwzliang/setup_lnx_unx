@@ -15,7 +15,7 @@ my_dirs=(
 	~/Downloads/videos
 	~/Downloads/audios
 	~/Downloads/tmp
-	~/Dropbox/org
+	~/git
 )
 
 for my_dir in "${my_dirs[@]}"; do
