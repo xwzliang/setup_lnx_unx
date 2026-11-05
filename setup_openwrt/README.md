@@ -706,8 +706,12 @@ The persistent overwrite hook imports namespaced nodes from the saved configs.
 Shared regional groups (`新加坡`, `美国`, `日本`, and existing load-balance groups)
 become native Mihomo fallback groups, with the preferred provider first. Each
 provider has its own node-selection subgroup. Generic proxy-only `Proxy`/`Auto`
-groups are also protected where present. Existing DIRECT selectors, individual
-node selections and routing rules are preserved; explicit individual-node routes
+groups are also protected where present. The groups `🚀 节点选择` and `🐟 漏网之鱼` have their `DIRECT` choices removed
+and receive provider fallback, using all nodes when a backup has no matching
+group. `🎯 全球直连` has `🚀 节点选择` removed and retains its direct choice.
+These changes are reapplied on every config generation, including subscription
+updates. Other DIRECT selectors, individual node selections and routing rules
+are preserved; explicit individual-node routes
 do not gain failover. A generic mixed-country group can still change country.
 Regional groups stay within the regions defined by the subscription templates.
 
@@ -754,3 +758,33 @@ The second command tests the installed router core in an isolated process using
 local simulated HTTP proxies: one preferred node failing, all preferred nodes
 failing, then recovery. It does not interrupt the live core or contact the Internet.
 Native behavior: https://wiki.metacubex.one/en/config/proxy-groups/fallback/
+
+## Router service ingress guard
+
+`router-service-guard.sh` restricts router-addressed management/proxy ports to
+trusted ingress interfaces (`lo`, `br-lan`, `wireguard`, `docker0`, `utun`). It uses
+IPv4/IPv6 mangle PREROUTING, before PassWall INPUT accepts and Docker DNAT. It does
+not disable services, change authentication, permit forwarding, or block the
+WireGuard VPN listener. The interface names and port list must be reviewed for
+other routers; additional trusted VLANs require explicit additions. This is not
+IoT isolation: all clients on the trusted LAN still have their existing access.
+
+On this router it is installed as `/usr/sbin/router-service-guard`, called from
+`/etc/firewall.user` and `/etc/hotplug.d/iface/99-service-guard` for `ifup/ifupdate`.
+Run it again safely after editing its port/interface list. The old IPv6 WAN
+`home` allowance for ports 7788–7789 is disabled; PassWall's authenticated Home
+SOCKS server remains enabled for trusted clients. The obsolete Lucky include was
+removed. No SSH authentication, HTTPS, or WireGuard endpoint settings were changed.
+
+Verify with `iptables -t mangle -S PREROUTING` and
+`iptables -t mangle -S SETUP_SERVICE_GUARD` (and the IPv6 equivalents). The guard
+jump should precede proxy redirection. Verify again after installing another VPN
+or proxy package that may alter firewall hooks. LAN connectivity and rule-order
+checks do not replace a test from a real external WAN client.
+
+## Planned firmware migration
+
+See [UPGRADE_PLAN.md](UPGRADE_PLAN.md) for the proposed 21.02-to-current-stable
+migration, offline/spare-disk recovery strategy, nftables/package-manager work,
+acceptance tests and reusable automation design. This is a plan, not an upgrade
+installer. Current scripts are not yet certified for the proposed firmware.

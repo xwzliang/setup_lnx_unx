@@ -3,6 +3,18 @@ require 'yaml'
 module ProviderFailover
   PREFIX = 'setup-failover/'
   URL = 'https://www.gstatic.com/generate_204'
+  def self.normalize_groups(config)
+    config.fetch('proxy-groups').each do |group|
+      remove = case group['name']
+               when '🚀 节点选择', '🐟 漏网之鱼' then 'DIRECT'
+               when '🎯 全球直连' then '🚀 节点选择'
+               end
+      next unless remove
+      group['proxies'] = group.fetch('proxies').reject { |member| member == remove }
+      raise 'Group empty after removing unwanted choice' if group['proxies'].empty?
+    end
+  end
+
   def self.apply(config, providers, active_path, directory = '/etc/openclash/config')
     raise 'At least two providers required' unless providers.is_a?(Hash) && providers.size >= 2
     providers.each do |id, file|
@@ -18,9 +30,11 @@ module ProviderFailover
       config['proxies'] = config.fetch('proxies').reject { |p| p['name'].start_with?(PREFIX) }
     end
     raise 'Reserved failover name prefix is already in use' if (config.fetch('proxies') + config.fetch('proxy-groups')).any? { |g| g.fetch('name').start_with?(PREFIX) }
+    normalize_groups(config)
     ordered = [preferred] + (providers.keys - [preferred])
     sources = ordered.map do |id|
       c = YAML.load_file(File.join(directory, providers.fetch(id) + '.yaml'))
+      normalize_groups(c)
       nodes = c.fetch('proxies').map { |n| [n.fetch('name'), n] }.to_h
       groups = c.fetch('proxy-groups').map { |g| [g.fetch('name'), g] }.to_h
       [id, [nodes, groups]]
@@ -45,7 +59,7 @@ module ProviderFailover
     config.fetch('proxy-groups').each do |group|
       name = group.fetch('name')
       common = sources.values.all? { |_, groups| groups.key?(name) }
-      generic = ['Proxy', 'Auto', '🚀 节点选择'].include?(name)
+      generic = ['Proxy', 'Auto', '🚀 节点选择', '🐟 漏网之鱼'].include?(name)
       next unless common || generic
       members = {}
       begin
@@ -59,7 +73,7 @@ module ProviderFailover
         end
       rescue KeyError, RuntimeError
         # Do not replace selectors with explicit DIRECT choices.
-        raise if ['新加坡', '美国', '日本', '新加坡loadbalance', 'loadbalance'].include?(name)
+        raise if ['新加坡', '美国', '日本', '新加坡loadbalance', 'loadbalance', '🚀 节点选择', '🐟 漏网之鱼'].include?(name)
         next
       end
       originals[name] = Marshal.load(Marshal.dump(group))
