@@ -706,8 +706,12 @@ The persistent overwrite hook imports namespaced nodes from the saved configs.
 Shared regional groups (`新加坡`, `美国`, `日本`, and existing load-balance groups)
 become native Mihomo fallback groups, with the preferred provider first. Each
 provider has its own node-selection subgroup. Generic proxy-only `Proxy`/`Auto`
-groups are also protected where present. Existing DIRECT selectors, individual
-node selections and routing rules are preserved; explicit individual-node routes
+groups are also protected where present. The groups `🚀 节点选择` and `🐟 漏网之鱼` have their `DIRECT` choices removed
+and receive provider fallback, using all nodes when a backup has no matching
+group. `🎯 全球直连` has `🚀 节点选择` removed and retains its direct choice.
+These changes are reapplied on every config generation, including subscription
+updates. Other DIRECT selectors, individual node selections and routing rules
+are preserved; explicit individual-node routes
 do not gain failover. A generic mixed-country group can still change country.
 Regional groups stay within the regions defined by the subscription templates.
 
