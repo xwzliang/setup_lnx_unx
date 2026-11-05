@@ -777,3 +777,10 @@ Verify with `iptables -t mangle -S PREROUTING` and
 jump should precede proxy redirection. Verify again after installing another VPN
 or proxy package that may alter firewall hooks. LAN connectivity and rule-order
 checks do not replace a test from a real external WAN client.
+
+## Planned firmware migration
+
+See [UPGRADE_PLAN.md](UPGRADE_PLAN.md) for the proposed 21.02-to-current-stable
+migration, offline/spare-disk recovery strategy, nftables/package-manager work,
+acceptance tests and reusable automation design. This is a plan, not an upgrade
+installer. Current scripts are not yet certified for the proposed firmware.
