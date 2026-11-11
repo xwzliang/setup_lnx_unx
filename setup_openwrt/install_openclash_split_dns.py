@@ -153,6 +153,7 @@ def main():
     parser.add_argument('--proxy-group', default='新加坡', help='Proxy-only group for unmatched traffic and default DNS')
     parser.add_argument('--iot-inventory', type=Path, help='Confirmed MAC/IP inventory from discover_iot.py; omitted preserves installed IoT exceptions')
     parser.add_argument('--enable-provider-failover', action='store_true', help='Load saved subscriptions from .env and enable native regional fallback/failback')
+    parser.add_argument('--service-policies', type=Path, default=HERE/'openclash_service_policies.json', help='Authoritative per-service provider preferences (JSON list; [] disables)')
     parser.add_argument('--env-file', type=Path, default=HERE/'.env')
     parser.add_argument('--check-only', action='store_true')
     args = parser.parse_args()
@@ -160,7 +161,9 @@ def main():
         parser.error('Invalid router or SSH port')
     if not args.proxy_group or any(c in args.proxy_group for c in '\r\n,#&'):
         parser.error('Invalid proxy group name')
-    settings = {'proxy_group': args.proxy_group}
+    settings = {'proxy_group': args.proxy_group, 'service_policies': json.loads(args.service_policies.read_text())}
+    if not isinstance(settings['service_policies'], list):
+        raise ValueError('Service policies must be a JSON list')
     if args.enable_provider_failover:
         entries, _, _ = subscription_settings(read_env(args.env_file), [], True, require_urls=False)
         if len(entries) < 2:

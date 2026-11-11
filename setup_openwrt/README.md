@@ -788,3 +788,39 @@ See [UPGRADE_PLAN.md](UPGRADE_PLAN.md) for the proposed 21.02-to-current-stable
 migration, offline/spare-disk recovery strategy, nftables/package-manager work,
 acceptance tests and reusable automation design. This is a plan, not an upgrade
 installer. Current scripts are not yet certified for the proposed firmware.
+
+## Per-service provider preference (Antigravity)
+
+`openclash_service_policies.json` is the local authoritative list of service
+policies. Apply with `./install_openclash_split_dns.py` (or first `--check-only`).
+Use `--service-policies PATH` for another file. A JSON list `[]` removes these
+managed exceptions on the next install. Provider IDs must match the installed
+failover mapping exactly; both providers must have the requested regional group.
+For other routers, edit this file to match their provider IDs or supply `[]`.
+
+The supplied policy prefers SHADOWSOCKS, falling back to WGETCLOUD, for:
+
+- US: exact `cloudcode-pa.googleapis.com`, `daily-cloudcode-pa.googleapis.com`,
+  `aicode.googleapis.com`, `businessaicode.googleapis.com` endpoints.
+- Singapore: domain names containing `antigravity`, including updater/feature hosts.
+
+Dedicated native fallback groups precede broad Google routing rules. Other
+routing rules remain in the same order, including DIRECT rules; generic Google,
+Gemini browsing, OAuth and unrelated downloads keep their existing policies.
+Domain-based routing cannot distinguish applications sharing these coding API
+hosts, or identify arbitrary sites/tools downloaded by an Antigravity task.
+The endpoint list should be reviewed if the application changes its backend.
+Reference: https://docs.cloud.google.com/docs/security/compliance/deploy-antigravity-us-public-sector
+
+The service order is independent of the global/manual subscription selection and
+persists in `/etc/openclash/split-dns/settings.yaml`. Subscription switches/updates
+rebuild it through the existing overwrite hook. Editing the local JSON requires
+rerunning the split-DNS installer. Generated service rules/groups are replaced
+idempotently, so removing/changing a policy does not leave stale generated rules.
+
+Fallback tests connectivity every 60 seconds, not remaining provider quota.
+Current static subscriptions expose no quota metadata to Mihomo. If exhausting
+quota makes the preferred proxy unusable, fallback switches to the backup; it
+returns when the preferred route recovers. If a provider keeps health-check
+traffic working while restricting task traffic, this cannot guarantee a
+quota-triggered switch. Existing connections are not migrated between nodes.

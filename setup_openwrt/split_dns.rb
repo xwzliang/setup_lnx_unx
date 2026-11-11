@@ -5,9 +5,10 @@ path, settings, active_config = ARGV
 c = YAML.load_file(path)
 begin
   options = YAML.load_file(settings)
+  raise 'Service policies require provider failover' if !options.fetch('service_policies', []).empty? && !options['provider_failover']
   if options['provider_failover']
     require_relative 'provider_failover'
-    ProviderFailover.apply(c, options.fetch('provider_failover'), active_config)
+    ProviderFailover.apply(c, options.fetch('provider_failover'), active_config, '/etc/openclash/config', options.fetch('service_policies', []))
   end
   group = options.fetch('proxy_group')
   groups = c.fetch('proxy-groups', []).map { |g| [g.fetch('name'), g] }.to_h

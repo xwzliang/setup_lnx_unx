@@ -15,7 +15,7 @@ module ProviderFailover
     end
   end
 
-  def self.apply(config, providers, active_path, directory = '/etc/openclash/config')
+  def self.apply(config, providers, active_path, directory = '/etc/openclash/config', policies = [])
     raise 'At least two providers required' unless providers.is_a?(Hash) && providers.size >= 2
     providers.each do |id, file|
       raise 'Unsafe provider identifier/config filename' unless id.match?(/\A[A-Za-z][A-Za-z0-9_]*\z/) && file.match?(/\A[A-Za-z0-9][A-Za-z0-9_-]*\z/)
@@ -23,6 +23,8 @@ module ProviderFailover
     preferred = providers.key(File.basename(active_path.to_s, '.yaml'))
     raise 'Active subscription is not in the failover mapping' unless preferred
     # Restore pre-transform groups on repeated verification; rebuild from saved sources.
+    old_rules = config.delete('x-setup-service-rules') || []
+    config['rules'] = config.fetch('rules').reject { |r| old_rules.include?(r) }
     old = config.delete('x-setup-provider-failover')
     if old
       originals = old.fetch('original_groups')
@@ -100,6 +102,29 @@ module ProviderFailover
     raise 'No shared Singapore group to protect DNS/default routing' unless originals.key?('新加坡')
     config['proxy-groups'].concat(generated)
     config['proxies'].concat(imported.values)
+    service_rules = []
+    raise 'Service policies must be a list' unless policies.is_a?(Array)
+    policies.each do |policy|
+      name = policy.fetch('name')
+      raise 'Invalid service name' unless name.match?(/\A[A-Za-z][A-Za-z0-9_-]*\z/)
+      region = policy.fetch('region')
+      order = policy.fetch('providers')
+      raise 'Invalid service provider order' unless order.is_a?(Array) && order.size >= 2 && order.uniq == order && order.all? { |id| providers.key?(id) }
+      service_name = "#{PREFIX}service/#{name}"
+      raise 'Duplicate service group' if config['proxy-groups'].any? { |g| g['name'] == service_name }
+      children = order.map { |id| "#{PREFIX}#{id}/#{region}" }
+      raise 'Service region missing from provider groups' unless children.all? { |n| config['proxy-groups'].any? { |g| g['name'] == n } }
+      config['proxy-groups'] << {'name'=>service_name, 'type'=>'fallback', 'proxies'=>children,
+        'url'=>URL, 'interval'=>60, 'lazy'=>false, 'timeout'=>5000, 'expected-status'=>'204', 'max-failed-times'=>2}
+      matches = policy.fetch('matches')
+      raise 'Empty service match list' unless matches.is_a?(Array) && !matches.empty?
+      matches.each do |match|
+        raise 'Invalid service domain match' unless match.match?(/\A(?:DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD),[a-z0-9][a-z0-9.-]*\z/)
+        service_rules << "#{match},#{service_name}"
+      end
+    end
+    config['x-setup-service-rules'] = service_rules
+    config['rules'] = service_rules + config['rules']
     config['x-setup-provider-failover'] = {'preferred'=>preferred, 'original_groups'=>originals}
   end
 end

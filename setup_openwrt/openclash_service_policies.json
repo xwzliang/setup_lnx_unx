@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Antigravity-US",
+    "region": "美国",
+    "providers": [
+      "SHADOWSOCKS",
+      "WGETCLOUD"
+    ],
+    "matches": [
+      "DOMAIN,cloudcode-pa.googleapis.com",
+      "DOMAIN,daily-cloudcode-pa.googleapis.com",
+      "DOMAIN,aicode.googleapis.com",
+      "DOMAIN,businessaicode.googleapis.com"
+    ]
+  },
+  {
+    "name": "Antigravity-SG",
+    "region": "新加坡",
+    "providers": [
+      "SHADOWSOCKS",
+      "WGETCLOUD"
+    ],
+    "matches": [
+      "DOMAIN-KEYWORD,antigravity"
+    ]
+  }
+]
