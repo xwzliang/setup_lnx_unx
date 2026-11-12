@@ -14,7 +14,7 @@ import sys
 import tempfile
 import tarfile
 import time
-from install_openclash_killswitch import Installer, VERIFY
+from install_openclash_killswitch import Installer, VERIFY, VERIFY_OFF, kill_switch_enabled
 from test_outage import client_address
 
 VERSION = '1.19.33'
@@ -150,6 +150,29 @@ def resolve_release(arch, requested=VERSION, checksum=None):
     return resolved, url, digest
 
 
+def verify_connectivity(remote, args, enabled):
+    """Preserve the selected protection state while checking the upgraded core."""
+    verification = VERIFY if enabled else VERIFY_OFF
+    remote.script(verification)
+    if enabled:
+        route = remote.remote(f'ip -4 route get 1.1.1.1 from {args.client_ip} iif br-lan')
+        if 'dev utun table 354' not in route:
+            raise RuntimeError('LAN traffic is not using expected TUN route')
+    for address in ['http://'+remote.router_ip+'/', 'https://example.com/', 'https://www.baidu.com/']:
+        remote.probe(address)
+    if enabled:
+        print('Testing stopped-core + firewall reload, with router-local automatic recovery.', flush=True)
+        outage_command = [sys.executable, str(Path(__file__).with_name('test_outage.py')),
+                          '--router', remote.target, '--router-ip', remote.router_ip,
+                          '--client-ip', str(args.client_ip), '--reload-firewall']
+        if args.client:
+            outage_command.extend(['--client', args.client])
+        subprocess.run(outage_command, check=True, timeout=180)
+    else:
+        print('Kill switch remains off; skipping the fail-closed outage test.', flush=True)
+    remote.script(verification)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--router', default='192.168.5.1')
@@ -181,7 +204,8 @@ def main():
             remote.connect()
             args.client_ip = client_address(args.client, args.client_ip, remote.client_ip)
             print(f"Test client: {args.client or 'this machine'} ({args.client_ip})", flush=True)
-            remote.script(VERIFY)
+            enabled = kill_switch_enabled(remote)
+            remote.script(VERIFY if enabled else VERIFY_OFF)
             route = remote.remote(f'ip -4 route get {args.client_ip}')
             if not re.search(r'\bdev br-lan\b', route):
                 raise RuntimeError('Outage-test client must be reachable through br-lan')
@@ -219,24 +243,12 @@ def main():
                 if result: raise RuntimeError(f'Upgrade {result}; inspect {stage}/upgrade.log and *-validation.log')
                 time.sleep(3)
             else: raise RuntimeError('Upgrade timed out; automatic rollback remains armed')
-            print('Mihomo started; verifying LAN routing and firewall guard.', flush=True)
-            remote.script(VERIFY)
+            print('Mihomo started; verifying LAN routing and configured protection state.', flush=True)
             version = remote.remote('/etc/openclash/clash -v')
             if not re.search(r'\bMeta v' + re.escape(selected_version) + r'(?:\s|$)', version):
                 raise RuntimeError('Running core version does not match expected release')
             remote.remote('test "$(readlink /etc/openclash/clash)" = /etc/openclash/core/clash_meta')
-            route = remote.remote(f'ip -4 route get 1.1.1.1 from {args.client_ip} iif br-lan')
-            if 'dev utun table 354' not in route: raise RuntimeError('LAN traffic is not using expected TUN route')
-            for address in ['http://'+remote.router_ip+'/', 'https://example.com/', 'https://www.baidu.com/']:
-                remote.probe(address)
-            print('Testing stopped-core + firewall reload, with router-local automatic recovery.', flush=True)
-            outage_command = [sys.executable, str(Path(__file__).with_name('test_outage.py')),
-                              '--router', remote.target, '--router-ip', remote.router_ip,
-                              '--client-ip', str(args.client_ip), '--reload-firewall']
-            if args.client:
-                outage_command.extend(['--client', args.client])
-            subprocess.run(outage_command, check=True, timeout=180)
-            remote.script(VERIFY)
+            verify_connectivity(remote, args, enabled)
             folder = args.backup_dir.expanduser()/remote.router_ip
             folder.mkdir(parents=True,exist_ok=True,mode=0o700)
             folder.chmod(0o700)

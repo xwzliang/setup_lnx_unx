@@ -40,6 +40,7 @@ config_foreach zone zone
 
 VERIFY = r"""
 set -eu
+test "$(cat /etc/openclash-killswitch/enabled 2>/dev/null || echo 1)" = 1
 test -s /etc/openclash-killswitch/interfaces
 test -s /etc/openclash-killswitch/backup
 /etc/init.d/openclash-killswitch enabled
@@ -64,8 +65,54 @@ fi
 for p in /proc/sys/net/ipv6/conf/*/disable_ipv6; do test "$(cat "$p")" = 1; done
 raw=$(uci -q get openclash.config.config_path)
 active="/etc/openclash/${raw##*/}"
-ruby -ryaml -e 'c=YAML.load_file(ARGV[0]); abort "Missing CN DIRECT rule" unless (c.fetch("rules").include?("GEOIP,CN,DIRECT") || c.fetch("rules").include?("GEOSITE,cn,DIRECT")); abort "IPv6 enabled" unless c["ipv6"] == false' "$active"
+ruby -ryaml -e '
+  c = YAML.load_file(ARGV[0])
+  protected = !File.file?(ARGV[1]) || YAML.load_file(ARGV[1]).fetch("dns_protection", true) != false
+  if protected
+    abort "Missing CN DIRECT rule" unless (c.fetch("rules").include?("GEOIP,CN,DIRECT") || c.fetch("rules").include?("GEOSITE,cn,DIRECT"))
+  end
+  abort "IPv6 enabled" unless c["ipv6"] == false
+' "$active" /etc/openclash/split-dns/settings.yaml
 """
+
+
+KILL_SWITCH_STATE = 'if test -f /etc/openclash-killswitch/enabled; then cat /etc/openclash-killswitch/enabled; else echo 1; fi'
+
+VERIFY_OFF = r"""
+set -eu
+test "$(cat /etc/openclash-killswitch/enabled)" = 0
+test -s /etc/openclash-killswitch/interfaces
+/etc/init.d/openclash-killswitch enabled
+ip -4 route show table 354 | grep -Eq '^default dev utun scope link[[:space:]]*$'
+for table in 51820 51821; do
+    test -z "$(ip -4 route show table "$table" 2>/dev/null || true)"
+done
+if ip -4 rule show | grep -Eq 'lookup (51820|51821)([[:space:]]|$)'; then
+    echo 'Kill-switch policy routing remains active' >&2
+    exit 1
+fi
+for dev in $(cat /etc/openclash-killswitch/interfaces); do
+    if ip -4 rule show | grep -F "iif $dev lookup 354" >/dev/null; then
+        echo 'Kill-switch client TUN route remains active' >&2
+        exit 1
+    fi
+done
+if iptables -w -t mangle -S | grep -q OC_KS_FORWARD; then
+    echo 'Kill-switch forwarding chain remains active' >&2
+    exit 1
+fi
+for p in /proc/sys/net/ipv6/conf/*/disable_ipv6; do test "$(cat "$p")" = 1; done
+raw=$(uci -q get openclash.config.config_path)
+active="/etc/openclash/${raw##*/}"
+ruby -ryaml -e 'abort "IPv6 enabled" unless YAML.load_file(ARGV[0])["ipv6"] == false' "$active"
+"""
+
+
+def kill_switch_enabled(remote):
+    state = remote.remote(KILL_SWITCH_STATE)
+    if state not in ('0', '1'):
+        raise RuntimeError('Invalid installed kill-switch state')
+    return state == '1'
 
 
 def interfaces(values):
@@ -197,6 +244,8 @@ class Installer:
             raise RuntimeError(f"Missing sibling installer: {self.payload}")
         self.connect()
         existing = self.remote("if test -d /etc/openclash-killswitch; then echo yes; else echo no; fi") == "yes"
+        if existing and not kill_switch_enabled(self):
+            raise RuntimeError('Kill switch is deliberately off; use install_openclash_split_dns.py --kill-switch on to enable it')
         if self.args.interfaces:
             devices = interfaces(self.args.interfaces)
         elif existing:

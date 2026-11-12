@@ -18,12 +18,14 @@ class SplitDNS(unittest.TestCase):
                 'rules':['DOMAIN,foreign.example,DIRECT','DOMAIN,protected.example,SG',
                          'IP-CIDR,17.0.0.0/8,DIRECT','GEOIP,CN,DIRECT','MATCH,DIRECT']}
 
-    def transform(self, c, group='SG', iot_clients=None):
+    def transform(self, c, group='SG', iot_clients=None, protected=True, native=None):
         with tempfile.TemporaryDirectory() as td:
             path=Path(td)/'config.yaml'
             opts=Path(td)/'settings.yaml'
-            path.write_text(json.dumps(c)); opts.write_text(json.dumps({'proxy_group':group, 'iot_clients':iot_clients or []}))
-            r=subprocess.run(['ruby',str(HERE/'split_dns.rb'),str(path),str(opts)],capture_output=True,text=True)
+            path.write_text(json.dumps(c)); opts.write_text(json.dumps({'proxy_group':group, 'iot_clients':iot_clients or [], 'dns_protection':protected}))
+            raw=Path(td)/'native.yaml'
+            if native is not None: raw.write_text(json.dumps(native))
+            r=subprocess.run(['ruby',str(HERE/'split_dns.rb'),str(path),str(opts),str(raw)],capture_output=True,text=True)
             data=subprocess.check_output(['ruby','-ryaml','-rjson','-e','puts JSON.generate(YAML.load_file(ARGV[0]))',str(path)],text=True)
             return r.returncode,json.loads(data)
 
@@ -96,6 +98,46 @@ class SplitDNS(unittest.TestCase):
             rc,c=self.transform(self.config(),iot_clients=[ip])
             self.assertNotEqual(rc,0)
             self.assertEqual(c['rules'],['MATCH,REJECT'])
+
+    def test_off_restores_dns_and_native_unknown_routing_round_trip(self):
+        original=self.config()
+        rc,on=self.transform(original)
+        self.assertEqual(rc,0)
+        rc,off=self.transform(on,protected=False)
+        self.assertEqual(rc,0)
+        self.assertEqual(off['dns'],original['dns'])
+        self.assertEqual(off['rules'],original['rules'])
+        self.assertNotIn('x-setup-split-dns-original',off)
+        self.assertEqual(self.transform(off,protected=False),(0,off))
+        self.assertEqual(self.transform(off),(0,on))
+
+    def test_legacy_runtime_migrates_without_leaving_protected_dns(self):
+        native=self.config()
+        native['dns'].update({'enable':True,'enhanced-mode':'fake-ip','ipv6':False})
+        rc,old=self.transform(native)
+        del old['x-setup-split-dns-original']
+        old['dns']['listen']='0.0.0.0:7874'
+        rc,off=self.transform(old,protected=False,native=native)
+        self.assertEqual(rc,0)
+        self.assertEqual(off['rules'],native['rules'])
+        self.assertEqual(off['dns'],dict(native['dns'],listen='0.0.0.0:7874'))
+
+    def test_off_keeps_iot_explicit_rules_and_allows_native_direct_default(self):
+        native=self.config()
+        native['proxy-groups'][0]['proxies'].append('DIRECT')
+        rc,off=self.transform(native,protected=False,iot_clients=['192.168.5.135'])
+        self.assertEqual(rc,0)
+        self.assertEqual(off['rules'][-1],'MATCH,DIRECT')
+        self.assertEqual(off['rules'][-2],off['x-setup-iot-rules'][0])
+        self.assertIn('GEOIP,CN,DIRECT',off['rules'])
+        self.assertEqual(off['dns'],native['dns'])
+
+    def test_off_restores_cn_rule_changed_by_legacy_hook(self):
+        native=self.config()
+        native['rules']=[r for r in native['rules'] if r!='GEOIP,CN,DIRECT']
+        rc,off=self.transform(self.config(),protected=False,native=native)
+        self.assertEqual(rc,0)
+        self.assertEqual(off['rules'],native['rules'])
 
     def test_workers_shell_syntax(self):
         for script in [worker(),worker(True),RESTORE,WATCH,HOOK_TEXT]:

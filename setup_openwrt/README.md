@@ -428,8 +428,9 @@ that LAN, not through a jump host, VPN, or a public SSH forwarding endpoint.
 `--client` is a local SSH alias/address for a Linux machine behind the target
 router, with curl available; `--client-ip` is that machine's LAN IPv4 address.
 Both options are required only when selecting a separate client. Use values
-appropriate to each router. The script intentionally stops OpenClash
-and reloads the firewall to test fail-closed behavior. A file-based recovery job
+appropriate to each router. When the kill switch is enabled, the script intentionally stops OpenClash
+and reloads the firewall to test fail-closed behavior. With the kill switch off,
+it preserves that choice and skips the disruptive fail-closed test. A file-based recovery job
 on the router starts OpenClash again after 25 seconds, independently of SSH.
 Local router HTTP and SSH must remain accessible throughout.
 
@@ -473,9 +474,9 @@ script; review that integration when upgrading OpenClash itself. Meta TUN retain
 OpenClash's `utun` interface and route table 354; automatic route generation remains
 under OpenClash's existing configuration.
 
-It enables the Meta core, restarts, checks routing, IPv6 disablement and the firewall
-guard, probes public and mainland-China sites, then runs `test_outage.py` with
-`--reload-firewall`. A separate router watchdog restores the old core/config after
+It enables the Meta core, restarts, checks routing, IPv6 disablement and the chosen
+kill-switch state, and probes public and mainland-China sites. When protection is
+on, it also runs `test_outage.py` with `--reload-firewall`. A separate router watchdog restores the old core/config after
 15 minutes unless verification completes and confirmation is recorded. Errors after
 mutation request immediate restoration. Do not power off the router during the
 transaction; the watchdog is process-based and does not survive a reboot.
@@ -545,7 +546,53 @@ Ruby, and `/etc/openclash/GeoSite.dat` containing `cn`. Run from a LAN client:
 ./install_openclash_split_dns.py --router 192.168.8.1 --proxy-group '新加坡'
 ```
 
-The proxy group must exist in every subscription you activate and contain only
+### Turn protections on or off independently
+
+Run from a LAN computer in this directory. These settings persist through router
+boots, firewall/OpenClash restarts, subscription updates and provider switches:
+
+```sh
+# Disable both protections, retaining provider fallback and service preferences.
+./install_openclash_split_dns.py --kill-switch off --dns-protection off
+# Enable both again.
+./install_openclash_split_dns.py --kill-switch on --dns-protection on
+# Change just one; the omitted setting retains its current state.
+./install_openclash_split_dns.py --kill-switch off
+./install_openclash_split_dns.py --dns-protection on
+# Validate before applying; no restart or policy change.
+./install_openclash_split_dns.py --kill-switch off --dns-protection off --check-only
+# Another router / SSH port.
+./install_openclash_split_dns.py --router 192.168.8.1 --port 22 --kill-switch off
+```
+
+With **kill switch off**, ordinary LAN/Docker-to-WAN forwarding is restored and
+Internet access can continue directly while OpenClash is stopped/restarting.
+Only this setup's policy rules, routing tables and forwarding guard are removed.
+Existing WAN service restrictions, IPv6 disablement and disabled flow offloading
+are retained. The original forwarding flags are restored by zone pair; later
+firewall/service changes are not reverted. Re-enabling saves the current forwarding
+flags for the next disable operation. Do not use the old `rollback` command as a
+toggle: that command restores the original installation's broader configuration.
+
+With **DNS protection off**, the extra proxied-resolver policy and forced unknown-
+destination policy are removed. OpenClash uses the active subscription's DNS and
+GEOIP/MATCH rules; local resolution may use direct DNS. Native OpenClash DNS
+listeners, fake-IP compatibility, sniffing and explicit routing rules remain.
+Provider fallback/failback and Antigravity's separate preferred provider still run
+through the same overwrite hook. IoT reservations and scoped DIRECT rules remain.
+Turning protection on restores the policy described below.
+
+With neither option, rerunning the installer preserves both installed states.
+Old installations with no DNS state field default to on; the legacy kill-switch
+marker also defaults to on. Each toggle has a configuration backup and the same
+router-local rollback watchdog as other policy changes. The firewall and
+kill-switch files are included in rollback for this transaction, so use the printed
+rollback command immediately if needed, before making unrelated firewall edits.
+For a local router-only toggle after upgrading these scripts, use
+`/usr/sbin/openclash-killswitch on|off`; `state` prints the current state. The LAN
+installer is recommended because it also backs up and validates the change.
+
+When DNS protection is on, the proxy group must exist in every subscription you activate and contain only
 explicit proxy nodes/groups, with no DIRECT/PASS options or provider-based dynamic
 membership. The default is `新加坡`. Preflight rejects unsafe or missing groups.
 
@@ -571,8 +618,8 @@ Policy, applied after the existing overwrite hook on each config regeneration:
   Such exclusions can therefore depend on a working proxy. Fake-IP A/AAAA responses
   otherwise avoid upstream lookups until a connection needs them. Other query types
   use the proxied default; this is not an all-query domestic DNS allowlist.
-- Preserve the forwarding kill switch and disabled IPv6. If OpenClash is stopped,
-  mainland access is blocked too. Direct DoH still reveals the router's public IP
+- Preserve the selected forwarding kill-switch state and disabled IPv6. With the
+  kill switch on, stopped OpenClash blocks mainland access too. Direct DoH still reveals the router's public IP
   and queried names to the domestic resolver; it encrypts them against transit ISPs.
 
 The script disables OpenClash's separate dnsmasq custom-domain upstream feature.
@@ -596,10 +643,12 @@ candidate and regenerated runtime, forwarding protection, IPv6, and LAN-client
 access to Baidu, example.com and the router. No Claude/Anthropic test requests are
 made. Keep the router powered on until installation completes; the watchdog does
 not survive a reboot. The printed rollback command restores the old OpenClash
-files and reapplies the guard without overwriting later network/firewall changes.
+files, firewall settings and kill-switch state from this transaction; it does not
+restore the network snapshot. Avoid using it after unrelated firewall changes.
 Private logs may include subscription secrets; do not publish them.
 
-For a disruptive stopped-core check with automatic recovery:
+With the kill switch enabled, run a disruptive stopped-core check with automatic recovery
+(the test refuses to run while it is disabled):
 
 ```sh
 ./test_outage.py --reload-firewall

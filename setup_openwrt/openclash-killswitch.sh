@@ -13,6 +13,96 @@ load() {
     INTERFACES=$(cat "$BASE/interfaces")
 }
 
+# Missing marker means enabled for installations made before toggles existed.
+enabled() {
+    case "$(cat "$BASE/enabled" 2>/dev/null || echo 1)" in
+        1) return 0 ;;
+        0) return 1 ;;
+        *) fail "Invalid $BASE/enabled (expected 0 or 1)" ;;
+    esac
+}
+
+set_enabled() {
+    (umask 077; printf '%s\n' "$1" > "$BASE/enabled.new")
+    mv "$BASE/enabled.new" "$BASE/enabled"
+}
+
+# Store only forwarding enable flags, keyed by zone pair rather than anonymous
+# UCI section indexes. Never restore an old complete firewall configuration.
+save_forwardings() (
+    output=$1
+    config_dir=${2:-}
+    read_uci() {
+        if test -n "$config_dir"; then uci -c "$config_dir" "$@"; else uci "$@"; fi
+    }
+    umask 077
+    scratch=$(mktemp "$BASE/forwardings.XXXXXX")
+    trap 'rm -f "$scratch"' 0
+    for section in $(read_uci show firewall | sed -n 's/^firewall\.\([^=]*\)=forwarding$/\1/p'); do
+        dest=$(read_uci -q get "firewall.$section.dest" || true)
+        test "$dest" = wan || continue
+        src=$(read_uci -q get "firewall.$section.src" || true)
+        case "$src" in ''|*[!a-zA-Z0-9_-]*) fail "Unsupported forwarding source zone: $src";; esac
+        if grep -q "^$src $dest " "$scratch"; then
+            fail "Duplicate $src -> $dest forwarding grants; cannot safely toggle"
+        fi
+        value=$(read_uci -q get "firewall.$section.enabled" || echo __unset__)
+        case "$value" in 0|1|true|false|yes|no|on|off|__unset__) :;; *) fail "Unsupported forwarding enabled value: $value";; esac
+        printf '%s %s %s\n' "$src" "$dest" "$value" >> "$scratch"
+    done
+    mv "$scratch" "$output"
+)
+
+ensure_forwarding_baseline() (
+    test ! -f "$BASE/forwarding-state" || exit 0
+    # Upgrade a legacy installation from its original backup, without rolling
+    # back later firewall/service/routing changes.
+    backup=$(cat "$BASE/backup")
+    test -f "$backup/restore.tar.gz" || fail "Original forwarding backup is missing"
+    umask 077
+    staging=$(mktemp -d "$BASE/legacy-firewall.XXXXXX")
+    trap 'rm -rf "$staging"' 0
+    tar -xzf "$backup/restore.tar.gz" -C "$staging" etc/config/firewall
+    save_forwardings "$BASE/forwarding-state" "$staging/etc/config"
+)
+
+restore_forwardings() (
+    # Validate all current zone pairs before making any UCI changes.
+    umask 077
+    current=$(mktemp "$BASE/current-forwardings.XXXXXX")
+    trap 'rm -f "$current"' 0
+    save_forwardings "$current"
+    for section in $(uci show firewall | sed -n 's/^firewall\.\([^=]*\)=forwarding$/\1/p'); do
+        dest=$(uci -q get "firewall.$section.dest" || true)
+        test "$dest" = wan || continue
+        src=$(uci -q get "firewall.$section.src")
+        value=$(awk -v src="$src" -v dest="$dest" '$1 == src && $2 == dest {print $3}' "$BASE/forwarding-state")
+        case "$value" in
+            '') : ;; # A grant added after installation belongs to the user.
+            __unset__) uci -q delete "firewall.$section.enabled" || true ;;
+            *) uci set "firewall.$section.enabled=$value" ;;
+        esac
+    done
+)
+
+remove_guard() {
+    for dev in $INTERFACES; do
+        for pair in "11000 $LOCAL_TABLE" "11010 $PROXY_TABLE" "11020 $DENY_TABLE"; do
+            set -- $pair
+            while ip -4 rule del pref "$1" iif "$dev" lookup "$2" 2>/dev/null; do :; done
+        done
+        while iptables -w -t mangle -D FORWARD -i "$dev" -j OC_KS_FORWARD 2>/dev/null; do :; done
+    done
+    iptables -w -t mangle -F OC_KS_FORWARD 2>/dev/null || true
+    iptables -w -t mangle -X OC_KS_FORWARD 2>/dev/null || true
+    for table in "$LOCAL_TABLE" "$DENY_TABLE"; do
+        # Linux may report a missing FIB table after the first successful off.
+        if ip -4 route show table "$table" >/dev/null 2>&1; then
+            ip -4 route flush table "$table"
+        fi
+    done
+}
+
 disable_ipv6() {
     for p in /proc/sys/net/ipv6/conf/*/disable_ipv6; do
         test ! -f "$p" || echo 1 > "$p"
@@ -24,6 +114,11 @@ apply() (
     mkdir -p /var/lock
     exec 9>/var/lock/openclash-killswitch.lock
     flock -x 9
+    disable_ipv6
+    if ! enabled; then
+        remove_guard
+        exit 0
+    fi
     # Install the final deny BEFORE allowing any paths. Never flush these rules.
     ip -4 route replace prohibit default table "$DENY_TABLE"
     for dev in $INTERFACES; do
@@ -49,7 +144,6 @@ apply() (
             ip -4 rule add pref 11010 iif "$dev" lookup "$PROXY_TABLE"
         fi
     done
-    disable_ipv6
     # Defense in depth before established/related and Docker ACCEPT rules.
     # The routing deny above remains in place even during fw3 table rebuilds.
     iptables -w -t mangle -N OC_KS_FORWARD 2>/dev/null || true
@@ -64,6 +158,45 @@ apply() (
             iptables -w -t mangle -I FORWARD 1 -i "$dev" -j OC_KS_FORWARD
     done
 )
+
+toggle() {
+    test "$(id -u)" = 0 || fail "Run as root on the router"
+    load
+    mkdir -p /var/lock
+    exec 8>/var/lock/openclash-killswitch-toggle.lock
+    flock -x 8
+    test ! -e "$BASE/pending" || fail "Confirm the pending installation before toggling"
+    test -z "$(uci changes)" || fail "Commit or revert pending UCI changes before toggling"
+    case "$1" in
+        on)
+            if ! enabled; then save_forwardings "$BASE/forwarding-state"; else ensure_forwarding_baseline; fi
+            set_enabled 1
+            # Establish protection before changing forwarding or reloading fw3.
+            apply
+            uci set firewall.@defaults[0].flow_offloading=0
+            uci set firewall.@defaults[0].flow_offloading_hw=0
+            uci set firewall.@defaults[0].forward=REJECT
+            for section in $(uci show firewall | sed -n 's/^firewall\.\([^=]*\)=forwarding$/\1/p'); do
+                if test "$(uci -q get "firewall.$section.dest" || true)" = wan; then
+                    uci set "firewall.$section.enabled=0"
+                fi
+            done
+            uci commit firewall
+            ;;
+        off)
+            if enabled; then
+                ensure_forwarding_baseline
+                restore_forwardings
+                uci commit firewall
+            fi
+            set_enabled 0
+            ;;
+    esac
+    # Do not hold apply's lock over reload: fw3 invokes the same apply hook.
+    /etc/init.d/firewall reload
+    apply
+    echo "Kill switch $1 (IPv6 remains disabled)."
+}
 
 rollback() {
     load
@@ -80,17 +213,7 @@ rollback() {
     /etc/init.d/dnsmasq restart
     /etc/init.d/firewall restart
     /etc/init.d/openclash restart
-    for dev in $INTERFACES; do
-        for pair in "11000 $LOCAL_TABLE" "11010 $PROXY_TABLE" "11020 $DENY_TABLE"; do
-            set -- $pair
-            while ip -4 rule del pref "$1" iif "$dev" lookup "$2" 2>/dev/null; do :; done
-        done
-        while iptables -w -t mangle -D FORWARD -i "$dev" -j OC_KS_FORWARD 2>/dev/null; do :; done
-    done
-    iptables -w -t mangle -F OC_KS_FORWARD 2>/dev/null || true
-    iptables -w -t mangle -X OC_KS_FORWARD 2>/dev/null || true
-    ip -4 route flush table "$LOCAL_TABLE"
-    ip -4 route flush table "$DENY_TABLE"
+    remove_guard
     rm -rf "$BASE"
     echo "Restored original configuration from $backup"
 }
@@ -130,6 +253,8 @@ install() {
     ip -4 route show table all > "$backup/ip-routes.txt"
     printf '%s\n' "$@" > "$BASE/interfaces"
     echo "$backup" > "$BASE/backup"
+    save_forwardings "$BASE/forwarding-state"
+    set_enabled 1
     cp "$0" "$SELF"; chmod 700 "$SELF"
     # Recovery is router-local and does not depend on internet or this SSH session.
     echo "$backup" > "$BASE/pending"
@@ -144,7 +269,7 @@ START=18
 STOP=99
 start() { /usr/sbin/openclash-killswitch apply; }
 reload() { start; }
-# Deliberately retain protection on service stop. Use explicit rollback to remove.
+# Retain the selected mode on service stop. Use explicit on/off to change it.
 stop() { :; }
 INIT
     chmod 755 /etc/init.d/openclash-killswitch
@@ -228,10 +353,14 @@ OVERWRITE
 case "${1:-}" in
     install) shift; install "$@" ;;
     apply) apply ;;
+    on|enable) toggle on ;;
+    off|disable) toggle off ;;
+    state) load; if enabled; then echo on; else echo off; fi ;;
     confirm) load; rm -f "$BASE/pending"; echo 'Confirmed; automatic rollback cancelled.' ;;
     rollback) rollback ;;
     status)
         load
+        if enabled; then echo 'Kill switch: on'; else echo 'Kill switch: off'; fi
         echo "Protected interfaces: $INTERFACES"
         echo "Backup: $(cat "$BASE/backup")"
         test ! -e "$BASE/pending" || echo 'AUTO-ROLLBACK PENDING'
@@ -239,8 +368,8 @@ case "${1:-}" in
         ip -4 route show table "$LOCAL_TABLE"
         ip -4 route show table "$PROXY_TABLE"
         ip -4 route show table "$DENY_TABLE"
-        iptables -t mangle -nvL OC_KS_FORWARD
+        iptables -t mangle -nvL OC_KS_FORWARD 2>/dev/null || true
         for p in /proc/sys/net/ipv6/conf/*/disable_ipv6; do echo "$p=$(cat "$p")"; done
         ;;
-    *) echo "Usage: $0 {install INTERFACE...|apply|status|confirm|rollback}"; exit 2 ;;
+    *) echo "Usage: $0 {install INTERFACE...|on|off|apply|state|status|confirm|rollback}"; exit 2 ;;
 esac

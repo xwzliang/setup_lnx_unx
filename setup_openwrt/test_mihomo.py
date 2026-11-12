@@ -5,13 +5,41 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from types import SimpleNamespace
-from test_outage import client_address, probe
+from test_outage import client_address, probe, require_enabled
 import install_mihomo as m
 
 
 class UpgradeTests(unittest.TestCase):
+    def test_disabled_guard_skips_disruptive_test_and_synthetic_route(self):
+        remote = Mock(router_ip='192.168.5.1', target='root@192.168.5.1')
+        args = SimpleNamespace(client_ip='192.168.5.22', client=None)
+        with patch('install_mihomo.subprocess.run') as run:
+            m.verify_connectivity(remote, args, False)
+            run.assert_not_called()
+        remote.remote.assert_not_called()
+        self.assertEqual(remote.probe.call_count, 3)
+        self.assertEqual([c.args[0] for c in remote.script.call_args_list], [m.VERIFY_OFF, m.VERIFY_OFF])
+
+    def test_enabled_guard_keeps_route_and_outage_verification(self):
+        remote = Mock(router_ip='192.168.5.1', target='root@192.168.5.1')
+        remote.remote.return_value = '1.1.1.1 dev utun table 354'
+        args = SimpleNamespace(client_ip='192.168.5.22', client=None)
+        with patch('install_mihomo.subprocess.run') as run:
+            m.verify_connectivity(remote, args, True)
+            self.assertIn('--reload-firewall', run.call_args.args[0])
+        self.assertEqual([c.args[0] for c in remote.script.call_args_list], [m.VERIFY, m.VERIFY])
+        remote.remote.assert_called_once()
+
+    def test_outage_refuses_off_or_unreadable_state_before_disruption(self):
+        for code, state in [(0, '0'), (0, 'bad'), (255, '')]:
+            with self.subTest(state=state), patch('test_outage.ssh', return_value=SimpleNamespace(returncode=code, stdout=state)) as ssh:
+                with self.assertRaisesRegex(RuntimeError, 'nothing stopped'):
+                    require_enabled('root@router')
+                self.assertEqual(ssh.call_count, 1)
+                self.assertNotIn('/etc/init.d/openclash', ssh.call_args.args[1])
+
     def test_pinned_architecture_selection(self):
         self.assertIn('amd64-compatible', m.release('x86_64')[0])
         self.assertIn('arm64', m.release('aarch64')[0])

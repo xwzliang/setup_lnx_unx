@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install persistent split DNS on an existing Mihomo/OpenClash + kill switch router."""
+"""Manage DNS/routing protection and kill-switch state while preserving provider fallback."""
 import argparse
 import hashlib
 import ipaddress
@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from install_openclash_killswitch import Installer, VERIFY
+from install_openclash_killswitch import Installer, VERIFY, VERIFY_OFF, kill_switch_enabled
 from install_openclash_subscription import PREAMBLE, read_env, settings as subscription_settings
 
 HERE = Path(__file__).resolve().parent
@@ -36,6 +36,9 @@ while IFS= read -r file; do
 done <manifest
 cp backup/openclash /etc/config/openclash
 if [ -f backup/etc/config/dhcp ]; then uci revert dhcp; /etc/init.d/dnsmasq restart; fi
+uci revert firewall
+/etc/init.d/firewall reload
+/usr/sbin/openclash-killswitch apply
 rm -f pending
 /etc/init.d/openclash restart 9>&- 7>&-
 /usr/sbin/openclash-killswitch apply
@@ -55,6 +58,8 @@ phase split-dns-preflight
 export SAFE_PATHS=/usr/share/openclash/ui
 test -x /usr/sbin/openclash-killswitch
 test -s /etc/openclash/GeoSite.dat
+sh -n openclash-killswitch.sh
+test -z "$(uci changes firewall)" || { echo "Uncommitted firewall UCI changes"; exit 1; }
 raw=$(uci -q get openclash.config.config_path)
 runtime="/etc/openclash/${raw##*/}"
 if [ -f iot_devices.json ]; then ruby iot_reservations.rb iot_devices.json check; fi
@@ -66,7 +71,7 @@ APPLY = r'''
 phase backup
 cp /etc/config/openclash backup/openclash
 mkdir -p /etc/openclash/split-dns
-for file in /etc/openclash/custom/openclash_custom_overwrite.sh /etc/openclash/split-dns/previous-overwrite.sh /etc/openclash/split-dns/split_dns.rb /etc/openclash/split-dns/provider_failover.rb /etc/openclash/split-dns/settings.yaml "$runtime"; do
+for file in /usr/sbin/openclash-killswitch /etc/openclash-killswitch/enabled /etc/openclash-killswitch/forwarding-state /etc/config/firewall /etc/openclash/custom/openclash_custom_overwrite.sh /etc/openclash/split-dns/previous-overwrite.sh /etc/openclash/split-dns/split_dns.rb /etc/openclash/split-dns/provider_failover.rb /etc/openclash/split-dns/settings.yaml "$runtime"; do
     printf '%s\n' "$file" >>manifest
     mkdir -p "backup${file%/*}"
     if [ -f "$file" ]; then cp -p "$file" "backup$file"; fi
@@ -77,12 +82,18 @@ if [ -f iot_devices.json ]; then
     echo /etc/config/dhcp >>manifest
 fi
 # Full configuration snapshot, no core binaries or credentials printed.
-tar -czf config-backup.tar.gz -C / etc/config/openclash etc/config/dhcp etc/config/network etc/config/firewall etc/openclash/custom etc/openclash/split-dns "${raw#/}" "${runtime#/}" etc/openclash-killswitch
+tar -czf config-backup.tar.gz -C / etc/config/openclash etc/config/dhcp etc/config/network etc/config/firewall etc/openclash/custom etc/openclash/split-dns "${raw#/}" "${runtime#/}" etc/openclash-killswitch usr/sbin/openclash-killswitch
 touch pending
 nohup sh "$PWD/watch.sh" "$PWD" >watch.log 2>&1 8>&- 9>&- </dev/null &
 mutated=1
 restart_needed=1
 phase install-split-dns
+cp openclash-killswitch.sh /usr/sbin/openclash-killswitch.new
+chmod 700 /usr/sbin/openclash-killswitch.new
+mv /usr/sbin/openclash-killswitch.new /usr/sbin/openclash-killswitch
+if [ -s kill-switch-action ]; then
+    /usr/sbin/openclash-killswitch "$(cat kill-switch-action)"
+fi
 if [ -f iot_devices.json ]; then
     ruby iot_reservations.rb iot_devices.json apply
     /etc/init.d/dnsmasq restart
@@ -121,6 +132,9 @@ def worker(check_only=False):
     ).replace(
         'if [ "$restart_needed" = 1 ]; then restart_core || :; fi',
         'if [ -f backup/etc/config/dhcp ]; then /etc/init.d/dnsmasq restart || :; fi\n'
+        '        uci revert firewall || :\n'
+        '        /etc/init.d/firewall reload || :\n'
+        '        /usr/sbin/openclash-killswitch apply || :\n'
         '        if [ "$restart_needed" = 1 ]; then restart_core || :; fi',
     ).replace('echo rolled-back >result', 'rm -f pending\n        echo rolled-back >result')
     tail = "trap - EXIT HUP INT TERM\necho validated >result\n" if check_only else APPLY
@@ -155,6 +169,8 @@ def main():
     parser.add_argument('--enable-provider-failover', action='store_true', help='Load saved subscriptions from .env and enable native regional fallback/failback')
     parser.add_argument('--service-policies', type=Path, default=HERE/'openclash_service_policies.json', help='Authoritative per-service provider preferences (JSON list; [] disables)')
     parser.add_argument('--env-file', type=Path, default=HERE/'.env')
+    parser.add_argument('--dns-protection', choices=['on', 'off'], help='Protect DNS and unknown routes, or restore subscription DNS/routing; omitted preserves installed state (new install: on)')
+    parser.add_argument('--kill-switch', choices=['on', 'off'], help='Block direct WAN forwarding when OpenClash stops; omitted preserves installed state')
     parser.add_argument('--check-only', action='store_true')
     args = parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', args.router) or not 1 <= args.port <= 65535:
@@ -202,10 +218,16 @@ def main():
                             mapping[key] = value
                     if mapping:
                         settings['provider_failover'] = mapping
+            dns_state = remote.remote("if test -f /etc/openclash/split-dns/settings.yaml; then ruby -ryaml -e 'puts YAML.load_file(ARGV[0]).fetch(\"dns_protection\", true) ? \"on\" : \"off\"' /etc/openclash/split-dns/settings.yaml; else echo on; fi")
+            if dns_state not in ('on', 'off'):
+                raise ValueError('Invalid installed DNS protection state')
+            settings['dns_protection'] = (args.dns_protection or dns_state) == 'on'
+            kill_state = 'on' if kill_switch_enabled(remote) else 'off'
+            expected_kill = args.kill_switch or kill_state
             stage = remote.remote('umask 077; mktemp -d /root/openclash-split-dns.XXXXXX')
             if not re.fullmatch(r'/root/openclash-split-dns\.[A-Za-z0-9]+', stage):
                 raise RuntimeError('Unexpected staging directory')
-            for name, content in [('provider_failover.rb', (HERE/'provider_failover.rb').read_text()), ('split_dns.rb', (HERE/'split_dns.rb').read_text()), ('settings.yaml', json.dumps(settings, ensure_ascii=False)),
+            for name, content in [('openclash-killswitch.sh', (HERE/'openclash-killswitch.sh').read_text()), ('kill-switch-action', args.kill_switch or ''), ('provider_failover.rb', (HERE/'provider_failover.rb').read_text()), ('split_dns.rb', (HERE/'split_dns.rb').read_text()), ('settings.yaml', json.dumps(settings, ensure_ascii=False)),
                                   ('hook.sh', HOOK_TEXT), ('restore.sh', RESTORE), ('watch.sh', WATCH),
                                   ('run.sh', worker(args.check_only))]:
                 remote.remote(f'umask 077; cat >{stage}/{name}', content)
@@ -229,7 +251,10 @@ def main():
                 raise RuntimeError(f'Split DNS {result}; inspect {stage}/worker.log')
             local_backup = save_backup(remote, stage)
             print('Private local configuration backup: '+str(local_backup), flush=True)
-            remote.script(VERIFY)
+            actual_kill = remote.remote('/usr/sbin/openclash-killswitch state')
+            if actual_kill != expected_kill:
+                raise RuntimeError('Kill-switch state changed unexpectedly')
+            remote.script(VERIFY if expected_kill == 'on' else VERIFY_OFF)
             # Local device is the test client; never use Claude/Anthropic test URLs.
             for url in ['https://www.baidu.com/', 'https://example.com/', 'http://'+remote.router_ip+'/']:
                 r = subprocess.run(['curl','-4','--noproxy','*','--interface',remote.client_ip,
@@ -238,7 +263,7 @@ def main():
                 if r.returncode:
                     raise RuntimeError('LAN connectivity verification failed for '+url)
             remote.remote(f'cd {stage}; exec 7>decision.lock; flock -x 7; test -f pending && test "$(cat result)" = ready && rm pending && echo confirmed >result')
-            print('Split DNS installed; mainland, proxy, LAN and kill-switch checks passed.')
+            print(f"Applied: kill switch {expected_kill}; DNS/unknown-route protection {'on' if settings['dns_protection'] else 'off'}. Mainland, public-site and LAN checks passed.")
             print(f'Rollback: ssh -p {args.port} {remote.target} '+shlex.quote(f'nohup sh {stage}/restore.sh {stage} force >/dev/null 2>&1 </dev/null &'))
         except Exception:
             if stage and not args.check_only:

@@ -5,6 +5,7 @@ import ipaddress
 import shlex
 import subprocess
 import time
+from install_openclash_killswitch import KILL_SWITCH_STATE
 
 
 def ssh(host, command, data=None):
@@ -37,6 +38,12 @@ def probe(client, client_ip, url):
     return result.returncode, result.stdout.strip(), result.stderr.strip()
 
 
+def require_enabled(router):
+    state = ssh(router, KILL_SWITCH_STATE)
+    if state.returncode or state.stdout.strip() != '1':
+        raise RuntimeError('Fail-closed outage test requires the kill switch to be enabled; nothing stopped')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--router", default="root@192.168.5.1")
@@ -46,6 +53,7 @@ def main():
     parser.add_argument("--reload-firewall", action="store_true", help="Also reload fw3 while OpenClash is stopped")
     args = parser.parse_args()
     ipaddress.IPv4Address(args.router_ip)
+    require_enabled(args.router)
     detected = None
     if not args.client:
         connection = ssh(args.router, 'printf "%s\\n" "$SSH_CONNECTION"')
