@@ -44,6 +44,7 @@ Package availability depends on the OS release and configured repositories.
 | [cmake](../packages/cmake/package.json) | ubuntu: apt, macos: brew, debian: apt | — | cross-platform, open-source make system |
 | [cockpit](../packages/cockpit/package.json) | 1 install script(s) | — | Cockpit |
 | [code-server](../packages/code-server/package.json) | — | 1 configure/workflow script(s) | Code server |
+| [codex](../packages/codex/package.json) | — | 1 configure/workflow script(s) | OpenAI Codex CLI standalone updater |
 | [codex-account-monitor](../packages/codex-account-monitor/package.json) | — | 2 configure/workflow script(s) | Restart local Codex processes when the authenticated account changes |
 | [codex-cron](../packages/codex-cron/package.json) | — | 1 configure/workflow script(s) | Schedule Codex jobs with cron |
 | [comfyui](../packages/comfyui/package.json) | 2 install script(s) | 1 configure/workflow script(s) | Node-based generative image workflows |

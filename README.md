@@ -143,3 +143,17 @@ configure GitHub authentication for this private repository first. Existing
 checkouts and local edits are preserved. No Dropbox directory or symlink is
 required. Credentials belong in `~/.authinfo`, sounds in
 `~/.local/share/sounds/`, and the optional wallpaper at `~/Pictures/WallPaper0.JPG`.
+
+## Update Codex CLI
+
+For an existing standalone Codex installation:
+
+```sh
+./setup run codex --recipe update          # preview
+./setup run codex --recipe update --apply  # download and apply the update
+```
+
+The script checks the active Codex installation and uses the
+[official standalone update procedure](https://learn.chatgpt.com/docs/cli).
+It refuses npm/Homebrew installations and prints their respective update commands.
+You can also run `bash packages/codex/scripts/update.sh` directly (executes immediately).
