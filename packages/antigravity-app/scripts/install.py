@@ -12,6 +12,27 @@ VERSION = '2.33.0-4731201358004224'
 BASE = 'https://storage.googleapis.com/antigravity-public/antigravity-hub'
 
 
+def discover_app(extracted):
+    """Find a uniquely named executable without assuming archive nesting or case."""
+    candidates = sorted(
+        path for path in extracted.rglob('*')
+        if path.name.casefold() == 'antigravity'
+        and not path.is_symlink() and path.is_file() and os.access(path, os.X_OK)
+    )
+    if len(candidates) != 1:
+        found = ', '.join(str(path.relative_to(extracted)) for path in candidates) or 'none'
+        raise SystemExit(f'Expected one executable Antigravity app; found: {found}')
+    # Strip only redundant enclosing directories. Keep all companion files,
+    # including resources outside the executable's own directory.
+    root = extracted
+    while True:
+        entries = list(root.iterdir())
+        if len(entries) != 1 or entries[0].is_symlink() or not entries[0].is_dir():
+            break
+        root = entries[0]
+    return root, candidates[0].relative_to(root)
+
+
 def install():
     if platform.system() != 'Linux':
         raise SystemExit('This installer supports Linux only')
@@ -38,22 +59,20 @@ def install():
         extracted.mkdir()
         with tarfile.open(archive) as bundle:
             bundle.extractall(extracted, filter='data')
-        candidates = [p for p in extracted.glob('*/antigravity') if p.is_file() and os.access(p, os.X_OK)]
-        if len(candidates) != 1:
-            raise SystemExit('Archive does not contain exactly one executable Antigravity app')
+        app_root, executable = discover_app(extracted)
         previous = staging / 'previous'
         if destination.is_symlink():
             raise SystemExit(f'Refusing to replace a symlinked install directory: {destination}')
         if destination.exists():
             destination.rename(previous)
         try:
-            candidates[0].parent.rename(destination)
+            app_root.rename(destination)
         except BaseException:
             if previous.exists():
                 previous.rename(destination)
             raise
         # TemporaryDirectory removes the replaced installation after success.
-    binary = destination / 'antigravity'
+    binary = destination / executable
     if not binary.is_file() or not os.access(binary, os.X_OK):
         raise SystemExit(f'Incomplete installation: {binary}')
     launcher.parent.mkdir(parents=True, exist_ok=True)

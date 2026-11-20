@@ -15,14 +15,15 @@ spec.loader.exec_module(installer)
 
 
 class AntigravityTests(unittest.TestCase):
-    def archive(self, name='Antigravity-x64/antigravity'):
+    def archive(self, name='Antigravity-x64/antigravity', extras=()):
         data = io.BytesIO()
         with tarfile.open(fileobj=data, mode='w:gz') as bundle:
-            entry = tarfile.TarInfo(name)
-            entry.mode = 0o755
-            content = b'#!/bin/sh\nexit 0\n'
-            entry.size = len(content)
-            bundle.addfile(entry, io.BytesIO(content))
+            for filename in (name, *extras):
+                entry = tarfile.TarInfo(filename)
+                entry.mode = 0o755
+                content = b'#!/bin/sh\nexit 0\n'
+                entry.size = len(content)
+                bundle.addfile(entry, io.BytesIO(content))
         data.seek(0)
         return data
 
@@ -54,6 +55,30 @@ class AntigravityTests(unittest.TestCase):
             with self.assertRaises(tarfile.FilterError):
                 self.run_install(home, self.archive('../../escape'))
             self.assertEqual((old / 'old-file').read_text(), 'old')
+
+    def test_layout_variants_and_companion_files(self):
+        for name in ('antigravity', 'Antigravity', 'release/linux/app/ANTIGRAVITY',
+                     'release/bin/Antigravity'):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                home = Path(temporary)
+                # A sibling resource tree must survive even with a nested binary.
+                self.run_install(home, self.archive(name, ('resources/data.pak',)))
+                destination = home / '.local/share/antigravity'
+                self.assertEqual((home / 'bin/antigravity').resolve(), destination / name)
+                self.assertTrue((destination / 'resources/data.pak').is_file())
+                self.assertIn(str(destination / name),
+                              (home / '.local/share/applications/antigravity.desktop').read_text())
+
+    def test_unknown_or_ambiguous_layout_preserves_existing_app(self):
+        for name, extras in (('other-app', ()), ('Antigravity', ('bin/antigravity',))):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                home = Path(temporary)
+                old = home / '.local/share/antigravity'
+                old.mkdir(parents=True)
+                (old / 'old-file').write_text('old')
+                with self.assertRaisesRegex(SystemExit, 'Expected one executable'):
+                    self.run_install(home, self.archive(name, extras))
+                self.assertEqual((old / 'old-file').read_text(), 'old')
 
     def test_cli_native_update_and_failure(self):
         with tempfile.TemporaryDirectory() as temporary:

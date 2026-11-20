@@ -174,3 +174,7 @@ It requires Python with `tarfile.data_filter` (Python 3.12+ recommended).
 It replaces `~/.local/share/antigravity`, updates `~/bin/antigravity`, and writes
 an application-menu entry. Close Antigravity before installing. Launch `antigravity` and sign in
 interactively after installation. System dependencies are not installed automatically.
+
+The app installer discovers the executable case-insensitively at any archive depth
+and keeps companion files together. Missing or ambiguous executables abort before
+replacing the installed app. The download version remains explicitly pinned.
