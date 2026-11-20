@@ -9,8 +9,10 @@ Package availability depends on the OS release and configured repositories.
 | Package | Install methods | Configuration | Description |
 | --- | --- | --- | --- |
 | [ack](../packages/ack/package.json) | ubuntu: apt, macos: brew, debian: apt | — | Search tool like grep, but optimized for programmers |
+| [agy](../packages/agy/package.json) | — | 1 configure/workflow script(s) | Runs the installed agy native updater and prints versions; preserves the existing launcher wrapper. |
 | [anki](../packages/anki/package.json) | ubuntu: apt, debian: apt, macos: brew | 1 configure/workflow script(s) | Anki is a program designed to help you remember facts as easily, quickly and efficiently as possible |
 | [ansible](../packages/ansible/package.json) | ubuntu: apt, macos: brew, debian: apt | — | Configuration management, deployment, and task execution system |
+| [antigravity-app](../packages/antigravity-app/package.json) | 1 install script(s) | — | Downloads the official Linux app, replaces ~/.local/share/antigravity, and updates ~/bin/antigravity and its desktop entry. |
 | [antigravity-ssh](../packages/antigravity-ssh/package.json) | — | 1 configure/workflow script(s) | Antigravity SSH wrapper setup |
 | [appdmg](../packages/appdmg/package.json) | macos: npm | — | Generate beautiful DMG-images for your OS X applications. |
 | [apt-file](../packages/apt-file/package.json) | ubuntu: apt, debian: apt | — | apt-file is a command line tool for searching files contained in packages for the APT packaging system. You can search in which package a file is included or list the contents of a package without installing or fetching it. |

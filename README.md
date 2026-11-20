@@ -157,3 +157,20 @@ The script checks the active Codex installation and uses the
 [official standalone update procedure](https://learn.chatgpt.com/docs/cli).
 It refuses npm/Homebrew installations and prints their respective update commands.
 You can also run `bash packages/codex/scripts/update.sh` directly (executes immediately).
+
+## Antigravity CLI and Linux app
+
+```sh
+./setup run agy --recipe update                 # preview CLI update
+./setup run agy --recipe update --apply         # use agy's native updater
+./setup install antigravity-app                 # preview Linux desktop installation
+./setup install antigravity-app --apply         # install for the current user
+```
+
+The CLI updater uses the active `agy` launcher, including an existing SSH wrapper.
+The desktop installer uses the [official Linux archive](https://antigravity.google/docs/getting-started),
+pinned to `2.33.0-4731201358004224` for reproducibility, and supports x86_64/aarch64.
+It requires Python with `tarfile.data_filter` (Python 3.12+ recommended).
+It replaces `~/.local/share/antigravity`, updates `~/bin/antigravity`, and writes
+an application-menu entry. Close Antigravity before installing. Launch `antigravity` and sign in
+interactively after installation. System dependencies are not installed automatically.
