@@ -9,8 +9,10 @@ Package availability depends on the OS release and configured repositories.
 | Package | Install methods | Configuration | Description |
 | --- | --- | --- | --- |
 | [ack](../packages/ack/package.json) | ubuntu: apt, macos: brew, debian: apt | — | Search tool like grep, but optimized for programmers |
+| [agy](../packages/agy/package.json) | — | 1 configure/workflow script(s) | Runs the installed agy native updater and prints versions; preserves the existing launcher wrapper. |
 | [anki](../packages/anki/package.json) | ubuntu: apt, debian: apt, macos: brew | 1 configure/workflow script(s) | Anki is a program designed to help you remember facts as easily, quickly and efficiently as possible |
 | [ansible](../packages/ansible/package.json) | ubuntu: apt, macos: brew, debian: apt | — | Configuration management, deployment, and task execution system |
+| [antigravity-app](../packages/antigravity-app/package.json) | 1 install script(s) | — | Downloads the official Linux app, replaces ~/.local/share/antigravity, and updates ~/bin/antigravity and its desktop entry. |
 | [antigravity-ssh](../packages/antigravity-ssh/package.json) | — | 1 configure/workflow script(s) | Antigravity SSH wrapper setup |
 | [appdmg](../packages/appdmg/package.json) | macos: npm | — | Generate beautiful DMG-images for your OS X applications. |
 | [apt-file](../packages/apt-file/package.json) | ubuntu: apt, debian: apt | — | apt-file is a command line tool for searching files contained in packages for the APT packaging system. You can search in which package a file is included or list the contents of a package without installing or fetching it. |
@@ -44,6 +46,7 @@ Package availability depends on the OS release and configured repositories.
 | [cmake](../packages/cmake/package.json) | ubuntu: apt, macos: brew, debian: apt | — | cross-platform, open-source make system |
 | [cockpit](../packages/cockpit/package.json) | 1 install script(s) | — | Cockpit |
 | [code-server](../packages/code-server/package.json) | — | 1 configure/workflow script(s) | Code server |
+| [codex](../packages/codex/package.json) | — | 1 configure/workflow script(s) | OpenAI Codex CLI standalone updater |
 | [codex-account-monitor](../packages/codex-account-monitor/package.json) | — | 2 configure/workflow script(s) | Restart local Codex processes when the authenticated account changes |
 | [codex-cron](../packages/codex-cron/package.json) | — | 1 configure/workflow script(s) | Schedule Codex jobs with cron |
 | [comfyui](../packages/comfyui/package.json) | 2 install script(s) | 1 configure/workflow script(s) | Node-based generative image workflows |

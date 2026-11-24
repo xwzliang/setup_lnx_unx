@@ -1,0 +1,35 @@
+{
+  "name": "antigravity-app",
+  "description": "Downloads the official Linux app, replaces ~/.local/share/antigravity, and updates ~/bin/antigravity and its desktop entry.",
+  "references": [
+    {
+      "path": "packages/antigravity-app/scripts/install.py",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "note": "Official instructions: https://antigravity.google/docs/getting-started"
+    }
+  ],
+  "recipes": {
+    "linux-app": {
+      "action": "install",
+      "os": [
+        "ubuntu",
+        "debian"
+      ],
+      "script": "packages/antigravity-app/scripts/install.py",
+      "interpreter": "python3",
+      "description": "Downloads the official Linux app, replaces ~/.local/share/antigravity, and updates ~/bin/antigravity and its desktop entry.",
+      "effects": "Downloads the official Linux app, replaces ~/.local/share/antigravity, and updates ~/bin/antigravity and its desktop entry.",
+      "requires": [],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "install": {
+      "ubuntu": "linux-app",
+      "debian": "linux-app"
+    }
+  }
+}

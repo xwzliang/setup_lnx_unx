@@ -1,0 +1,33 @@
+{
+  "name": "codex",
+  "description": "OpenAI Codex CLI standalone updater",
+  "references": [
+    {
+      "path": "packages/codex/scripts/update.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Updates an existing standalone installation using the official installer."
+    }
+  ],
+  "recipes": {
+    "update": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/codex/scripts/update.sh",
+      "interpreter": "bash",
+      "description": "Update standalone Codex CLI",
+      "effects": "Downloads and runs the official installer to update Codex; prints versions before and after. Restart existing sessions afterward.",
+      "requires": [
+        "curl"
+      ],
+      "parameters": {}
+    }
+  }
+}

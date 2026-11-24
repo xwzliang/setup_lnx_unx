@@ -1,0 +1,33 @@
+{
+  "name": "agy",
+  "description": "Runs the installed agy native updater and prints versions; preserves the existing launcher wrapper.",
+  "references": [
+    {
+      "path": "packages/agy/scripts/update.sh",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Official instructions: https://antigravity.google/docs/getting-started"
+    }
+  ],
+  "recipes": {
+    "update": {
+      "action": "run",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/agy/scripts/update.sh",
+      "interpreter": "bash",
+      "description": "Runs the installed agy native updater and prints versions; preserves the existing launcher wrapper.",
+      "effects": "Runs the installed agy native updater and prints versions; preserves the existing launcher wrapper.",
+      "requires": [
+        "agy"
+      ],
+      "parameters": {}
+    }
+  }
+}
