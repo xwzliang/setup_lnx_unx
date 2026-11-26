@@ -110,7 +110,7 @@ Package availability depends on the OS release and configured repositories.
 | [isort](../packages/isort/package.json) | ubuntu: pip, debian: pip, macos: pip | — | A Python utility / library to sort imports |
 | [java](../packages/java/package.json) | ubuntu: apt, debian: apt | — | default Java Development Kit (JDK) |
 | [jedi](../packages/jedi/package.json) | ubuntu: pip, debian: pip, macos: pip | — | Jedi is a static analysis tool for Python that is typically used in IDEs/editors plugins. Jedi has a focus on autocompletion and goto functionality. |
-| [jellyfin](../packages/jellyfin/package.json) | macos: brew | — | Jellyfin |
+| [jellyfin](../packages/jellyfin/package.json) | macos: brew | 1 configure/workflow script(s) | Jellyfin |
 | [jest](../packages/jest/package.json) | ubuntu: npm, debian: npm, macos: npm | — | Delightful JavaScript Testing |
 | [jq](../packages/jq/package.json) | ubuntu: apt, macos: brew, debian: apt | — | jq is like sed for JSON data - you can use it to slice and filter and map and transform structured data |
 | [karabiner-elements](../packages/karabiner-elements/package.json) | macos: brew | — | a powerful utility for keyboard customization |

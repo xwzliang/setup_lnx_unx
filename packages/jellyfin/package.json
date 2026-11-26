@@ -17,9 +17,33 @@
         "macos"
       ],
       "note": "Original package list; do not run the entire list to install this package."
+    },
+    {
+      "path": "packages/jellyfin/scripts/watchdog.py",
+      "os": [
+        "macos"
+      ],
+      "note": "Installs and runs the local Jellyfin recovery check."
     }
   ],
   "notes": [
-    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign."
-  ]
+    "Package methods and scripts migrated from the original repository. Availability varies by OS release and configured repositories; remote installation has not been verified during this redesign.",
+    "The watchdog expects /Applications/Jellyfin.app and the default HTTP endpoint on 127.0.0.1:8096. Install it as the Jellyfin user while logged into the Mac desktop. See packages/jellyfin/README.md."
+  ],
+  "recipes": {
+    "watchdog": {
+      "action": "configure",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/jellyfin/scripts/watchdog.py",
+      "interpreter": "python3",
+      "description": "Recover the bundled Jellyfin server after it exits",
+      "effects": "Installs a per-user LaunchAgent that checks the local Jellyfin API every minute and relaunches the app if its backend is gone.",
+      "requires": [
+        "launchctl"
+      ],
+      "parameters": {}
+    }
+  }
 }
