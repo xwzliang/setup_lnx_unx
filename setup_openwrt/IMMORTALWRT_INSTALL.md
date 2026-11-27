@@ -31,6 +31,52 @@ uses that folder when mounted and `~/.cache/immortalwrt` otherwise.
 `--release` selects another stable release using its published checksum.
 Add `--firmware bios` to download the BIOS image.
 
+## Install with your saved router settings and OpenClash
+
+Create a private profile from an existing router configuration archive. The
+installer uses the selected settings and OpenClash files from the archive
+and builds a fresh ImmortalWrt 25.12.2 image with OpenClash 0.48.002. The
+archive can be elsewhere on disk or copied from your offline backups.
+
+```sh
+python3 setup_openwrt/install_immortalwrt.py profile \
+  --from-backup "$HOME/router-backup.tar.gz" \
+  --output "$HOME/router-profile.tar.gz"
+```
+
+The profile includes the saved LAN and WAN, DHCP reservations, WireGuard,
+system settings, firewall rules, and OpenClash subscriptions, rules and
+Mihomo core. The source archive needs those UCI configs, the active OpenClash
+YAML, and `/etc/openclash/core/clash_meta`. A saved local subscription
+converter on port 15051 is initialized from its pinned container image and
+available to OpenClash on the new router's loopback interface.
+
+Use an x86-64 Linux builder with Docker and internet access to the package
+feeds. Use `--builder` from macOS, or run locally on such a Linux host.
+Pass `--router-profile` to either `prepare` or `proxmox`:
+
+```sh
+python3 setup_openwrt/install_immortalwrt.py prepare \
+  --builder daily --router-profile "$HOME/router-profile.tar.gz" \
+  --output "$HOME/immortalwrt-router.img"
+
+python3 setup_openwrt/install_immortalwrt.py proxmox \
+  --builder daily --router-profile "$HOME/router-profile.tar.gz" \
+  --vmid 108 --isolated --lan 192.168.82.1/24 --no-dhcp --web-port 8018
+```
+
+These commands use the saved hostname and LAN settings unless you override
+them. An isolated VM uses its own DHCP WAN and leaves WireGuard inactive.
+For a router taking over an existing LAN, assign its LAN and WAN Ethernet
+ports according to the saved interface configuration and disconnect the old
+router before reusing its LAN address and DHCP server.
+
+Keep the profile and any configured images private. They contain subscription
+URLs and can contain PPPoE and WireGuard credentials. Each install takes a new
+root password and generates its own SSH host keys. The image uses firewall4
+and OpenClash's nftables integration. Set up any additional router services
+separately.
+
 ## Install on a new Proxmox VM
 
 Use an unused VM ID. Pick a LAN bridge that serves the new router's clients.

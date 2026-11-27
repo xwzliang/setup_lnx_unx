@@ -15,6 +15,7 @@ stage=$(mktemp -d /var/tmp/immortalwrt.XXXXXXXX)
 trap 'rm -rf -- "$stage"' EXIT
 image=$stage/firmware.img
 cat > "$image"
+test -s "$image"
 printf '%s  %s\n' "$digest" "$image" | sha256sum --check --status
 
 if [[ $firmware == uefi ]]; then

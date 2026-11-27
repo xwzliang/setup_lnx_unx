@@ -2,9 +2,10 @@
 """Download, configure, and install a clean ImmortalWrt x86-64 system."""
 
 import argparse
+from functools import partial
 import getpass
 import hashlib
-from ipaddress import IPv4Interface
+from ipaddress import IPv4Interface, IPv4Network
 import json
 import os
 from pathlib import Path
@@ -15,8 +16,11 @@ import shutil
 import stat
 import subprocess
 import sys
+import tarfile
 from tempfile import TemporaryDirectory
 from urllib.request import urlopen
+
+from immortalwrt_router_profile import add_file, load_profile, render_profile, write_profile
 
 RELEASE = '25.12.2'
 DOWNLOADS = 'https://downloads.immortalwrt.org/releases'
@@ -27,6 +31,12 @@ CHECKSUMS = {
 }
 IMAGE_WORKER = Path(__file__).with_name('immortalwrt_image.py')
 PROXMOX_WORKER = Path(__file__).with_name('provision_immortalwrt.sh')
+OPENCLASH_WORKER = Path(__file__).with_name('build_immortalwrt_openclash.sh')
+BUILDER_DOCKERFILE = Path(__file__).with_name('immortalwrt_openclash.Dockerfile')
+SUBCONVERTER_INIT = Path(__file__).with_name('immortalwrt_subconverter.init')
+IMAGEBUILDER = f'immortalwrt-imagebuilder-{RELEASE}-x86-64.Linux-x86_64.tar.zst'
+OPENCLASH_APK = 'luci-app-openclash-0.48.002.apk'
+GITHUB_RELEASE = 'https://github.com/vernesong/OpenClash/releases/download/v0.48.002/'
 CHUNK_SIZE = 1024 ** 2
 
 
@@ -67,12 +77,16 @@ def download_image(release, firmware, directory):
             raise ValueError(f'No unique published SHA-256 for {name}')
         expected = matches[0][0]
 
+    return verified_download(url + name, directory, name, expected)
+
+
+def verified_download(url, directory, name, expected):
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / name
     if not path.exists():
         with TemporaryDirectory(prefix='.immortalwrt-', dir=directory) as stage:
             pending = Path(stage) / name
-            with urlopen(url + name, timeout=60) as source, pending.open('wb') as output:
+            with urlopen(url, timeout=60) as source, pending.open('wb') as output:
                 shutil.copyfileobj(source, output)
             with pending.open('rb') as source:
                 if checksum(source) != expected:
@@ -94,6 +108,11 @@ def first_boot(args, public_key):
         'uci commit system',
         'uci commit network',
     ]
+    if args.router_profile:
+        commands.extend([
+            'ln -sf /etc/openclash/core/clash_meta /etc/openclash/clash',
+            '/etc/init.d/openclash enable',
+        ])
     if args.no_dhcp:
         commands.extend([
             'uci set dhcp.lan.ignore=1',
@@ -111,7 +130,7 @@ def first_boot(args, public_key):
     return '#!/bin/sh\n' + ' &&\n'.join(commands) + '\n'
 
 
-def profile(args):
+def image_settings(args):
     if args.password_file:
         password = args.password_file.read_text().rstrip('\r\n')
     else:
@@ -159,7 +178,45 @@ def make_image(archive, settings, output, builder):
             raise ValueError('Could not prepare the ImmortalWrt image on the Linux builder')
 
 
-def prepare(args, archive, settings):
+def make_profile_image(args, files, settings, output):
+    imagebuilder = verified_download(f'{DOWNLOADS}/{RELEASE}/targets/x86/64/{IMAGEBUILDER}',
+                                    args.image_dir, IMAGEBUILDER,
+                                    'b9b290f5ef60a22bccd5bdca9c1e7523b8fc84e60462afbf550e20db94acf2c6')
+    apk = verified_download(GITHUB_RELEASE + OPENCLASH_APK, args.image_dir, OPENCLASH_APK,
+                            'f7ebbd43f9be15c5e6df26e5d0c03d50d0bb8f7fa4cc0d2c2bf048b08c0b155b')
+    flags = (args.firmware, 'yes' if args.include_converter else 'no')
+    command = (ssh_command(args.builder, 'bash', '-c', OPENCLASH_WORKER.read_text(),
+                           'build-immortalwrt', *flags) if args.builder else
+               ['bash', str(OPENCLASH_WORKER), *flags])
+    with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=output) as worker:
+        try:
+            with tarfile.open(fileobj=worker.stdin, mode='w|') as bundle:
+                bundle.add(imagebuilder, IMAGEBUILDER)
+                bundle.add(apk, OPENCLASH_APK)
+                add_file(bundle, 'Dockerfile', BUILDER_DOCKERFILE.read_bytes())
+                add_file(bundle, IMAGE_WORKER.name, IMAGE_WORKER.read_bytes())
+                add_file(bundle, 'settings.json', json.dumps(settings).encode() + b'\n')
+                if args.include_converter:
+                    add_file(bundle, 'files/etc/init.d/router-subconverter', SUBCONVERTER_INIT.read_bytes(), 0o755)
+                    dockerd = {
+                        'data-root': '/overlay/docker', 'storage-driver': 'overlay2',
+                        'features': {'containerd-snapshotter': False},
+                        'bridge': 'none', 'ip-forward-no-drop': True,
+                        'log-driver': 'local', 'log-level': 'warn',
+                    }
+                    add_file(bundle, 'files/etc/docker/router-profile.json', json.dumps(dockerd).encode())
+                    add_file(bundle, 'files/etc/config/dockerd',
+                             b"config globals 'globals'\n option alt_config_file '/etc/docker/router-profile.json'\n")
+                for path, (contents, mode) in files.items():
+                    add_file(bundle, f'files/{path}', contents, mode)
+            worker.stdin.close()
+        except BrokenPipeError:
+            pass
+        if worker.wait() or not output.tell():
+            raise ValueError('Could not build an ImmortalWrt image with the OpenClash profile')
+
+
+def prepare(args, write_image):
     output = args.output
     sidecar = output.with_suffix(output.suffix + '.sha256')
     if output.exists() or sidecar.exists():
@@ -167,7 +224,7 @@ def prepare(args, archive, settings):
     with TemporaryDirectory(prefix='.immortalwrt-', dir=output.parent) as stage:
         pending = Path(stage) / output.name
         with pending.open('w+b') as image:
-            make_image(archive, settings, image, args.builder)
+            write_image(image)
             image.seek(0)
             digest = checksum(image)
         with sidecar.open('x') as handle:
@@ -181,7 +238,7 @@ def prepare(args, archive, settings):
     print(output)
 
 
-def provision(args, archive, settings):
+def provision(args, write_image):
     network = []
     if args.isolated:
         options = ['user', 'id=immortallan', 'restrict=on', f'net={args.lan.network}']
@@ -189,14 +246,22 @@ def provision(args, archive, settings):
             options.append(f'hostfwd=tcp:127.0.0.1:{args.ssh_port}-{args.lan.ip}:22')
         if args.web_port:
             options.append(f'hostfwd=tcp:127.0.0.1:{args.web_port}-{args.lan.ip}:80')
-        network = ['--args', f'-netdev {",".join(options)} -device e1000,netdev=immortallan']
+        devices = f'-netdev {",".join(options)} -device e1000,netdev=immortallan'
+        if args.router_profile:
+            wan = IPv4Network('10.0.2.0/24')
+            if wan.overlaps(args.lan.network):
+                wan = IPv4Network('172.31.254.0/24')
+            if wan.overlaps(args.lan.network):
+                raise ValueError('Choose a LAN subnet that does not overlap the isolated WAN')
+            devices += f' -netdev user,id=immortalwan,restrict=on,net={wan} -device e1000,netdev=immortalwan'
+        network = ['--args', devices]
     else:
         network = ['--net0', f'e1000,bridge={args.lan_bridge}']
         if args.wan_bridge:
             network.extend(('--net1', f'e1000,bridge={args.wan_bridge}'))
     with TemporaryDirectory(prefix='immortalwrt-') as stage:
         with (Path(stage) / 'disk.img').open('w+b') as image:
-            make_image(archive, settings, image, args.builder or args.proxmox)
+            write_image(image)
             image.seek(0)
             digest = checksum(image)
             image.seek(0)
@@ -279,6 +344,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     download = commands.add_parser('download', help='save the verified official firmware')
+    export = commands.add_parser('profile', help='save a portable router profile from an offline configuration archive')
+    export.add_argument('--from-backup', type=Path, required=True, help='existing configuration archive')
+    export.add_argument('--output', type=Path, required=True, help='new private profile archive')
     prepare_command = commands.add_parser('prepare', help='make a configured bootable raw image')
     proxmox = commands.add_parser('proxmox', help='create and start a new Proxmox VM')
     usb = commands.add_parser('usb', help='write a prepared image to a removable USB disk')
@@ -289,13 +357,13 @@ def main():
             ARCHIVE if ARCHIVE.is_dir() else Path.home() / '.cache' / 'immortalwrt'),
             help='directory for verified upstream downloads')
     for command in (prepare_command, proxmox):
-        command.add_argument('--builder', help='Linux SSH host with Python, sfdisk, and e2fsprogs')
-        command.add_argument('--hostname', default='immortalwrt')
-        command.add_argument('--lan', type=IPv4Interface, default='192.168.1.1/24',
-                             help='LAN address/prefix (default 192.168.1.1/24)')
+        command.add_argument('--builder', help='Linux SSH builder with image tools, or Docker for OpenClash')
+        command.add_argument('--router-profile', type=Path, help='private router profile archive with OpenClash settings')
+        command.add_argument('--hostname', help='override the saved hostname (stock default immortalwrt)')
+        command.add_argument('--lan', type=IPv4Interface, help='override the saved LAN address/prefix (stock default 192.168.1.1/24)')
         command.add_argument('--no-dhcp', action='store_true', help='disable LAN DHCP and router advertisements')
-        command.add_argument('--zone', default='Asia/Shanghai', help='IANA time zone (default Asia/Shanghai)')
-        command.add_argument('--timezone', default='CST-8', help='POSIX time zone (default CST-8)')
+        command.add_argument('--zone', help='override IANA time zone (stock default Asia/Shanghai)')
+        command.add_argument('--timezone', help='override POSIX time zone (stock default CST-8)')
         command.add_argument('--ssh-public-key', type=Path, help='override the public key discovered in ~/.ssh')
         command.add_argument('--password-file', type=Path, help='read the root password from a private file')
     prepare_command.add_argument('--output', type=Path, required=True, help='new .img file')
@@ -305,7 +373,7 @@ def main():
     lan = proxmox.add_mutually_exclusive_group(required=True)
     lan.add_argument('--lan-bridge', help='Proxmox bridge for the router LAN')
     lan.add_argument('--isolated', action='store_true', help='use a private QEMU network for testing')
-    proxmox.add_argument('--wan-bridge', help='separate Proxmox bridge for DHCP WAN')
+    proxmox.add_argument('--wan-bridge', help='separate Proxmox bridge for the router WAN')
     proxmox.add_argument('--ssh-port', type=int, help='isolated SSH forward on Proxmox loopback')
     proxmox.add_argument('--web-port', type=int, help='isolated HTTP forward on Proxmox loopback')
     usb.add_argument('--image', type=Path, required=True, help='raw image from the prepare command')
@@ -315,15 +383,33 @@ def main():
     if args.command == 'usb':
         flash_usb(args)
         return
+    if args.command == 'profile':
+        write_profile(args.from_backup, args.output)
+        print(args.output)
+        return
     if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', args.release):
         parser.error('--release must be a numbered stable release, such as 25.12.2')
-    if args.command in ('prepare', 'proxmox'):
-        if not re.fullmatch(r'[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?', args.hostname):
-            parser.error('--hostname must be a single DNS label')
-        if args.lan.ip in (args.lan.network.network_address, args.lan.network.broadcast_address):
-            parser.error('--lan must be a usable host address within its subnet')
-        if args.builder and not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.@-]*', args.builder):
-            parser.error('Invalid Linux builder SSH destination')
+    if args.command == 'download':
+        print(download_image(args.release, args.firmware, args.image_dir))
+        return
+    files = None
+    if args.router_profile:
+        if args.release != RELEASE:
+            parser.error(f'--router-profile supports ImmortalWrt {RELEASE}')
+        if not args.builder and sys.platform != 'linux':
+            parser.error('OpenClash image builds on macOS require --builder with an x86-64 Linux Docker host')
+        files = render_profile(load_profile(args.router_profile), args)
+    else:
+        args.hostname = args.hostname or 'immortalwrt'
+        args.lan = args.lan or IPv4Interface('192.168.1.1/24')
+        args.zone = args.zone or 'Asia/Shanghai'
+        args.timezone = args.timezone or 'CST-8'
+    if not re.fullmatch(r'[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?', args.hostname):
+        parser.error('--hostname must be a single DNS label')
+    if args.lan.ip in (args.lan.network.network_address, args.lan.network.broadcast_address):
+        parser.error('--lan must be a usable host address within its subnet')
+    if args.builder and not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.@-]*', args.builder):
+        parser.error('Invalid Linux builder SSH destination')
     if args.command == 'prepare' and args.output.suffix != '.img':
         parser.error('--output must end in .img')
     if args.command == 'proxmox':
@@ -341,21 +427,22 @@ def main():
             if args.ssh_port == args.web_port:
                 parser.error('SSH and HTTP require different loopback ports')
 
-    archive = download_image(args.release, args.firmware, args.image_dir)
-    if args.command == 'download':
-        print(archive)
-        return
-    settings = profile(args)
-    if args.command == 'prepare':
-        prepare(args, archive, settings)
+    if files is not None:
+        write_image = partial(make_profile_image, args, files, image_settings(args))
     else:
-        provision(args, archive, settings)
+        archive = download_image(args.release, args.firmware, args.image_dir)
+        builder = args.builder or getattr(args, 'proxmox', None)
+        write_image = partial(make_image, archive, image_settings(args), builder=builder)
+    if args.command == 'prepare':
+        prepare(args, write_image)
+    else:
+        provision(args, write_image)
 
 
 if __name__ == '__main__':
     os.umask(0o077)
     try:
         main()
-    except (OSError, ValueError, subprocess.CalledProcessError) as error:
+    except (OSError, ValueError, subprocess.CalledProcessError, tarfile.TarError) as error:
         print(f'Error: {error}', file=sys.stderr)
         sys.exit(1)

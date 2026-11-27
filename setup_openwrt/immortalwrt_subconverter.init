@@ -1,0 +1,31 @@
+#!/bin/sh /etc/rc.common
+START=99
+STOP=10
+
+start() {
+    local attempt image network
+    image=sha256:5c37238061333197a100e07a17145a7bfb76fd9bb0b1f40cd390d3042952d70d
+    network=router-subconverter
+    for attempt in $(seq 1 30); do
+        docker info >/dev/null 2>&1 && break
+        sleep 2
+    done
+    docker info >/dev/null 2>&1 || return 1
+    if docker container inspect subconverter >/dev/null 2>&1; then
+        [ "$(docker inspect --format '{{.Image}}' subconverter)" = "$image" ] || return 1
+        [ "$(docker inspect --format '{{.HostConfig.NetworkMode}}' subconverter)" = "$network" ] || return 1
+        docker start subconverter >/dev/null
+        return
+    fi
+    docker image inspect "$image" >/dev/null 2>&1 ||
+        docker load -i /usr/share/immortalwrt/subconverter.tar >/dev/null || return 1
+    # Use a Docker-managed bridge independent of netifd's docker0 interface.
+    docker network inspect "$network" >/dev/null 2>&1 ||
+        docker network create "$network" >/dev/null || return 1
+    docker run -d --name subconverter --restart always --network "$network" \
+        -p 127.0.0.1:15051:25500 -v /etc/openclash/config:/data "$image" >/dev/null
+}
+
+stop() {
+    docker stop subconverter >/dev/null 2>&1 || true
+}
