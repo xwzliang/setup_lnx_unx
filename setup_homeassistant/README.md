@@ -24,12 +24,9 @@ Use a trusted LAN for first boot and account creation over HTTP.
 The clean profile completes normal Home Assistant onboarding, adds the MCP
 Server integration, and installs Terminal & SSH, Advanced SSH & Web Terminal,
 and Node-RED. It starts fresh Node-RED through Home Assistant ingress and
-leaves direct port 1880 disabled. Configure SSH keys on the SSH app you want
-to use. Home Assistant 2026.11+ includes Marketplace, so the clean profile
-uses it in place of the legacy Get HACS app. Install Xiaomi Home from Marketplace
-and authorize it, enter the SwitchBot Cloud credentials, and pair the mobile
-app from the web UI. See [Xiaomi Home](https://github.com/XiaoMi/ha_xiaomi_home),
-[SwitchBot Cloud](https://www.home-assistant.io/integrations/switchbot_cloud/),
+leaves direct port 1880 disabled. Home Assistant 2026.11+ includes Marketplace.
+Enter the SwitchBot Cloud credentials and pair the mobile app from the web UI.
+See [SwitchBot Cloud](https://www.home-assistant.io/integrations/switchbot_cloud/)
 and [Marketplace](https://www.home-assistant.io/integrations/marketplace/).
 
 To set general options during setup, pass `--settings-file` with a private
@@ -54,6 +51,32 @@ installations can use port 80, while older ones can use port 8123.
 
 ```sh
 node setup_homeassistant/install.mjs configure --target http://192.168.1.50
+```
+
+### Add SSH access and Xiaomi Home
+
+Pass your `.pub` file to `--ssh-public-key` to configure and start Advanced SSH.
+The installer adds the key alongside any existing keys, sets the app to start
+on boot, and retains its existing SSH port if one is set. `--ssh-user` selects
+the login name for a fresh app. Keep the matching private key on your workstation.
+
+Pass `--xiaomi-home` to acknowledge the Marketplace's first-use notice and
+install Xiaomi's official integration. Set `--xiaomi-browser` to a local Chrome
+or Chromium executable to open the add-integration screen. The separate
+browser profile routes Xiaomi's fixed `homeassistant.local:8123` callback to the
+target VM's HTTP address and port. Its mapping is scoped to that window, which
+lets a second Home Assistant instance keep using `homeassistant.local` on the
+LAN. Review Xiaomi's terms, authorize the account, and choose the homes to
+import in that browser window. See [Xiaomi Home's setup guide](https://github.com/XiaoMi/ha_xiaomi_home).
+
+Both options work with `install`. For a VM you already set up, use `configure
+--resume` with its own address and owner account.
+
+```sh
+node setup_homeassistant/install.mjs configure --resume \
+  --target http://192.168.1.50 --ssh-public-key "$HOME/.ssh/id_ed25519.pub" \
+  --ssh-user myuser --xiaomi-home \
+  --xiaomi-browser '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 ```
 
 Run the installer tests with `node --test tests/test_homeassistant_install.mjs`.

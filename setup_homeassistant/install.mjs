@@ -7,6 +7,7 @@ import { createInterface } from 'node:readline/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 import { pathToFileURL } from 'node:url';
+import { configureSsh, installXiaomiHome, openXiaomiBrowser, parsePublicKey } from './install-extras.mjs';
 
 const APPS = ['core_ssh', 'a0d7b954_ssh', 'a0d7b954_nodered'];
 const NODE_RED = 'a0d7b954_nodered';
@@ -34,6 +35,10 @@ Home Assistant options
   --username NAME        Home Assistant owner username (default admin)
   --password-file PATH   Local file holding only the owner password
   --settings-file PATH   Optional JSON with Home Assistant general settings
+  --ssh-public-key PATH  Enable Advanced SSH with this OpenSSH public key
+  --ssh-user NAME        Advanced SSH login name (default: its configured user)
+  --xiaomi-home          Install Xiaomi Home and acknowledge the Marketplace notice
+  --xiaomi-browser PATH  Open Xiaomi authorization in this Chrome/Chromium executable
   --resume               Sign in to continue a previously started configure run
 
   --timeout SECONDS   Time allowed for first boot or an app operation (default 1200)
@@ -233,8 +238,12 @@ async function withSocket(origin, token, timeout, configure) {
   }
 }
 
+function supervisorApi(call) {
+  return (endpoint, method = 'get', data) => call({ type: 'supervisor/api', endpoint, method, data, timeout: null });
+}
+
 export async function configureApps(call) {
-  const supervisor = (endpoint, method = 'get', data) => call({ type: 'supervisor/api', endpoint, method, data, timeout: null });
+  const supervisor = supervisorApi(call);
   const store = new Set((await supervisor('/store/addons')).addons.map(({ slug }) => slug));
   if (APPS.some((slug) => slug.startsWith('a0d7b954_') && !store.has(slug))) {
     const repositories = await supervisor('/store/repositories');
@@ -324,8 +333,19 @@ export async function configure(origin, options, password, settings) {
         if (result.type !== 'create_entry') throw new Error('Home Assistant did not finish the MCP Server integration setup.');
       }
       await configureApps(call);
+      if (options.sshKey) await configureSsh(supervisorApi(call), options.sshKey, options['ssh-user']);
+      if (options['xiaomi-home']) {
+        await installXiaomiHome(call, options.timeout);
+        const xiaomiEntries = await call({ type: 'config_entries/get', domain: 'xiaomi_home' });
+        if (xiaomiEntries.length === 0) {
+          const handlers = await request(origin, '/api/config/config_entries/flow_handlers', { token });
+          if (!handlers.includes('xiaomi_home')) throw new Error('Xiaomi Home is installed but its setup flow is unavailable. Check Home Assistant Repairs.');
+          if (options['xiaomi-browser']) await openXiaomiBrowser(origin, options['xiaomi-browser']);
+          else console.error(`Finish Xiaomi authorization at ${origin}/config/integrations/add?domain=xiaomi_home. Use --xiaomi-browser to route the callback to this instance.`);
+        }
+      }
     });
-    console.error('Home Assistant is set up. Complete Xiaomi Home, SwitchBot Cloud, mobile pairing, and SSH app configuration in the web UI.');
+    console.error('Home Assistant is set up. Connect cloud accounts and pair the mobile app in the web UI.');
   } finally {
     try {
       await request(origin, '/auth/revoke', { method: 'POST', form: new URLSearchParams({ token: session.refresh_token }) });
@@ -343,6 +363,8 @@ function argumentsFor(argv) {
     memory: string('4096'), cores: string('2'), 'disk-gb': string('32'), 'haos-version': { type: 'string' },
     'owner-name': string('Home Administrator'), username: string('admin'), 'password-file': { type: 'string' },
     'settings-file': { type: 'string' }, resume: { type: 'boolean' }, timeout: string('1200'),
+    'ssh-public-key': { type: 'string' }, 'ssh-user': { type: 'string' }, 'xiaomi-home': { type: 'boolean' },
+    'xiaomi-browser': { type: 'string' },
   } });
   return { options: values, command: positionals[0], extra: positionals.slice(1) };
 }
@@ -353,6 +375,9 @@ async function main(argv) {
   if (extra.length || !['install', 'provision', 'configure'].includes(command)) throw new Error('Use install, provision, or configure. See --help.');
   if (options.resume && command !== 'configure') throw new Error('--resume applies only to configure.');
   if (options.target && command !== 'configure') throw new Error('--target applies only to configure.');
+  if (options['ssh-user'] && !options['ssh-public-key']) throw new Error('--ssh-user requires --ssh-public-key.');
+  if (options['xiaomi-browser'] && !options['xiaomi-home']) throw new Error('--xiaomi-browser requires --xiaomi-home.');
+  if (command === 'provision' && (options['ssh-public-key'] || options['xiaomi-home'])) throw new Error('Use install or configure to set up SSH or Xiaomi Home.');
   if (command === 'configure' && (!options.target || options.vmid)) throw new Error('Configure requires --target and uses an existing VM.');
   options.timeout = Number(integer(options.timeout, '--timeout', 10, 7200)) * 1000;
   const target = options.target && targetOrigin(options.target);
@@ -362,6 +387,8 @@ async function main(argv) {
   if (command !== 'provision') {
     if (typeof WebSocket !== 'function') throw new Error('Configuration requires Node.js 22.4 or newer.');
     identifier(options.username, '--username', /^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/);
+    if (options['ssh-user']) identifier(options['ssh-user'], '--ssh-user', /^[a-z_][a-z0-9_-]{0,31}$/);
+    if (options['ssh-public-key']) options.sshKey = parsePublicKey(await readFile(options['ssh-public-key'], 'utf8'));
     if (options['settings-file']) {
       settings = JSON.parse(await readFile(options['settings-file'], 'utf8'));
       if (!settings || typeof settings !== 'object' || Array.isArray(settings) || 'id' in settings || 'type' in settings) {

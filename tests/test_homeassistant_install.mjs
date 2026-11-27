@@ -6,10 +6,64 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { configure, guestAddress, targetOrigin, welcomeOrigin } from '../setup_homeassistant/install.mjs';
+import { configureSsh, installXiaomiHome, parsePublicKey, xiaomiBrowserArgs } from '../setup_homeassistant/install-extras.mjs';
 
 const target = 'http://192.0.2.10:8123';
 const addons = ['core_ssh', 'a0d7b954_ssh', 'a0d7b954_nodered'];
 const options = { username: 'new-owner', 'owner-name': 'New Owner', timeout: 1000 };
+
+test('Advanced SSH adds a public key once and starts only the selected add-on', async () => {
+  const encoded = Buffer.concat([Buffer.from([0, 0, 0, 11]), Buffer.from('ssh-ed25519'),
+    Buffer.from([0, 0, 0, 32]), Buffer.alloc(32, 1)]).toString('base64');
+  const key = parsePublicKey(`ssh-ed25519 ${encoded} workstation\n`);
+  assert.equal(key, `ssh-ed25519 ${encoded}`);
+  assert.throws(() => parsePublicKey('-----BEGIN OPENSSH PRIVATE KEY-----'), /public key/);
+  assert.throws(() => parsePublicKey(`ssh-rsa ${encoded}`), /public key/);
+  const app = { state: 'stopped', boot: 'manual', network: { '22/tcp': null },
+    options: { ssh: { username: 'hassio', authorized_keys: [], password: '', allow_tcp_forwarding: false } } };
+  const updates = [];
+  const supervisor = async (endpoint, method = 'get', data) => {
+    if (endpoint === '/addons/core_ssh/info') return { state: 'stopped' };
+    if (endpoint.endsWith('/info')) return app;
+    assert.equal(method, 'post');
+    updates.push(endpoint.split('/').at(-1));
+    if (endpoint.endsWith('/options')) Object.assign(app, data);
+    if (endpoint.endsWith('/start')) app.state = 'started';
+  };
+  await configureSsh(supervisor, key, 'local-user');
+  await configureSsh(supervisor, key, 'local-user');
+  assert.deepEqual(updates, ['options', 'start']);
+  assert.deepEqual(app.options.ssh, { username: 'local-user', authorized_keys: [key], password: '', allow_tcp_forwarding: false });
+  assert.equal(app.network['22/tcp'], 22);
+  assert.equal(app.boot, 'auto');
+});
+
+test('Xiaomi setup installs the catalog repository once and scopes the callback to its browser', async () => {
+  const repository = { full_name: 'XiaoMi/ha_xiaomi_home', id: 'catalog-id', installed: false };
+  const actions = [];
+  const call = async ({ type, repository: repo, repository_id }) => {
+    if (type === 'marketplace/info') return { warning_accepted: false };
+    if (type === 'marketplace/repositories/list') return [repository];
+    if (type === 'marketplace/repository/info') {
+      assert.equal(repository_id, repository.id);
+      return repository;
+    }
+    actions.push(type);
+    if (type === 'marketplace/repository/install') {
+      assert.equal(repo, repository.id);
+      repository.installed = true;
+    }
+  };
+  await installXiaomiHome(call, 1000);
+  await installXiaomiHome(call, 1000);
+  assert.deepEqual(actions, ['marketplace/warning/accept', 'marketplace/repository/install']);
+  const args = xiaomiBrowserArgs('http://192.0.2.10', '/tmp/test-profile');
+  assert.ok(args.includes('--host-resolver-rules=MAP homeassistant.local 192.0.2.10:80'));
+  assert.ok(args.includes('--user-data-dir=/tmp/test-profile'));
+  assert.equal(args.at(-1), 'http://192.0.2.10/config/integrations/add?domain=xiaomi_home');
+  assert.ok(xiaomiBrowserArgs(target, '/tmp/test-profile').includes('--host-resolver-rules=MAP homeassistant.local 192.0.2.10:8123'));
+  assert.throws(() => xiaomiBrowserArgs('http://homeassistant.local', '/tmp/test-profile'), /IPv4/);
+});
 
 test('guest IP belongs to the configured primary NIC', () => {
   const interfaces = [
@@ -137,6 +191,9 @@ test('fresh setup creates the owner and sends the expected Supervisor requests',
       case '/api/onboarding/integration': return Response.json({});
       case '/api/config/config_entries/flow': return Response.json({ flow_id: 'mcp-flow' });
       case '/api/config/config_entries/flow/mcp-flow': return Response.json({ type: 'create_entry' });
+      case '/api/config/config_entries/flow_handlers':
+        assert.equal(request.headers.Authorization, 'Bearer short-token');
+        return Response.json(['xiaomi_home']);
       case '/auth/revoke':
         assert.equal(request.body.get('token'), 'temporary-session');
         return new Response(null, { status: 200 });
@@ -162,6 +219,8 @@ test('fresh setup creates the owner and sends the expected Supervisor requests',
       requests.push(data);
       let result;
       if (data.type === 'config_entries/get') result = [];
+      else if (data.type === 'marketplace/info') result = { warning_accepted: true };
+      else if (data.type === 'marketplace/repositories/list') result = [{ full_name: 'XiaoMi/ha_xiaomi_home', installed: true }];
       else if (data.endpoint === '/store/addons') result = { addons: [{ slug: 'core_ssh' }] };
       else if (data.endpoint === '/store/repositories' && data.method === 'get') result = [];
       else if (data.endpoint === '/addons') result = { addons: [...installed].map((slug) => ({ slug })) };
@@ -173,7 +232,7 @@ test('fresh setup creates the owner and sends the expected Supervisor requests',
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'WebSocket');
   Object.defineProperty(globalThis, 'WebSocket', { configurable: true, value: FakeSocket });
   t.after(() => Object.defineProperty(globalThis, 'WebSocket', descriptor));
-  await configure(target, options, 'sentinel-secret', { time_zone: 'Asia/Shanghai' });
+  await configure(target, { ...options, 'xiaomi-home': true }, 'sentinel-secret', { time_zone: 'Asia/Shanghai' });
   assert.deepEqual([...installed], addons);
   assert.deepEqual(requests[0], { id: 1, type: 'config/core/update', time_zone: 'Asia/Shanghai' });
   const settings = requests.find(({ endpoint }) => endpoint === '/addons/a0d7b954_nodered/options');
