@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 
-from automation_remote import MANAGED, decode_bundle
+from automation_remote import DISPLAY, MANAGED, REQUIRED, decode_bundle
 
 HERE = Path(__file__).resolve().parent
 PRIVATE = HERE / "automations"
@@ -88,17 +88,19 @@ def local_files(*, partial=False):
             raise AutomationError("Expected regular YAML files in the private working copy.")
         if path.is_file():
             files[name] = path.read_bytes().decode("utf-8")
-    if files and len(files) != len(MANAGED) and not partial:
+    if files and not set(REQUIRED).issubset(files) and not partial:
         raise AutomationError("The private working copy is incomplete. Inspect it before running checkout.")
     return files or None
 
 
 def checkout(data, *, replace=False):
     existing = local_files(partial=True) or {}
-    if not replace and any(text != data[name] for name, text in existing.items()):
+    if not replace and any(text != data.get(name) for name, text in existing.items()):
         raise AutomationError("Working YAML differs from the encrypted bundle. Seal it or use checkout --replace.")
-    for name in MANAGED:
-        atomic_write(WORKTREE / name, data[name].encode("utf-8"))
+    for name, text in data.items():
+        atomic_write(WORKTREE / name, text.encode("utf-8"))
+    if DISPLAY in existing and DISPLAY not in data:
+        (WORKTREE / DISPLAY).unlink()
     atomic_write(BASELINE, (fingerprint(data) + "\n").encode())
     print(f"Editable YAML in {WORKTREE}")
 
@@ -119,15 +121,19 @@ def remote(host, operation, data=None):
 
 
 def capture(host, identity, replace):
+    saved = {}
     if BUNDLE.exists():
         if not replace:
             raise AutomationError("A backup already exists. Use capture --replace to adopt the live files.")
         existing = local_files()
-        if existing is not None and existing != canonical(identity):
+        saved = canonical(identity)
+        if existing is not None and existing != saved:
             raise AutomationError("Seal or set aside working edits before importing the live files.")
     elif local_files() is not None:
         raise AutomationError("Set aside the private working copy before importing the live files.")
     data = remote(host, "snapshot")
+    if DISPLAY in saved and DISPLAY not in data:
+        raise AutomationError("The live Mac mini display package is missing. Deploy the bundle before capturing.")
     seal_bundle(data, identity)
     checkout(data, replace=True)
     print(f"Saved encrypted backup from {host} in {BUNDLE}")
@@ -161,7 +167,7 @@ def main():
             raise AutomationError("Run checkout before reviewing local YAML edits.")
         for name in MANAGED:
             sys.stdout.writelines(difflib.unified_diff(
-                saved[name].splitlines(keepends=True), working[name].splitlines(keepends=True),
+                saved.get(name, "").splitlines(keepends=True), working.get(name, "").splitlines(keepends=True),
                 fromfile=f"saved/{name}", tofile=f"working/{name}",
             ))
     elif args.command == "seal":
@@ -172,13 +178,15 @@ def main():
         else:
             if not BASELINE.is_file() or BASELINE.read_text().strip() != fingerprint(saved):
                 raise AutomationError("The encrypted bundle changed since checkout. Set aside and reapply your edits.")
+            if DISPLAY in saved and DISPLAY not in working:
+                raise AutomationError("The Mac mini display package is missing from the working copy.")
             seal_bundle(working, args.identity)
             atomic_write(BASELINE, (fingerprint(working) + "\n").encode())
             print(f"Sealed working edits in {BUNDLE}")
     elif args.command == "status":
         live = remote(args.host, "snapshot")
-        for name in MANAGED:
-            state = "matches" if saved[name] == live[name] else "differs from"
+        for name in (name for name in MANAGED if name in saved or name in live):
+            state = "matches" if saved.get(name) == live.get(name) else "differs from"
             print(f"{name} {state} {args.host}.")
         print("Working YAML has unsealed changes." if working is not None and working != saved
               else "No unsealed working changes.")

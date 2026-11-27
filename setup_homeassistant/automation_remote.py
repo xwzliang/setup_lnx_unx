@@ -14,9 +14,13 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 CONFIG = Path("/config")
+ROOT_CONFIG = "configuration.yaml"
 AUTOMATIONS = "automations.yaml"
 XIAOMI = "packages/xiaomi_home_auto_refresh.yaml"
-MANAGED = (AUTOMATIONS, XIAOMI)
+DISPLAY = "packages/macmini_display.yaml"
+REQUIRED = (AUTOMATIONS, XIAOMI)
+MANAGED = (*REQUIRED, DISPLAY)
+DISPLAY_COMMANDS = {"macmini_connect_imac_display", "macmini_disconnect_imac_display"}
 
 
 class DeployError(Exception):
@@ -25,20 +29,26 @@ class DeployError(Exception):
 
 def decode_bundle(raw):
     data = json.loads(raw)
-    if (not isinstance(data, dict) or set(data) != set(MANAGED)
+    if (not isinstance(data, dict) or set(data) not in (set(REQUIRED), set(MANAGED))
             or not all(isinstance(value, str) for value in data.values())):
-        raise ValueError("Expected the two managed Home Assistant YAML files.")
+        raise ValueError("Expected the managed Home Assistant automation YAML files.")
     return data
+
+
+def read_file(name):
+    path = CONFIG / name
+    if not path.is_symlink():
+        if path.is_file():
+            return path.read_bytes().decode("utf-8")
+        if name == DISPLAY and not path.exists():
+            return None
+    raise DeployError(f"Expected a regular configuration file at {name}.")
 
 
 def read_managed():
     if (CONFIG / "packages").is_symlink():
         raise DeployError("Expected packages to be a real configuration directory.")
-    for name in MANAGED:
-        path = CONFIG / name
-        if path.is_symlink() or not path.is_file():
-            raise DeployError(f"Expected a regular configuration file at {name}.")
-    return {name: (CONFIG / name).read_bytes().decode("utf-8") for name in MANAGED}
+    return {name: value for name in MANAGED if (value := read_file(name)) is not None}
 
 
 def check_layout():
@@ -49,7 +59,7 @@ def check_layout():
         matches = [value for key, value in node.value if key.value == name] if isinstance(node, MappingNode) else []
         return matches[0] if len(matches) == 1 else None
 
-    config = yaml.compose((CONFIG / "configuration.yaml").read_text())
+    config = yaml.compose((CONFIG / ROOT_CONFIG).read_text())
     automation = field(config, "automation")
     packages = field(field(config, "homeassistant"), "packages")
     if not (isinstance(automation, ScalarNode) and automation.tag == "!include"
@@ -62,19 +72,15 @@ def validate_yaml(data):
     import yaml
     from yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
-    def mapping(node):
-        if not isinstance(node, MappingNode) or not all(isinstance(key, ScalarNode) for key, _ in node.value):
-            raise DeployError("Expected a YAML mapping in the managed automation files.")
-        fields = {key.value: value for key, value in node.value}
-        if len(fields) != len(node.value):
-            raise DeployError("Duplicate YAML mapping keys in the managed automation files.")
-        return fields
-
     try:
         package = mapping(yaml.compose(data[XIAOMI]))
         if set(package) != {"automation", "shell_command"}:
             raise DeployError("The Xiaomi package must contain automation and shell_command sections.")
-        mapping(package["shell_command"])
+        xiaomi_commands = mapping(package["shell_command"])
+        if DISPLAY in data:
+            display_commands(data[DISPLAY])
+            if DISPLAY_COMMANDS.intersection(xiaomi_commands):
+                raise DeployError("The Xiaomi and Mac mini display packages define the same shell commands.")
         ids = set()
         for name, entries in [(AUTOMATIONS, yaml.compose(data[AUTOMATIONS])), (XIAOMI, package["automation"])]:
             if not isinstance(entries, SequenceNode):
@@ -90,6 +96,69 @@ def validate_yaml(data):
         line = getattr(error, "problem_mark", None)
         suffix = f" near line {line.line + 1}" if line is not None else ""
         raise DeployError(f"Invalid automation YAML{suffix}.") from None
+
+
+def mapping(node):
+    from yaml.nodes import MappingNode, ScalarNode
+
+    if not isinstance(node, MappingNode) or not all(isinstance(key, ScalarNode) for key, _ in node.value):
+        raise DeployError("Expected a YAML mapping.")
+    fields = {key.value: value for key, value in node.value}
+    if len(fields) != len(node.value):
+        raise DeployError("Duplicate YAML mapping keys.")
+    return fields
+
+
+def display_commands(text):
+    import yaml
+    from yaml.nodes import ScalarNode
+
+    package = mapping(yaml.compose(text))
+    if set(package) != {"shell_command"}:
+        raise DeployError("The Mac mini display package must contain only shell_command.")
+    commands = mapping(package["shell_command"])
+    if set(commands) != DISPLAY_COMMANDS or any(
+            not isinstance(command, ScalarNode) or command.tag != "tag:yaml.org,2002:str"
+            or not command.value.strip() for command in commands.values()):
+        raise DeployError("The Mac mini display package must contain both display commands as strings.")
+    return {name: command.value for name, command in commands.items()}
+
+
+def migrate_display(text, desired):
+    """Remove matching legacy definitions while preserving unrelated configuration."""
+    import yaml
+    from yaml.nodes import MappingNode, ScalarNode
+
+    config = yaml.compose(text)
+    shell = mapping(config).get("shell_command")
+    if shell is None:
+        return text
+    if not isinstance(shell, MappingNode):
+        raise DeployError("Move the legacy display commands out of the shell_command include before deploying.")
+    mapping(shell)
+    legacy = [(key, value) for key, value in shell.value if key.value in DISPLAY_COMMANDS]
+    if not legacy:
+        return text
+    if config.flow_style or shell.flow_style:
+        raise DeployError("Expected block YAML for the legacy display commands.")
+
+    lines = text.splitlines(keepends=True)
+    remove = set()
+    for key, value in legacy:
+        line = key.start_mark.line
+        prefix = " " * key.start_mark.column + key.value + ":"
+        if (not isinstance(value, ScalarNode) or value.tag != "tag:yaml.org,2002:str"
+                or value.value != desired[key.value] or line != value.start_mark.line
+                or line != value.end_mark.line or not lines[line].startswith(prefix)):
+            raise DeployError(f"Review the legacy {key.value} in configuration.yaml before deploying.")
+        remove.add(line)
+    if len(legacy) == len(shell.value):
+        key = next(key for key, _ in config.value if key.value == "shell_command")
+        line = key.start_mark.line
+        if not lines[line].startswith("shell_command:") or line >= min(remove):
+            raise DeployError("Expected a standalone shell_command section in configuration.yaml.")
+        remove.add(line)
+    return "".join(line for index, line in enumerate(lines) if index not in remove)
 
 
 def check_core():
@@ -135,9 +204,23 @@ def replace(path, text, metadata):
             pending.unlink(missing_ok=True)
 
 
+def deployment_changes(data, original):
+    updated = dict(data)
+    if DISPLAY in data:
+        updated[ROOT_CONFIG] = migrate_display(original[ROOT_CONFIG], display_commands(data[DISPLAY]))
+    return {name: value for name, value in updated.items() if value != original.get(name)}
+
+
+def deployment_snapshot(data):
+    original = read_managed()
+    if DISPLAY in data:
+        original[ROOT_CONFIG] = read_file(ROOT_CONFIG)
+    return original
+
+
 def apply(data):
     validate_yaml(data)
-    if read_managed() == data:
+    if not deployment_changes(data, deployment_snapshot(data)):
         return {"status": "unchanged"}
     directory = CONFIG / ".automation-deploy-backups"
     directory.mkdir(mode=0o700, exist_ok=True)
@@ -146,50 +229,57 @@ def apply(data):
     with (directory / "deploy.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         check_layout()
-        original = read_managed()
-        changed = [name for name in MANAGED if data[name] != original[name]]
+        original = deployment_snapshot(data)
+        changed = deployment_changes(data, original)
         if not changed:
             return {"status": "unchanged"}
         backup = Path(tempfile.mkdtemp(prefix="previous-", dir=directory))
         metadata = {}
         for name in changed:
-            metadata[name] = (CONFIG / name).stat()
-            path = backup / name
-            path.parent.mkdir(exist_ok=True)
-            path.write_text(original[name])
+            previous = original.get(name)
+            metadata[name] = (CONFIG / (XIAOMI if previous is None else name)).stat()
+            if previous is not None:
+                path = backup / name
+                path.parent.mkdir(exist_ok=True)
+                path.write_text(previous)
 
-        domains = ["shell_command", "automation"] if XIAOMI in changed else ["automation"]
+        domains = []
+        if {XIAOMI, DISPLAY, ROOT_CONFIG}.intersection(changed):
+            domains.append("shell_command")
+        if {AUTOMATIONS, XIAOMI}.intersection(changed):
+            domains.append("automation")
+        expected = {**original, **changed}
         written = []
         reloading = False
         try:
-            for name in changed:
-                path = CONFIG / name
-                if path.is_symlink() or path.read_bytes() != original[name].encode("utf-8"):
+            for name, value in changed.items():
+                if read_file(name) != original.get(name):
                     raise DeployError(f"{name} changed while deployment was in progress.")
                 written.append(name)
-                replace(path, data[name], metadata[name])
+                replace(CONFIG / name, value, metadata[name])
             check_core()
-            if read_managed() != data:
+            if any(read_file(name) != value for name, value in expected.items()):
                 raise DeployError("The managed files changed during validation.")
             reloading = True
             for domain in domains:
                 reload_domain(domain)
-            if read_managed() != data:
+            if any(read_file(name) != value for name, value in expected.items()):
                 raise DeployError("The managed files changed during reload.")
         except (OSError, UnicodeError, DeployError) as error:
             rollback_failed = False
             for name in reversed(written):
                 path = CONFIG / name
                 try:
-                    if path.is_symlink():
+                    current = read_file(name)
+                    previous = original.get(name)
+                    if current == changed[name]:
+                        if previous is None:
+                            path.unlink()
+                        else:
+                            replace(path, previous, metadata[name])
+                    elif current != previous:
                         rollback_failed = True
-                        continue
-                    current = path.read_bytes().decode("utf-8")
-                    if current == data[name]:
-                        replace(path, original[name], metadata[name])
-                    elif current != original[name]:
-                        rollback_failed = True
-                except (OSError, UnicodeError):
+                except (OSError, UnicodeError, DeployError):
                     rollback_failed = True
             if reloading and not rollback_failed:
                 try:
@@ -201,7 +291,7 @@ def apply(data):
                 raise DeployError(f"Deployment interrupted by an error. Review the private backup at {backup}.") from None
             message = str(error) if isinstance(error, DeployError) else "Could not complete the deployment."
             raise DeployError(f"{message} Previous YAML restored from {backup}.") from None
-    return {"status": "deployed", "changed": changed, "backup": str(backup)}
+    return {"status": "deployed", "changed": list(changed), "backup": str(backup)}
 
 
 def interrupted(_signal, _frame):

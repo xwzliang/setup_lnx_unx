@@ -100,9 +100,9 @@ They use fixtures for Proxmox and Home Assistant.
 Use [manage_automations.py](manage_automations.py) to edit and deploy the
 automation definitions on the `ha` SSH host. The encrypted
 [`automation-config.age`](automations/automation-config.age) is the source
-of truth. It includes `automations.yaml` and the Xiaomi Home auto-refresh
-package. Plaintext YAML is editable in `automations/worktree/`, which Git
-ignores. Keep edits to managed definitions here and use the Home Assistant
+of truth. It includes `automations.yaml`, the Xiaomi Home auto-refresh
+package, and the Mac mini display package. Plaintext YAML is editable in
+`automations/worktree/`, which Git ignores. Keep edits here and use the Home Assistant
 UI to view automations, run them, or change their runtime enabled state.
 
 The workstation needs Python 3.9+, OpenSSH, and [age](https://age-encryption.org/).
@@ -125,7 +125,7 @@ git commit -m 'chore(homeassistant): update automation definitions'
 `diff` prints the private working changes. `seal` encrypts them for Git.
 `deploy` applies that encrypted version to `ha`. It backs up any replaced
 YAML under `/config/.automation-deploy-backups/`, runs `ha core check`, and
-reloads automations. For Xiaomi package edits it also reloads shell commands.
+reloads the affected integrations.
 A validation or reload error triggers rollback. Identical files require no
 reload. Use `status` to compare the encrypted version with `ha`, and `check`
 to validate the current Home Assistant configuration.
@@ -140,6 +140,22 @@ entities and traces.
 The Xiaomi package uses the existing auto-refresh helper and administrator
 token on `ha`. Set that helper up on replacement installs using its
 [package instructions](../packages/xiaomi-home-auto-refresh/README.md).
+
+The Mac mini package defines the two shell commands that connect and
+disconnect the iMac display. On the first deployment, the manager moves any
+matching legacy definitions out of `configuration.yaml` in the same
+transaction. If they differ, reconcile the definitions before deployment.
+On a replacement install, enable `homeassistant.packages` with
+`!include_dir_named packages` and install the Xiaomi helper before deploying
+the bundle. The display commands need an SSH identity readable by Home
+Assistant Core and authorized on the Mac mini. Use the host, identity path,
+and Node project path in the decrypted `packages/macmini_display.yaml`. The
+Mac mini needs `npm` and the `my_appium` checkout with its Python virtual
+environment and `display:connect` and `display:disconnect` scripts. The
+imported commands preserve the old SSH options. To require host key
+verification, provision a trusted
+`known_hosts` file before changing the options in the package.
+
 Scripts, scenes, integrations, and automation runtime state are covered by
 the full Supervisor backup workflow below.
 

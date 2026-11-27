@@ -50,7 +50,7 @@ class AutomationDeploymentTests(unittest.TestCase):
             result = worker.apply(updated)
         self.assertEqual(events, ["check", "shell_command", "automation"])
         self.assertEqual(worker.read_managed(), updated)
-        for name in worker.MANAGED:
+        for name in self.original:
             self.assertEqual((Path(result["backup"]) / name).read_text(), self.original[name])
             self.assertEqual((self.root / name).stat().st_mode & 0o777, 0o640)
 
@@ -84,6 +84,83 @@ class AutomationDeploymentTests(unittest.TestCase):
                 worker.apply(updated)
         reload.assert_not_called()
         self.assertEqual(worker.read_managed()[worker.AUTOMATIONS], concurrent_edit)
+
+
+class DisplayMigrationTests(unittest.TestCase):
+    DEFINITIONS = """\
+shell_command:
+  macmini_connect_imac_display: ssh mac display-connect
+  macmini_disconnect_imac_display: ssh mac display-disconnect
+"""
+    LAYOUT = """\
+homeassistant:
+  packages: !include_dir_named packages
+automation: !include automations.yaml
+"""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        override = patch.object(worker, "CONFIG", self.root)
+        override.start()
+        self.addCleanup(override.stop)
+        self.legacy = {
+            worker.AUTOMATIONS: "[]\n",
+            worker.XIAOMI: "automation: []\nshell_command: {xiaomi_refresh: refresh}\n",
+        }
+        self.bundle = {**self.legacy, worker.DISPLAY: self.DEFINITIONS}
+        for name, text in self.legacy.items():
+            path = self.root / name
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(text)
+        self.config = self.root / worker.ROOT_CONFIG
+        self.display = self.root / worker.DISPLAY
+
+    def test_moves_legacy_commands_and_preserves_the_rest_of_the_file(self):
+        remaining = "  # Existing command\n  turn_display_off: off-display\n"
+        original = self.LAYOUT + self.DEFINITIONS + remaining
+        self.config.write_text(original)
+        with patch.object(worker, "check_core") as validate, patch.object(worker, "reload_domain") as reload:
+            result = worker.apply(self.bundle)
+            self.assertEqual(worker.apply(self.bundle), {"status": "unchanged"})
+        validate.assert_called_once()
+        reload.assert_called_once_with("shell_command")
+        self.assertEqual(self.config.read_text(), self.LAYOUT + "shell_command:\n" + remaining)
+        self.assertEqual(self.display.read_text(), self.DEFINITIONS)
+        self.assertEqual((Path(result["backup"]) / worker.ROOT_CONFIG).read_text(), original)
+
+    def test_failed_check_restores_legacy_config_and_removes_new_package(self):
+        original = self.LAYOUT + self.DEFINITIONS
+        self.config.write_text(original)
+
+        def reject():
+            self.assertEqual(self.config.read_text(), self.LAYOUT)
+            self.assertTrue(self.display.is_file())
+            raise worker.DeployError("Invalid config")
+
+        with patch.object(worker, "check_core", side_effect=reject):
+            with self.assertRaisesRegex(worker.DeployError, "Previous YAML restored"):
+                worker.apply(self.bundle)
+        self.assertEqual(self.config.read_text(), original)
+        self.assertFalse(self.display.exists())
+
+    def test_conflicting_legacy_command_is_preserved(self):
+        original = self.LAYOUT + self.DEFINITIONS.replace("ssh mac", "ssh another-mac", 1)
+        self.config.write_text(original)
+        with self.assertRaisesRegex(worker.DeployError, "Review the legacy"):
+            worker.apply(self.bundle)
+        self.assertEqual(self.config.read_text(), original)
+        self.assertFalse(self.display.exists())
+
+    def test_fresh_install_creates_package_and_legacy_bundle_preserves_it(self):
+        self.config.write_text(self.LAYOUT)
+        with patch.object(worker, "check_core"), patch.object(worker, "reload_domain") as reload:
+            worker.apply(self.bundle)
+            self.assertEqual(worker.apply(self.legacy), {"status": "unchanged"})
+        reload.assert_called_once_with("shell_command")
+        self.assertEqual(self.config.read_text(), self.LAYOUT)
+        self.assertEqual(worker.read_managed(), self.bundle)
 
 
 class AutomationCheckoutTests(unittest.TestCase):
