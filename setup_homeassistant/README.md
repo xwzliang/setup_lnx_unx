@@ -1,4 +1,64 @@
-# Migrate Home Assistant OS
+# Set up Home Assistant OS
+
+## Clean install on Proxmox
+
+Run this from a Mac or Linux workstation with Node.js 22.4 or newer, SSH access
+as root on the x86-64 Proxmox node, and access to its guest network. The installer
+uses `pve`, `local-lvm`, `vmbr0`, 2 vCPUs, 4 GiB RAM, and a 32 GiB boot disk by
+default. Pick an unused VM ID. Proxmox checks it cluster-wide before the download.
+The guest needs DHCP on its primary interface and internet access to initialize
+Home Assistant and install apps.
+
+```sh
+node setup_homeassistant/install.mjs install --vmid 106 --name haos-new
+```
+
+The installer downloads the current stable **PC VM** image on the Proxmox node,
+verifies its published SHA-256 digest, creates and starts the UEFI guest, and
+prints its Home Assistant URL. It prompts privately for the new owner password
+before provisioning. Use `--owner-name` and `--username` to customize the owner,
+or `--password-file` to run unattended with an owner password in a private file.
+Run `--help` for storage, bridge, resource, release, and timeout overrides.
+Use a trusted LAN for first boot and account creation over HTTP.
+
+The clean profile completes normal Home Assistant onboarding, adds the MCP
+Server integration, and installs Terminal & SSH, Advanced SSH & Web Terminal,
+and Node-RED. It starts fresh Node-RED through Home Assistant ingress and
+leaves direct port 1880 disabled. Configure SSH keys on the SSH app you want
+to use. Home Assistant 2026.11+ includes Marketplace, so the clean profile
+uses it in place of the legacy Get HACS app. Install Xiaomi Home from Marketplace
+and authorize it, enter the SwitchBot Cloud credentials, and pair the mobile
+app from the web UI. See [Xiaomi Home](https://github.com/XiaoMi/ha_xiaomi_home),
+[SwitchBot Cloud](https://www.home-assistant.io/integrations/switchbot_cloud/),
+and [Marketplace](https://www.home-assistant.io/integrations/marketplace/).
+
+To set general options during setup, pass `--settings-file` with a private
+JSON object. For example, `{"location_name":"Home","time_zone":"Asia/Shanghai"}`.
+Other supported fields include `latitude`, `longitude`, `country`, and `currency`.
+The clean install starts with the defaults, one owner account, and a fresh
+device registry, history, and Node-RED workspace.
+
+Use `provision` to create the VM and stop at the welcome screen, including when
+you plan to restore a backup.
+
+```sh
+node setup_homeassistant/install.mjs provision --vmid 106 --name haos-new
+```
+
+Use `configure` for an already booted, fresh Home Assistant OS instance.
+After an interrupted configuration, rerun with `--resume` and the same owner
+username and password. It skips installed apps and completed onboarding steps.
+If the guest agent cannot report its address, get the IP from the Proxmox VM
+console and use the same `configure` command.
+
+```sh
+node setup_homeassistant/install.mjs configure --target http://192.168.1.50:8123
+```
+
+Run the installer tests with `node --test tests/test_homeassistant_install.mjs`.
+They use fixtures for Proxmox and Home Assistant.
+
+## Migrate an existing installation
 
 Use `migrate.py` on your Mac or a Linux workstation with Python 3.9 or newer.
 It uses the existing `ha` SSH alias to create a full encrypted Supervisor
@@ -9,7 +69,7 @@ The source SSH add-on must provide Bash, curl, and Supervisor backup access in
 its login environment. The destination uses the Home Assistant welcome screen
 and needs no account, SSH add-on, or API token of its own.
 
-## Back up the running VM
+### Back up the running VM
 
 ```sh
 python3 setup_homeassistant/migrate.py backup
@@ -23,11 +83,11 @@ SHA-256 checksum, and `restore-key.txt`. Keep the key in private storage with a
 recoverable copy and keep these files out of Git. The source keeps a copy in
 its local Home Assistant backup list.
 
-## Set up the replacement
+### Restore on the replacement
 
 1. Boot a fresh [Home Assistant OS installation](https://www.home-assistant.io/installation/)
-   for the replacement hardware. For Proxmox, use the official KVM/Proxmox disk
-   image with UEFI, enough space for the restored data, and a network bridge
+   for the replacement hardware. For Proxmox, use `provision` above with
+   enough space for the restored data, and a network bridge
    with access to the add-on repositories. Use the new guest's IP and leave it
    at the welcome screen. Use the same CPU architecture where possible so the
    add-on images remain available. See the [HAOS virtual-machine images](https://www.home-assistant.io/installation/alternative/).

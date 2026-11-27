@@ -158,10 +158,11 @@ The script checks the active Codex installation and uses the
 It refuses npm/Homebrew installations and prints their respective update commands.
 You can also run `bash packages/codex/scripts/update.sh` directly (executes immediately).
 
-## Migrate Home Assistant OS
+## Set up Home Assistant OS
 
-Create an encrypted backup over SSH and restore it on a fresh Home Assistant
-OS installation. See the [Home Assistant migration guide](setup_homeassistant/README.md).
+Provision and configure a clean Home Assistant OS VM on Proxmox, or move an
+existing installation with an encrypted backup. See the
+[Home Assistant setup guide](setup_homeassistant/README.md).
 
 ## Antigravity CLI and Linux app
 
