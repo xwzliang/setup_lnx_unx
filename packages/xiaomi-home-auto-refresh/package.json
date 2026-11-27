@@ -1,0 +1,43 @@
+{
+  "name": "xiaomi-home-auto-refresh",
+  "description": "Import new Xiaomi Home devices automatically on Home Assistant",
+  "recipes": {
+    "install-refresh": {
+      "action": "configure",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "script": "packages/xiaomi-home-auto-refresh/scripts/xiaomi_home_auto_refresh.py",
+      "interpreter": "python3",
+      "description": "Install a notification-triggered additions-only refresh for Home Assistant",
+      "effects": "Writes an opt-in Home Assistant package and a private token file. The automation previews the Xiaomi options flow before applying additions with zero removals.",
+      "requires": [
+        "python3"
+      ],
+      "parameters": {}
+    }
+  },
+  "defaults": {
+    "configure": {
+      "ubuntu": "install-refresh",
+      "debian": "install-refresh",
+      "macos": "install-refresh"
+    }
+  },
+  "notes": [
+    "Requires an existing Home Assistant configuration with packages enabled and one unfiltered Xiaomi Home entry. See the package README for HAOS deployment and validation."
+  ],
+  "references": [
+    {
+      "path": "packages/xiaomi-home-auto-refresh/scripts/xiaomi_home_auto_refresh.py",
+      "os": [
+        "ubuntu",
+        "debian",
+        "macos"
+      ],
+      "note": "Home Assistant OS setup and device refresh runner."
+    }
+  ]
+}

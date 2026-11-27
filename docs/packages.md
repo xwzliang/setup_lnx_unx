@@ -243,6 +243,7 @@ Package availability depends on the OS release and configured repositories.
 | [webpack-cli](../packages/webpack-cli/package.json) | ubuntu: npm, debian: npm, macos: npm | — | The official CLI of webpack |
 | [wget](../packages/wget/package.json) | macos: brew | — | Wget |
 | [workstation](../packages/workstation/package.json) | — | 6 configure/workflow script(s) | Workstation |
+| [xiaomi-home-auto-refresh](../packages/xiaomi-home-auto-refresh/package.json) | — | 1 configure/workflow script(s) | Import new Xiaomi Home devices automatically on Home Assistant |
 | [xss-lock](../packages/xss-lock/package.json) | ubuntu: apt, debian: apt | — | invoke external screen lock in response to X ScreenSaver events |
 | [xterm](../packages/xterm/package.json) | ubuntu: apt, debian: apt | — | Xterm |
 | [youtube-dl](../packages/youtube-dl/package.json) | macos: brew | — | Youtube dl |
