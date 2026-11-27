@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-path = Path(__file__).resolve().parents[1] / "packages/xiaomi-home-auto-refresh/scripts/xiaomi_home_auto_refresh.py"
+path = Path(__file__).resolve().parents[1] / "setup_homeassistant/xiaomi_home_auto_refresh.py"
 spec = importlib.util.spec_from_file_location("xiaomi_refresh", path)
 refresh = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(refresh)
@@ -114,12 +114,19 @@ class XiaomiRefreshTests(unittest.TestCase):
         with patch("sys.stdin") as stdin:
             stdin.read.return_value = "fixture-token"
             refresh.install(self.path, token_stdin=True)
-        refresh.install(self.path, token_stdin=False)
+        with patch.object(refresh.getpass, "getpass") as prompt:
+            refresh.install(self.path, token_stdin=False)
+        prompt.assert_not_called()
         raw = (self.path / "packages/xiaomi_home_auto_refresh.yaml").read_text()
         pattern = json.loads(re.search(r"^      addition_pattern: (.+)$", raw, re.M)[1])
         self.assertRegex("\n**12 个新增设备**: \n- device", pattern)
         self.assertNotRegex("\n**3 个设备离线**: \n- device", pattern)
         self.assertIn("xiaomi_home-1234-cn-dev_list_changed", raw)
         self.assertNotIn("fixture-token", raw)
-        self.assertEqual((self.path / refresh.NAME / "token").stat().st_mode & 0o777, 0o600)
+        token = self.path / ".home-assistant" / "token"
+        self.assertEqual(token.read_text(), "fixture-token\n")
+        self.assertEqual(token.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(token.parent.stat().st_mode & 0o777, 0o700)
+        self.assertFalse((self.path / refresh.NAME / "token").exists())
+        self.assertEqual((self.path / refresh.NAME / "refresh.py").read_bytes(), path.read_bytes())
         self.assertEqual((self.path / "configuration.yaml").read_text(), config)

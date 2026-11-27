@@ -18,16 +18,17 @@ so its entities may briefly reconnect.
 ## Install on Home Assistant OS
 
 Home Assistant must already have `packages: !include_dir_named packages` under
-`homeassistant:` in its configuration. Create a long-lived access token in the
-Home Assistant profile of an administrator account. The installer prompts for it
-and stores it only in `/config/xiaomi_home_auto_refresh/token` (mode 0600). Use a
-separate token for this job so it can be revoked independently. Do not put the
-token in Git, YAML, shell arguments, or the command history.
+`homeassistant:` in its configuration. The installer uses the shared Home
+Assistant administrator credential in `/config/.home-assistant/token`
+(mode 0600). If the file is absent, create a long-lived access token in an
+administrator's Home Assistant profile and enter it at the installer's hidden
+prompt. Keep the token out of Git, YAML, shell arguments, and command history.
 
-From your checkout, where `ha` is your Home Assistant SSH alias:
+Run these commands from your checkout with `ha` set up as your Home Assistant
+SSH alias.
 
 ```sh
-scp packages/xiaomi-home-auto-refresh/scripts/xiaomi_home_auto_refresh.py ha:/tmp/
+scp setup_homeassistant/xiaomi_home_auto_refresh.py ha:/tmp/
 ssh -t ha 'sudo -n python3 /tmp/xiaomi_home_auto_refresh.py install'
 ```
 

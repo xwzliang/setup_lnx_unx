@@ -12,7 +12,7 @@
       "script": "packages/xiaomi-home-auto-refresh/scripts/xiaomi_home_auto_refresh.py",
       "interpreter": "python3",
       "description": "Install a notification-triggered additions-only refresh for Home Assistant",
-      "effects": "Writes an opt-in Home Assistant package and a private token file. The automation previews the Xiaomi options flow before applying additions with zero removals.",
+      "effects": "Writes an opt-in Home Assistant package and uses a shared administrator token file. The automation previews the Xiaomi options flow before applying additions with zero removals.",
       "requires": [
         "python3"
       ],
@@ -37,7 +37,7 @@
         "debian",
         "macos"
       ],
-      "note": "Home Assistant OS setup and device refresh runner."
+      "note": "Catalog launcher for setup_homeassistant/xiaomi_home_auto_refresh.py."
     }
   ]
 }
