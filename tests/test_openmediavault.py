@@ -28,6 +28,12 @@ guest = load("configure_guest")
 
 
 class OpenMediaVaultTests(unittest.TestCase):
+    def test_hardware_override_keeps_the_recorded_sata_slots_and_boot_order(self):
+        self.assertEqual(install.vm_hardware(None)["boot_slot"], "scsi0")
+        hardware = {"boot_slot": "sata0", "boot_order": "sata0;ide2;net0", "disk_options": ""}
+        expected = {**install.VM_HARDWARE, **hardware}
+        self.assertEqual(install.vm_hardware(json.dumps(hardware)), expected)
+
     def test_cloud_seed_contains_the_existing_samba_fix(self):
         args = SimpleNamespace(vmid=106, user="omvadmin", name="omv-new", data_gb=32,
                                ssh_public_key=None, timezone="Asia/Singapore")

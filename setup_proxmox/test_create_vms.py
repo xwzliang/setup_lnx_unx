@@ -24,7 +24,15 @@ class VmProfileTests(unittest.TestCase):
             (100, "ubuntu"), (101, "windows"), (102, "omv"),
             (103, "mac"), (104, "daily-ubuntu"), (105, "ha"),
         ])
-        self.assertEqual(plan[0]["settings"]["cores"], 168)
+        self.assertEqual([(vm["settings"]["cores"], vm["settings"]["memory"], vm["settings"]["cpu"],
+                           vm["settings"]["sockets"], vm["settings"]["numa"]) for vm in plan], [
+            (168, 512000, "host", 1, 0),
+            (64, 204800, "host", 1, 0),
+            (4, 16384, "x86-64-v2-AES", 1, 0),
+            (4, 8192, "host", 1, 0),
+            (32, 40960, "host", 1, 0),
+            (2, 4096, "x86-64-v2-AES", 1, 0),
+        ])
         self.assertEqual(plan[0]["disk"]["size"], 2548)
         self.assertEqual(plan[4]["media"]["ide2"]["image"], "ubuntu")
         self.assertTrue(self.catalog["media"][plan[5]["disk"]["image"]]["path"].endswith("18.4.qcow2.xz"))

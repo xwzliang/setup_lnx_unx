@@ -77,8 +77,16 @@ class FirstBootVmTests(unittest.TestCase):
             if command[2] == "install":
                 self.assertIn("--local-proxmox", command)
                 self.assertEqual(command[command.index("--provision-tag") + 1], self.job["tag"])
-                configs[102] = {"name": "omv", "tags": f"setup-omv;{self.job['tag']}", "scsi0": "disk",
-                                "ide2": "seed", "scsi1": "data"}
+                self.assertEqual(command[command.index("--cores") + 1], "4")
+                self.assertEqual(command[command.index("--memory") + 1], "16384")
+                self.assertEqual(command[command.index("--boot-gb") + 1], "32")
+                self.assertEqual(json.loads(command[command.index("--vm-hardware") + 1]), {
+                    "settings": {"sockets": 1, "numa": 0, "ostype": "l26", "scsihw": "virtio-scsi-single",
+                                 "cpu": "x86-64-v2-AES", "startup": "order=1"},
+                    "boot_slot": "sata0", "boot_order": "sata0;ide2;net0", "disk_options": "", "nic": "virtio",
+                })
+                configs[102] = {"name": "omv", "tags": f"setup-omv;{self.job['tag']}", "sata0": "disk",
+                                "ide2": "seed", "sata1": "data"}
             else:
                 self.assertIn("--resume-if-needed", command)
                 password = command[command.index("--password-file") + 1]

@@ -31,6 +31,11 @@ IMAGE = "debian-13-generic-amd64.qcow2"
 MEDIA = Path("/Volumes/DeepLearn/OS/omv")
 MIRRORS = ("https://cloud.debian.org/images/cloud/trixie/latest",
            "https://cdimage.debian.org/cdimage/cloud/trixie/latest")
+VM_HARDWARE = {
+    "settings": {"cpu": "x86-64-v2-AES", "ostype": "l26", "scsihw": "virtio-scsi-single", "startup": "order=1"},
+    "boot_slot": "scsi0", "boot_order": "scsi0", "disk_options": "discard=on,iothread=1", "nic": "virtio",
+}
+HARDWARE_OPTIONS = {"cpu", "ostype", "scsihw", "startup", "sockets", "numa", "machine", "bios", "vga", "balloon"}
 
 
 class InstallError(Exception):
@@ -163,7 +168,36 @@ def add_text(archive, name, text):
     archive.addfile(item, source)
 
 
+def vm_hardware(raw):
+    overrides = json.loads(raw) if raw is not None else {}
+    if not isinstance(overrides, dict) or overrides.keys() - VM_HARDWARE.keys():
+        raise InstallError("Invalid OpenMediaVault VM hardware fields.")
+    hardware = {**VM_HARDWARE, **overrides}
+    settings = hardware["settings"]
+    if not isinstance(settings, dict) or settings.keys() - HARDWARE_OPTIONS or any(
+            type(value) not in (int, str) or not re.fullmatch(r"[a-zA-Z0-9_.,=+:-]+", str(value))
+            for value in settings.values()):
+        raise InstallError("Invalid OpenMediaVault Proxmox hardware setting.")
+    if settings.get("bios", "seabios") != "seabios":
+        raise InstallError("The OpenMediaVault installer requires SeaBIOS.")
+    slot = hardware["boot_slot"]
+    if slot not in ("scsi0", "sata0"):
+        raise InstallError("The OpenMediaVault boot slot must be scsi0 or sata0.")
+    order = hardware["boot_order"]
+    if not isinstance(order, str) or order.split(";")[0] != slot or set(order.split(";")) - {slot, "ide2", "net0"}:
+        raise InstallError("Invalid OpenMediaVault VM boot order.")
+    options = hardware["disk_options"]
+    if not isinstance(options, str) or (options and any(
+            not re.fullmatch(r"(?:cache|discard|iothread|ssd)=[a-zA-Z0-9_-]+", option)
+            for option in options.split(","))):
+        raise InstallError("Invalid OpenMediaVault boot disk options.")
+    if hardware["nic"] not in ("virtio", "e1000", "vmxnet3", "rtl8139"):
+        raise InstallError("Invalid OpenMediaVault network adapter model.")
+    return hardware
+
+
 def provision(args):
+    hardware = vm_hardware(getattr(args, "vm_hardware", None))
     seed = cloud_config(args)
     remote(args.proxmox, "pvesh", "get", "/cluster/nextid", "--vmid", str(args.vmid))
     members = remote(args.proxmox, "pvesh", "get", "/cluster/resources", "--type", "vm", "--output-format", "json")
@@ -175,10 +209,12 @@ def provision(args):
     directory = args.image_dir or (MEDIA if MEDIA.is_dir() else Path.home() / ".cache/setup-openmediavault/images")
     image, checksum = cached_image(directory)
     script = (HERE / "provision.sh").read_text()
+    qm_options = [item for key, value in hardware["settings"].items() for item in (f"--{key}", str(value))]
     command = ssh_command(args.proxmox, "bash", "-c", script, "setup-omv", str(args.vmid), args.name,
                           args.storage, args.iso_storage, args.bridge, str(args.memory), str(args.cores),
                           str(args.boot_gb), str(args.data_gb), "0" if args.no_onboot else "1",
-                          getattr(args, "provision_tag", None) or "")
+                          getattr(args, "provision_tag", None) or "", hardware["boot_slot"],
+                          hardware["boot_order"], hardware["disk_options"], hardware["nic"], *qm_options)
     print("Transferring the verified image and cloud-init seed to Proxmox.", flush=True)
     with subprocess.Popen(command, stdin=subprocess.PIPE) as process:
         try:
@@ -313,6 +349,7 @@ def arguments():
             command.add_argument("--ssh-public-key", type=Path)
             command.add_argument("--no-onboot", action="store_true")
             command.add_argument("--provision-tag", help="add a VM ownership tag")
+            command.add_argument("--vm-hardware", help="JSON virtual hardware from the Proxmox VM profile")
     args = parser.parse_args()
     if args.local_proxmox:
         args.proxmox = None

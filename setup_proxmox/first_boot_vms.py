@@ -128,23 +128,28 @@ def configure_ha(target, vm, config, job, directory):
 
 
 def configure_omv(target, vm, config, job, directory, args):
+    settings = vm["settings"]
+    disk = vm["disk"]
     pm_args = ["--local-proxmox", "--vmid", str(vm["vmid"]), "--credentials-file", directory / "omv-credentials.txt"]
     command = [sys.executable, directory / "setup_openmediavault/install.py"]
     if config is None:
-        settings = vm["settings"]
+        hardware = {
+            "settings": {name: value for name, value in settings.items() if name not in {"cores", "memory", "onboot"}},
+            "boot_slot": disk["slot"], "boot_order": vm["boot"], "disk_options": disk.get("options", ""),
+            "nic": vm["nic"].split(",", 1)[0],
+        }
         more = [] if settings["onboot"] else ["--no-onboot"]
         run(*command, "install", *pm_args, "--name", vm["name"], "--storage", args.storage,
             "--iso-storage", args.iso_storage, "--bridge", args.bridge, "--cores", str(settings["cores"]),
-            "--memory", str(settings["memory"]), "--boot-gb", str(vm["disk"]["size"]),
+            "--memory", str(settings["memory"]), "--boot-gb", str(disk["size"]),
             "--data-gb", str(job["omv_data_gb"]), "--ssh-public-key", directory / "ssh.pub",
-            "--provision-tag", job["tag"], *more)
+            "--provision-tag", job["tag"], "--vm-hardware", json.dumps(hardware), *more)
         return
-    required = {"scsi0", "ide2", *({"scsi1"} if job["omv_data_gb"] else set())}
-    if "setup-omv" not in re.split(r"[;,]", config.get("tags", "")) or required - config.keys():
+    data_slot = disk["slot"].removesuffix("0") + "1"
+    if "setup-omv" not in re.split(r"[;,]", config.get("tags", "")) or (job["omv_data_gb"] and data_slot not in config):
         raise create_vms.CreateError(f"VM {vm['vmid']} has incomplete OpenMediaVault provisioning. Inspect its config.")
-    if config.get("boot") != "order=scsi0":
-        target.run("qm", "set", vm["vmid"], "--boot", "order=scsi0")
-    onboot = str(vm["settings"]["onboot"])
+    ensure_boot_order(target, vm, config)
+    onboot = str(settings["onboot"])
     if config.get("onboot", "0") != onboot:
         target.run("qm", "set", vm["vmid"], "--onboot", onboot)
     ensure_started(target, vm["vmid"])

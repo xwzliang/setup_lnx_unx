@@ -92,8 +92,10 @@ the unattended ISO. This example enables all six recorded profiles.
 
 Build and boot the ISO as above. The first-boot hook installs a persistent
 systemd job containing the setup scripts and VM catalog. It runs on the
-new node once networking and Proxmox are ready. Choose specific profiles
-with `"profiles": ["ha", "omv"]` to omit the other guests.
+new node once networking and Proxmox are ready. It uses the recorded
+memory, CPU topology and model, firmware, and virtual disk settings
+without scaling them to the host. Choose specific profiles with
+`"profiles": ["ha", "omv"]` to omit the other guests.
 
 The `media_url` root serves files at the relative paths in
 [`vm_profiles.json`](vm_profiles.json). For example, it can serve the
@@ -114,10 +116,11 @@ requires the private QEMU settings file described below. Use
   browser. Set `"xiaomi_home": false` to skip the app and
   `"trusted_web_login": false` to keep the Home Assistant LAN login prompt.
 - `omv` uses the fresh OpenMediaVault 8 installer with the original VM
-  ID, name, CPU count, memory, boot size, and autostart policy. It creates
-  the mergerfs pool and authenticated SMB share on a new data disk and
-  applies the Samba large-copy memory fix. Set `"omv_data_gb"` to change
-  the default 32 GiB data disk or use `0` to omit it.
+  hardware settings and SATA boot order. It provisions the system disk
+  on `sata0` and places a new data disk on `sata1`. It creates the mergerfs
+  pool and authenticated SMB share and applies the Samba large-copy
+  memory fix. Set `"omv_data_gb"` to change the default 32 GiB data disk
+  or use `0` to omit it.
 
 Both appliance installers use the build workstation's public key or the
 key passed with `--ssh-public-key`. On the Proxmox node, their generated

@@ -3,6 +3,8 @@
 set -euo pipefail
 vmid=$1 name=$2 storage=$3 iso_storage=$4 bridge=$5 memory=$6 cores=$7 boot_gb=$8 data_gb=$9 onboot=${10}
 provision_tag=${11:-}
+boot_slot=${12} boot_order=${13} disk_options=${14} nic=${15}
+shift 15
 
 if [[ $(id -u) != 0 || $(uname -m) != x86_64 ]]; then
     echo 'Run as root on an x86-64 Proxmox node.' >&2
@@ -57,18 +59,21 @@ mkdir -p -- "$(dirname "$seed_path")"
 genisoimage -quiet -volid cidata -joliet -rock -output "$work/seed.iso" "$work/user-data" "$work/meta-data"
 # The atomic create fails if the VMID was claimed while the image downloaded.
 qm create "$vmid" --name "$name" --description "Created by setup_openmediavault" --tags "setup-omv${provision_tag:+;$provision_tag}" \
-    --memory "$memory" --cores "$cores" --cpu x86-64-v2-AES --ostype l26 \
-    --agent enabled=1 --scsihw virtio-scsi-single --net0 "virtio,bridge=$bridge,firewall=1" \
-    --onboot 0 --startup order=1
+    --memory "$memory" --cores "$cores" --agent enabled=1 \
+    --net0 "$nic,bridge=$bridge,firewall=1" --onboot 0 "$@"
 install -m 0644 -- "$work/seed.iso" "$seed_path"
 qm set "$vmid" --ide2 "$seed,media=cdrom" \
-    --scsi0 "$storage:0,import-from=$work/image.qcow2,discard=on,iothread=1"
+    "--$boot_slot" "$storage:0,import-from=$work/image.qcow2${disk_options:+,$disk_options}"
 if (( boot_gb * 1073741824 > image_bytes )); then
-    qm disk resize "$vmid" scsi0 "${boot_gb}G"
+    qm disk resize "$vmid" "$boot_slot" "${boot_gb}G"
 fi
 if (( data_gb > 0 )); then
-    qm set "$vmid" --scsi1 "$storage:$data_gb,serial=omvdata$vmid,discard=on,iothread=1"
+    data_options=discard=on
+    if [[ $boot_slot == scsi0 ]]; then
+        data_options+=,iothread=1
+    fi
+    qm set "$vmid" "--${boot_slot%0}1" "$storage:$data_gb,serial=omvdata$vmid,$data_options"
 fi
-qm set "$vmid" --boot order=scsi0
+qm set "$vmid" --boot "order=$boot_order"
 qm start "$vmid"
 qm set "$vmid" --onboot "$onboot"
