@@ -14,6 +14,8 @@ Python 3.9+ and only its standard library; no dependency installation is needed.
 Nothing runs without `--apply`. Browse the [package index](docs/packages.md) or
 use `./setup show NAME` to see every method, recipe, parameter, and source path.
 
+For a new hypervisor, see [unattended Proxmox VE installation](setup_proxmox/README.md).
+
 ## Install and configure together or separately
 
 | Task | Command |

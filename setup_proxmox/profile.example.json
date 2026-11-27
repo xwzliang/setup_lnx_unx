@@ -1,0 +1,19 @@
+{
+  "fqdn": "pve-new.home.arpa",
+  "email": "admin@example.net",
+  "country": "cn",
+  "keyboard": "en-us",
+  "timezone": "Asia/Shanghai",
+  "network": {
+    "cidr": "192.168.5.102/24",
+    "gateway": "192.168.5.1",
+    "dns": "192.168.5.1",
+    "mac": "52:54:00:12:34:56"
+  },
+  "disk": {
+    "property": "ID_SERIAL_SHORT",
+    "id": "REPLACE-WITH-EXACT-DISK-SERIAL"
+  },
+  "repository": "no-subscription",
+  "upgrade": false
+}
