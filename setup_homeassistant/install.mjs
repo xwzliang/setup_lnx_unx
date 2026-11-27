@@ -14,6 +14,13 @@ const NODE_RED = 'a0d7b954_nodered';
 const COMMUNITY_REPOSITORY = 'https://github.com/hassio-addons/repository';
 const ONBOARDING = '/api/onboarding';
 const FLOW = '/api/config/config_entries/flow';
+const DEFAULT_GENERAL_SETTINGS = {
+  country: 'CN',
+  currency: 'CNY',
+  language: 'en',
+  time_zone: 'Asia/Shanghai',
+  unit_system: 'metric',
+};
 const HELP = `Install Home Assistant OS from scratch on Proxmox or configure a fresh HAOS host.
 
   install.mjs install --vmid ID [Proxmox options] [Home Assistant options]
@@ -34,7 +41,7 @@ Home Assistant options
   --owner-name NAME      Owner display name (default Home Administrator)
   --username NAME        Home Assistant owner username (default admin)
   --password-file PATH   Local file holding only the owner password
-  --settings-file PATH   Optional JSON with Home Assistant general settings
+  --settings-file PATH   Optional JSON that overrides the general defaults
   --ssh-public-key PATH  Override the OpenSSH public key discovered on this machine
   --ssh-user NAME        Advanced SSH login name (default: its configured user)
   --no-ssh               Skip Advanced SSH configuration
@@ -383,9 +390,11 @@ export async function configure(origin, options, password, settings, guest) {
   try {
     const info = await request(origin, '/api/config', { token });
     if (!info.components?.includes('hassio')) throw new Error('Supervisor is unavailable on the target.');
+    const defaults = options.resume && info.country ? {} : DEFAULT_GENERAL_SETTINGS;
+    const general = { ...defaults, ...settings };
     await withSocket(origin, token, options.timeout, async (call) => {
       if (guest) owner = await call({ type: 'auth/current_user' });
-      if (settings) await call({ ...settings, type: 'config/core/update' });
+      if (Object.keys(general).length) await call({ ...general, type: 'config/core/update' });
       if (pending('core_config')) await post(`${ONBOARDING}/core_config`);
       if (pending('analytics')) await post(`${ONBOARDING}/analytics`);
       if (pending('integration')) {

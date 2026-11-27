@@ -178,13 +178,15 @@ test('fresh setup creates the owner and sends the expected Supervisor requests',
   const mutations = [];
   const installed = new Set();
   const steps = ['user', 'core_config', 'analytics', 'integration'];
+  let onboarded = false;
+  let country = null;
   t.mock.method(globalThis, 'fetch', async (url, request) => {
     assert.equal(new URL(url).origin, target);
     assert.equal(request.redirect, 'error');
     const path = new URL(url).pathname;
     if (request.method === 'POST') mutations.push(path);
     switch (path) {
-      case '/api/onboarding': return Response.json(steps.map((step) => ({ step, done: false })));
+      case '/api/onboarding': return Response.json(steps.map((step) => ({ step, done: onboarded })));
       case '/api/onboarding/installation_type': return Response.json({ installation_type: 'Home Assistant OS' });
       case '/api/onboarding/users': {
         const data = JSON.parse(request.body);
@@ -193,12 +195,14 @@ test('fresh setup creates the owner and sends the expected Supervisor requests',
         assert.equal(data.client_id, `${target}/`);
         return Response.json({ auth_code: 'owner-code' });
       }
+      case '/auth/login_flow': return Response.json({ flow_id: 'owner-flow' });
+      case '/auth/login_flow/owner-flow': return Response.json({ result: 'owner-code' });
       case '/auth/token':
         assert.equal(request.body.get('code'), 'owner-code');
         return Response.json({ access_token: 'short-token', refresh_token: 'temporary-session' });
       case '/api/config':
         assert.equal(request.headers.Authorization, 'Bearer short-token');
-        return Response.json({ components: ['hassio'] });
+        return Response.json({ components: ['hassio'], country });
       case '/api/onboarding/core_config':
       case '/api/onboarding/analytics':
       case '/api/onboarding/integration': return Response.json({});
@@ -231,23 +235,29 @@ test('fresh setup creates the owner and sends the expected Supervisor requests',
       }
       requests.push(data);
       let result;
-      if (data.type === 'config_entries/get') result = [];
+      if (data.type === 'config_entries/get') result = onboarded ? [{ entry_id: 'mcp-entry' }] : [];
       else if (data.type === 'marketplace/info') result = { warning_accepted: true };
       else if (data.type === 'marketplace/repositories/list') result = [{ full_name: 'XiaoMi/ha_xiaomi_home', installed: true }];
       else if (data.endpoint === '/store/addons') result = { addons: [{ slug: 'core_ssh' }] };
       else if (data.endpoint === '/store/repositories' && data.method === 'get') result = [];
       else if (data.endpoint === '/addons') result = { addons: [...installed].map((slug) => ({ slug })) };
       else if (data.endpoint?.endsWith('/install')) installed.add(data.endpoint.split('/')[2]);
-      else if (data.endpoint === '/addons/a0d7b954_nodered/info') result = { state: 'stopped', options: { ssl: true }, network: { '80/tcp': 1880 } };
+      else if (data.endpoint === '/addons/a0d7b954_nodered/info') {
+        result = onboarded ? { state: 'started' } : { state: 'stopped', options: { ssl: true }, network: { '80/tcp': 1880 } };
+      }
       this.reply({ id: data.id, success: true, result });
     }
   }
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'WebSocket');
   Object.defineProperty(globalThis, 'WebSocket', { configurable: true, value: FakeSocket });
   t.after(() => Object.defineProperty(globalThis, 'WebSocket', descriptor));
-  await configure(target, { ...options, 'xiaomi-home': true }, 'sentinel-secret', { time_zone: 'Asia/Shanghai' });
+  await configure(target, { ...options, 'xiaomi-home': true }, 'sentinel-secret');
   assert.deepEqual([...installed], addons);
-  assert.deepEqual(requests[0], { id: 1, type: 'config/core/update', time_zone: 'Asia/Shanghai' });
+  const coreUpdate = {
+    id: 1, type: 'config/core/update',
+    country: 'CN', currency: 'CNY', language: 'en', time_zone: 'Asia/Shanghai', unit_system: 'metric',
+  };
+  assert.deepEqual(requests[0], coreUpdate);
   const settings = requests.find(({ endpoint }) => endpoint === '/addons/a0d7b954_nodered/options');
   const start = requests.find(({ endpoint }) => endpoint === '/addons/a0d7b954_nodered/start');
   assert.equal(settings.data.network['80/tcp'], null);
@@ -257,4 +267,21 @@ test('fresh setup creates the owner and sends the expected Supervisor requests',
     '/api/onboarding/users', '/auth/token', '/api/onboarding/core_config', '/api/onboarding/analytics',
     '/api/onboarding/integration', '/api/config/config_entries/flow', '/api/config/config_entries/flow/mcp-flow', '/auth/revoke',
   ]);
+
+  onboarded = true;
+  const resume = { ...options, resume: true };
+  await t.test('resume applies defaults when the country is missing', async () => {
+    requests.length = 0;
+    await configure(target, resume, 'sentinel-secret', { location_name: 'Home' });
+    assert.deepEqual(requests[0], { ...coreUpdate, location_name: 'Home' });
+  });
+  await t.test('resume preserves existing settings and accepts explicit overrides', async () => {
+    country = 'SG';
+    requests.length = 0;
+    await configure(target, resume, 'sentinel-secret');
+    assert.ok(!requests.some(({ type }) => type === 'config/core/update'));
+    requests.length = 0;
+    await configure(target, resume, 'sentinel-secret', { time_zone: 'Asia/Singapore' });
+    assert.deepEqual(requests[0], { id: 1, type: 'config/core/update', time_zone: 'Asia/Singapore' });
+  });
 });

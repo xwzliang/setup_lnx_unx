@@ -33,10 +33,14 @@ Enter the SwitchBot Cloud credentials and pair the mobile app from the web UI.
 See [SwitchBot Cloud](https://www.home-assistant.io/integrations/switchbot_cloud/)
 and [Marketplace](https://www.home-assistant.io/integrations/marketplace/).
 
-To set general options during setup, pass `--settings-file` with a private
-JSON object. For example, `{"location_name":"Home","time_zone":"Asia/Shanghai"}`.
-Other supported fields include `latitude`, `longitude`, `country`, and `currency`.
-The clean install starts with the defaults, one owner account, and a fresh
+The clean installer sets the country to China (`CN`), the currency to CNY,
+the time zone to `Asia/Shanghai`, the language to English, and the units to
+metric. These defaults work on a fresh machine without an existing Home
+Assistant server. Override individual defaults with `--settings-file`. For
+example, use a JSON file containing
+`{"country":"SG","currency":"SGD","time_zone":"Asia/Singapore"}`.
+The file can also set the home location using `latitude`, `longitude`, and
+`location_name`. The clean install starts with one owner account and a fresh
 device registry, history, and Node-RED workspace.
 
 Use `provision` to create the VM and stop at the welcome screen, including when
@@ -49,6 +53,8 @@ node setup_homeassistant/install.mjs provision --vmid 106 --name haos-new
 Use `configure` for an already booted, fresh Home Assistant OS instance.
 After an interrupted configuration, rerun with `--resume` and the same owner
 username and password. It skips installed apps and completed onboarding steps.
+If the country is still unset, it applies the regional defaults. For a VM that
+already has a country, use `--settings-file` to change general settings.
 If the guest agent cannot report its address, get the IP from the Proxmox VM
 console and use the same `configure` command with the URL shown there. New HAOS
 installations can use port 80, while older ones can use port 8123.
