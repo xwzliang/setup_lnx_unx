@@ -59,7 +59,8 @@ class FirstBootVmTests(unittest.TestCase):
         hardware = self.directory / "vm-hardware.json"
         hardware.write_text(json.dumps({"omv": {"sata1": DATA_MAPPING}}))
         hardware.chmod(0o600)
-        job = {**self.job, "profiles": ["omv"]}
+        shares = [{"name": "omv", "path": "."}, {"name": "Media", "path": "Media", "readonly": True}]
+        job = {**self.job, **install.load_vm_setup({"profiles": ["omv"], "omv_shares": shares})}
         config = {}
         running = False
         configured = False
@@ -110,8 +111,13 @@ class FirstBootVmTests(unittest.TestCase):
                               boot="order=sata0;ide2;net0", onboot="0")
             else:
                 self.assertTrue(running)
-                self.assertNotIn("sata1", config)
-                configured = True
+                if "--reuse-sata1" in command:
+                    self.assertTrue(configured)
+                    self.assertIn("sata1", config)
+                    self.assertEqual(json.loads(command[command.index("--existing-shares") + 1]), shares)
+                else:
+                    self.assertNotIn("sata1", config)
+                    configured = True
 
         target.run.side_effect = qemu
         with patch.object(first_boot, "run", side_effect=guest_setup) as setup:
@@ -119,7 +125,7 @@ class FirstBootVmTests(unittest.TestCase):
                 first_boot.provision(self.directory, target, self.catalog, job)
             self.assertFalse((self.directory / "vm-102-complete").exists())
             first_boot.provision(self.directory, target, self.catalog, job)
-        self.assertEqual([entry.args[2] for entry in setup.call_args_list], ["install", "configure"])
+        self.assertEqual([entry.args[2] for entry in setup.call_args_list], ["install", "configure", "configure"])
         self.assertEqual(target.run.call_args_list.count(call("qm", "start", 102)), 3)
         self.assertEqual(target.run.call_args_list.count(call("qm", "shutdown", 102, "--timeout", "120")), 1)
         updates = [entry.args for entry in target.run.call_args_list if entry.args[:2] == ("qm", "set")]

@@ -319,8 +319,11 @@ def configure_omv(target, vm, config, job, directory, args, saved_disk=None):
     onboot = str(settings["onboot"])
     if config.get("onboot", "0") != onboot:
         target.run("qm", "set", vmid, "--onboot", onboot)
-    if partition is None:
-        run(*configure)
+    if partition is not None:
+        configure.append("--reuse-sata1")
+        if "omv_shares" in job:
+            configure.extend(("--existing-shares", json.dumps(job["omv_shares"])))
+    run(*configure)
 
 
 def provision(directory, target, catalog, job):

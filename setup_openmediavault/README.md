@@ -44,8 +44,40 @@ and share.
 The installer applies the existing
 [Samba memory fix](../packages/samba/scripts/linux/setup_omv_smb_aio.py) and
 verifies the generated share has `aio write size = 0`. It also checks that
-Samba accepts an authenticated connection to the share. The original
-NAS files and attached physical disk are outside this fresh-install flow.
+Samba accepts an authenticated connection to the share.
+
+## Reuse the filesystem on sata1
+
+For an installer-created VM provisioned with `--data-gb 0`, attach the
+physical partition to `sata1` by its PARTUUID. Run this after the VM has
+started with the disk attached.
+
+```sh
+python3 setup_openmediavault/install.py configure --vmid 102 --reuse-sata1
+```
+
+The installer reads the UUID of the existing ext4 filesystem from the
+attached partition, checks that it is clean, and persists the mount in
+OMV. It registers existing directories as Samba shares while preserving
+their contents, ownership, modes, and ACLs. Each share uses the installer
+SMB account and retains the disk's existing Unix permissions. The SMB
+credentials are added to the installation file when needed.
+
+By default, the share named `omv` uses the existing `omv` directory.
+Pass `--existing-shares` with the saved layout to use other share names
+or paths. Paths are relative to the filesystem root. Use `"."` explicitly
+if a share covered the whole filesystem. The optional `readonly` and
+`browseable` flags default to `false` and `true`.
+
+```sh
+python3 setup_openmediavault/install.py configure --vmid 102 --reuse-sata1 \
+  --existing-shares '[{"name":"omv","path":"."},{"name":"Media","path":"Media","readonly":true}]'
+```
+
+The Proxmox first-boot job runs this mode automatically when it attaches
+the saved physical partition. Set `vm_setup.omv_shares` in the private
+Proxmox machine profile to include the same layout in the installer ISO.
+Missing directories and conflicting mounts or shares cause setup to stop.
 
 ## Access and reruns
 

@@ -121,9 +121,12 @@ requires the private QEMU settings file described below. Use
   partition identified by `/dev/disk/by-partuuid/…`. When that partition is
   available, the job installs and configures OMV with only its system
   disk, then shuts down the guest, attaches the partition directly to
-  `sata1`, and starts it again. This leaves the filesystem and data
-  intact during setup. OMV has normal read and write access to the
-  partition, which can be mounted as an existing filesystem after setup.
+  `sata1`, and starts it again. It then mounts the existing ext4 filesystem
+  and reapplies Samba shares on existing directories, preserving the data
+  and filesystem permissions. The default share uses `omv/`. Set
+  `vm_setup.omv_shares` to restore your saved names and paths. The
+  [OpenMediaVault guide](../setup_openmediavault/README.md#reuse-the-filesystem-on-sata1)
+  describes the layout and standalone command.
   If the mapping is missing or the partition is unavailable
   during initial provisioning, OMV uses a fresh disk on `sata1` for its
   mergerfs pool and authenticated SMB share, with the Samba large-copy

@@ -59,7 +59,7 @@ def load_vm_setup(value):
     if value is None:
         return None
     options = read_object(value, 'vm_setup', {
-        'profiles', 'media_url', 'omv_data_gb', 'xiaomi_home', 'trusted_web_login',
+        'profiles', 'media_url', 'omv_data_gb', 'omv_shares', 'xiaomi_home', 'trusted_web_login',
     })
     catalog = json.loads((HERE / 'vm_profiles.json').read_text())
     profiles = options.get('profiles', list(catalog['vms']))
@@ -88,7 +88,15 @@ def load_vm_setup(value):
     booleans = {key: options.get(key, True) for key in ('xiaomi_home', 'trusted_web_login')}
     if not all(isinstance(value, bool) for value in booleans.values()):
         raise ValueError('Use boolean Xiaomi Home and trusted web login settings')
-    return {'profiles': profiles, 'media_url': media_url, 'omv_data_gb': size, **booleans}
+    setup = {'profiles': profiles, 'media_url': media_url, 'omv_data_gb': size, **booleans}
+    if 'omv_shares' in options:
+        shares = options['omv_shares']
+        if (not isinstance(shares, list) or not shares or 'omv' not in profiles
+                or not all(isinstance(share, dict) and {'name', 'path'} <= share.keys()
+                           and not share.keys() - {'name', 'path', 'readonly', 'browseable'} for share in shares)):
+            raise ValueError('Use a nonempty vm_setup.omv_shares list with names and relative paths for the OMV profile')
+        setup['omv_shares'] = shares
+    return setup
 
 
 def load_profile(path):

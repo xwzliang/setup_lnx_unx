@@ -17,6 +17,7 @@ import sys
 import tarfile
 import tempfile
 import time
+from urllib.parse import quote
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 HERE = Path(__file__).resolve().parent
@@ -35,6 +36,7 @@ VM_HARDWARE = {
     "settings": {"cpu": "x86-64-v2-AES", "ostype": "l26", "scsihw": "virtio-scsi-single", "startup": "order=1"},
     "boot_slot": "scsi0", "boot_order": "scsi0", "disk_options": "discard=on,iothread=1", "nic": "virtio",
 }
+DEFAULT_EXISTING_SHARES = [{"name": "omv", "path": "omv"}]
 HARDWARE_OPTIONS = {"cpu", "ostype", "scsihw", "startup", "sockets", "numa", "machine", "bios", "vga", "balloon"}
 
 
@@ -285,20 +287,55 @@ def save_credentials(args, credentials):
         with os.fdopen(os.open(destination, flags, 0o600), "w") as output:
             output.write(credentials)
     except FileExistsError:
-        if (destination.is_symlink() or not destination.is_file()
-                or destination.stat().st_mode & 0o077 or destination.read_text() != credentials):
+        if destination.is_symlink() or not destination.is_file() or destination.stat().st_mode & 0o077:
             raise InstallError("The credentials destination already exists. Choose another --credentials-file.")
+        previous = destination.read_text()
+        if previous != credentials:
+            added = credentials[len(previous):]
+            if (not getattr(args, "reuse_sata1", False) or not credentials.startswith(previous)
+                    or "SMB password:" in previous
+                    or not re.fullmatch(r"SMB username: [^\n]+\nSMB password: [^\n]+\n", added)):
+                raise InstallError("The credentials destination already exists. Choose another --credentials-file.")
+            with tempfile.TemporaryDirectory(dir=destination.parent) as temporary:
+                pending = Path(temporary) / destination.name
+                with os.fdopen(os.open(pending, flags, 0o600), "w") as output:
+                    output.write(credentials)
+                pending.replace(destination)
     return destination
 
 
+def sata1_filesystem_uuid(host, config):
+    drive = re.search(r"^sata1: (.*)$", config, re.MULTILINE)
+    if drive is None:
+        raise InstallError("Attach the existing physical data partition to sata1 first.")
+    volume, *fields = drive[1].split(",")
+    path = volume.removeprefix("file=").removeprefix("volume=")
+    options = dict(field.split("=", 1) for field in fields if "=" in field)
+    if (not re.fullmatch(r"/dev/disk/by-partuuid/[A-Fa-f0-9-]+", path)
+            or options.get("format", "raw") != "raw" or options.get("media", "disk") != "disk"
+            or options.get("ro", "0") not in ("0", "off") or options.get("snapshot", "0") not in ("0", "off")):
+        raise InstallError("sata1 must be a writable raw partition attached by its PARTUUID.")
+    remote(host, "test", "-b", path)
+    probe = remote(host, "blkid", "-p", "-s", "UUID", "-s", "TYPE", "-o", "export", "--", path).stdout
+    tags = dict(line.split("=", 1) for line in probe.splitlines() if "=" in line)
+    filesystem_uuid = tags.get("UUID", "").lower()
+    if tags.get("TYPE") != "ext4" or not re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", filesystem_uuid):
+        raise InstallError("sata1 must already contain an ext4 filesystem with a UUID.")
+    return filesystem_uuid
+
+
 def configure(args):
-    config = remote(args.proxmox, "qm", "config", str(args.vmid)).stdout
+    config = remote(args.proxmox, "qm", "config", str(args.vmid), "--current").stdout
     tags = re.search(r"^tags: (.*)$", config, re.MULTILINE)
     if not tags or TAG not in re.split("[;,]", tags[1]):
         raise InstallError("This VM was not created by setup_openmediavault.")
+    command = ["/usr/bin/python3", "-", str(args.vmid)]
+    if getattr(args, "reuse_sata1", False):
+        layout = args.existing_shares if args.existing_shares is not None else DEFAULT_EXISTING_SHARES
+        command.append(json.dumps({"uuid": sata1_filesystem_uuid(args.proxmox, config), "shares": layout}))
     wait_for_packages(args)
     code = (HERE / "configure_guest.py").read_text()
-    result = guest(args, "/usr/bin/python3", "-", str(args.vmid), timeout=300, data=code)
+    result = guest(args, *command, timeout=300, data=code)
     if result.get("exitcode") != 0:
         raise InstallError(result.get("err-data", "OpenMediaVault guest configuration failed.").strip())
     if result.get("out-truncated"):
@@ -311,8 +348,8 @@ def configure(args):
     address = ipaddress.IPv4Address(summary["address"])
     print(f"OpenMediaVault {summary['version']}: http://{address}")
     print(f"SSH: ssh {summary['user']}@{address}")
-    if summary["share"]:
-        print(f"SMB: smb://{address}/omv")
+    for name in summary["shares"]:
+        print(f"SMB: smb://{address}/{quote(name, safe='')}")
     print(f"Credentials saved at {destination}")
 
 
@@ -335,6 +372,9 @@ def arguments():
         transport.add_argument("--local-proxmox", action="store_true", help="run on the Proxmox node as root")
         command.add_argument("--timeout", type=between(10, 7200), default=1800, help="first boot wait in seconds")
         command.add_argument("--credentials-file", type=Path, help="new private file for generated passwords")
+        if operation == "configure":
+            command.add_argument("--reuse-sata1", action="store_true", help="mount the existing ext4 data disk at sata1")
+            command.add_argument("--existing-shares", type=json.loads, help="JSON list of shares on the existing disk")
         if operation == "install":
             command.add_argument("--name", default="omv")
             command.add_argument("--storage", default="local-lvm")
@@ -357,6 +397,8 @@ def arguments():
         args.proxmox = None
     elif not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]*(?:@[a-zA-Z0-9][a-zA-Z0-9._-]*)?", args.proxmox):
         parser.error("Invalid Proxmox SSH target.")
+    if args.operation == "configure" and args.existing_shares is not None and not args.reuse_sata1:
+        parser.error("--existing-shares requires --reuse-sata1.")
     if args.operation == "install":
         if not re.fullmatch(r"[a-z][a-z0-9-]{0,14}", args.name) or args.name.endswith("-"):
             parser.error("Use a lowercase hostname of at most 15 characters for Samba.")
