@@ -104,6 +104,100 @@ def ensure_started(target, vmid):
         target.run("qm", "start", vmid)
 
 
+def pci_groups(selector, devices):
+    groups = set()
+    for address in selector.split(";"):
+        if not re.fullmatch(r"(?:[0-9a-f]{4}:)?[0-9a-f]{2}:[0-9a-f]{2}(?:\.[0-7])?", address):
+            return set()
+        if address.count(":") == 1:
+            address = f"0000:{address}"
+        functions = [devices / address] if "." in address else list(devices.glob(address + ".[0-7]"))
+        if not functions:
+            return set()
+        for function in functions:
+            group = function / "iommu_group"
+            if not group.is_dir():
+                return set()
+            groups.add(("pci", group.resolve().name))
+    return groups
+
+
+def usb_ports(selector, devices):
+    if re.fullmatch(r"[0-9]+-[0-9]+(?:\.[0-9]+)*", selector):
+        return {("usb", selector)} if (devices / selector / "idVendor").is_file() else set()
+    if not re.fullmatch(r"[0-9a-f]{4}:[0-9a-f]{4}", selector) or not devices.is_dir():
+        return set()
+    matches = set()
+    for entry in devices.iterdir():
+        try:
+            identity = f"{(entry / 'idVendor').read_text().strip()}:{(entry / 'idProduct').read_text().strip()}"
+        except OSError:
+            continue
+        if identity.lower() == selector:
+            matches.add(("usb", entry.name))
+    return matches
+
+
+def passthrough_devices(slot, value, sysfs):
+    options = value.split(",")
+    selector = next((part[5:] for part in options if part.startswith("host=")), options[0]).lower()
+    if slot.startswith("hostpci"):
+        return pci_groups(selector, sysfs / "bus/pci/devices")
+    return usb_ports(selector, sysfs / "bus/usb/devices")
+
+
+def running_passthrough(target, sysfs):
+    inventory = target.json("pvesh", "get", "/cluster/resources", "--type", "vm", "--output-format", "json")
+    running = [guest for guest in inventory if guest.get("type") == "qemu" and guest.get("status") == "running"]
+    claimed = set()
+    if running:
+        node = target.run("hostname", "-s")
+        for guest in running:
+            if guest.get("node") == node:
+                config = read_config(target, guest["vmid"])
+                for slot, value in config.items():
+                    if create_vms.PCI_USB_SLOT.fullmatch(slot):
+                        claimed.update(passthrough_devices(slot, value, sysfs))
+    return claimed
+
+
+def apply_passthrough(target, vm, config, hardware, sysfs=Path("/sys")):
+    if config is None:
+        return
+    vmid = vm["vmid"]
+    missing = [slot for slot in vm.get("passthrough", ()) if create_vms.PCI_USB_SLOT.fullmatch(slot) and slot not in config]
+    available = {}
+    for slot in missing:
+        value = hardware.get(slot)
+        matches = passthrough_devices(slot, value, sysfs) if value else set()
+        if value is None:
+            print(f"Skipped VM {vmid} {slot} because no mapping was saved.")
+        elif not matches or (slot.startswith("usb") and len(matches) != 1):
+            print(f"Skipped VM {vmid} {slot} because the recorded device is unavailable or ambiguous.")
+        else:
+            available[slot] = (value, matches)
+    if not available:
+        return
+    if target.run("qm", "status", vmid) != "status: stopped":
+        print(f"Skipped new PCI/USB mappings for VM {vmid} because it is running.")
+        return
+    try:
+        claimed = running_passthrough(target, sysfs)
+    except create_vms.CreateError:
+        print(f"Skipped new PCI/USB mappings for VM {vmid} because the running guest assignments could not be checked.")
+        return
+    for slot, (value, devices) in available.items():
+        if devices & claimed:
+            print(f"Skipped VM {vmid} {slot} because a running VM is using the device.")
+            continue
+        try:
+            target.run("qm", "set", vmid, f"--{slot}", value)
+        except create_vms.CreateError:
+            print(f"Skipped VM {vmid} {slot} because Proxmox rejected the mapping.")
+        else:
+            print(f"Applied the recorded {slot} mapping to VM {vmid}.")
+
+
 def ensure_password(directory):
     path = directory / "ha-password"
     if not path.exists():
@@ -164,6 +258,7 @@ def provision(directory, target, catalog, job):
         image_dir=[], cache_dir=directory / "media", media_url=job["media_url"], provision_tag=job["tag"],
     )
     plan = create_vms.build_plan(catalog, args)
+    hardware = create_vms.read_hardware(args.hardware_file) if args.hardware_file.exists() else {}
     for vm in plan:
         if vm["profile"] == "ha":
             vm["settings"]["agent"] = "enabled=1"
@@ -183,6 +278,7 @@ def provision(directory, target, catalog, job):
         if receipts[vmid].exists():
             continue
         config = owned.get(vmid)
+        apply_passthrough(target, vm, config, hardware.get(name, {}))
         if name == "ha":
             configure_ha(target, vm, config, job, directory)
         elif name == "omv":

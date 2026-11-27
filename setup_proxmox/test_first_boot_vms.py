@@ -21,12 +21,16 @@ class FirstBootVmTests(unittest.TestCase):
         self.catalog = json.loads(create_vms.CATALOG.read_text())
         self.job = {**install.load_vm_setup({"profiles": ["daily-ubuntu", "omv", "ha"]}), "tag": "setup-vms-test"}
 
-    def test_full_payload_contains_runnable_guest_setup_and_only_mac_args(self):
+    def test_payload_contains_only_selected_pci_usb_and_mac_arguments(self):
         with self.assertRaisesRegex(ValueError, "vm_setup.media_url"):
             install.load_vm_setup({})
         settings = install.load_vm_setup({"media_url": "http://media.example.test/OS"})
         hardware = self.directory / "hardware.json"
-        hardware.write_text(json.dumps({"mac": {"args": "-smbios type=2"}, "omv": {"sata1": "private-disk"}}))
+        hardware.write_text(json.dumps({
+            "mac": {"args": "-smbios type=2"}, "omv": {"sata1": "private-disk"},
+            "windows": {"hostpci0": "0000:81:00,pcie=1", "usb0": "host=1-1.1,usb3=1"},
+            "ha": {"usb0": "host=1234:5678", "usb1": "host=1234:5679"},
+        }))
         hardware.chmod(0o600)
         script = install.first_boot_script({"repository": "enterprise", "upgrade": False, "vm_setup": settings},
                                           "ssh-ed25519 TEST", hardware)
@@ -36,12 +40,48 @@ class FirstBootVmTests(unittest.TestCase):
             self.assertEqual(set(bundle.getnames()), {*install.VM_SETUP_FILES, "vm-job.json", "ssh.pub", "vm-hardware.json"})
             for name in install.VM_SETUP_FILES:
                 self.assertEqual(bundle.extractfile(name).read(), (install.HERE.parent / name).read_bytes())
-            self.assertEqual(json.load(bundle.extractfile("vm-hardware.json")), {"mac": {"args": "-smbios type=2"}})
+            self.assertEqual(json.load(bundle.extractfile("vm-hardware.json")), {
+                "mac": {"args": "-smbios type=2"},
+                "windows": {"hostpci0": "0000:81:00,pcie=1", "usb0": "host=1-1.1,usb3=1"},
+                "ha": {"usb0": "host=1234:5678"},
+            })
             job = json.load(bundle.extractfile("vm-job.json"))
             self.assertEqual(job["profiles"], list(self.catalog["vms"]))
             self.assertEqual(job["media_url"], "http://media.example.test/OS/")
 
+    def test_available_passthrough_preserves_options_and_skips_busy_or_ambiguous_devices(self):
+        sysfs = self.directory / "sys"
+        iommu = sysfs / "kernel/iommu_groups/7"
+        iommu.mkdir(parents=True)
+        for function in ("0000:81:00.0", "0000:81:00.1"):
+            pci = sysfs / "bus/pci/devices" / function
+            pci.mkdir(parents=True)
+            (pci / "iommu_group").symlink_to(iommu)
+        for port, product in (("1-1.1", "0001"), ("1-1.2", "1234"), ("1-1.3", "1234"), ("1-2", "0002")):
+            device = sysfs / "bus/usb/devices" / port
+            device.mkdir(parents=True)
+            (device / "idVendor").write_text("abcd\n")
+            (device / "idProduct").write_text(product + "\n")
+        target = Mock()
+        target.run.side_effect = ["status: stopped", "pve-new", "usb0: host=abcd:0002", "", ""]
+        target.json.return_value = [{"type": "qemu", "node": "pve-new", "status": "running", "vmid": 110}]
+        vm = {"vmid": 101, "passthrough": ["hostpci0", "hostpci1", "usb0", "usb1", "usb2", "usb3", "sata1"]}
+        hardware = {
+            "hostpci0": "0000:81:00,pcie=1", "hostpci1": "0000:82:00,pcie=1",
+            "usb0": "host=1-1.1,usb3=1", "usb1": "host=abcd:1234",
+            "usb2": "host=1-2", "usb3": "host=1-3", "sata1": "raw-disk",
+        }
+        first_boot.apply_passthrough(target, vm, {"usb3": "host=1-4"}, hardware, sysfs)
+        updates = [call.args for call in target.run.call_args_list if call.args[:2] == ("qm", "set")]
+        self.assertEqual(updates, [
+            ("qm", "set", 101, "--hostpci0", "0000:81:00,pcie=1"),
+            ("qm", "set", 101, "--usb0", "host=1-1.1,usb3=1"),
+        ])
+
     def test_provisioning_resumes_ha_without_recreating_its_vm_or_rerunning_omv(self):
+        hardware = self.directory / "vm-hardware.json"
+        hardware.write_text(json.dumps({"ha": {"usb0": "host=1234:5678"}}))
+        hardware.chmod(0o600)
         configs = {}
         commands = []
         credentials = []
@@ -57,7 +97,12 @@ class FirstBootVmTests(unittest.TestCase):
             if action == "status":
                 return "status: running" if vmid in running else "status: stopped"
             if action == "start":
+                self.assertEqual(configs[vmid]["usb0"], "host=1234:5678")
                 running.add(vmid)
+                return ""
+            if action == "set":
+                self.assertEqual(command[3], "--usb0")
+                configs[vmid]["usb0"] = command[4]
                 return ""
             raise AssertionError(command)
 
@@ -98,7 +143,9 @@ class FirstBootVmTests(unittest.TestCase):
         target.json.side_effect = inventory
         target.run.side_effect = qemu
         with patch.object(create_vms, "apply", side_effect=create) as create_pending, patch.object(
-                first_boot, "run", side_effect=guest_setup), patch.object(first_boot, "node_runtime", return_value="node"):
+                first_boot, "run", side_effect=guest_setup), patch.object(
+                first_boot, "node_runtime", return_value="node"), patch.object(
+                first_boot, "passthrough_devices", return_value={("usb", "1-1")}):
             with self.assertRaises(subprocess.CalledProcessError):
                 first_boot.provision(self.directory, target, self.catalog, self.job)
             self.assertTrue((self.directory / "vm-102-complete").exists())

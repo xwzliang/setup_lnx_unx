@@ -181,7 +181,7 @@ def answer_file(profile, hashed, key):
 
 
 def vm_setup_payload(options, key, hardware_file):
-    from create_vms import CreateError, private_settings
+    from create_vms import PCI_USB_SLOT, CreateError, private_settings
 
     if {'ha', 'omv'}.intersection(options['profiles']) and key is None:
         raise ValueError('VM setup needs an OpenSSH public key. Use --ssh-public-key.')
@@ -190,13 +190,20 @@ def vm_setup_payload(options, key, hardware_file):
     files['vm-job.json'] = json.dumps(job).encode()
     if key:
         files['ssh.pub'] = (key + '\n').encode()
-    if 'mac' in options['profiles']:
-        args = SimpleNamespace(hardware_file=hardware_file, with_passthrough=False)
-        try:
-            read = private_settings([{'profile': 'mac', 'private_args': True}], args)
-        except CreateError as error:
-            raise ValueError(str(error)) from None
-        files['vm-hardware.json'] = json.dumps(read).encode()
+    catalog = json.loads((HERE / 'vm_profiles.json').read_text())['vms']
+    plan = []
+    for name in options['profiles']:
+        vm = catalog[name]
+        slots = [slot for slot in vm.get('passthrough', ()) if PCI_USB_SLOT.fullmatch(slot)]
+        plan.append({'profile': name, 'private_args': vm.get('private_args'), 'passthrough': slots})
+    args = SimpleNamespace(hardware_file=hardware_file, with_passthrough=True)
+    try:
+        hardware = private_settings(plan, args, optional_passthrough=True)
+    except CreateError as error:
+        raise ValueError(str(error)) from None
+    hardware = {name: fields for name, fields in hardware.items() if fields}
+    if hardware:
+        files['vm-hardware.json'] = json.dumps(hardware).encode()
     with BytesIO() as output:
         with tarfile.open(fileobj=output, mode='w:gz') as archive:
             for name, data in files.items():

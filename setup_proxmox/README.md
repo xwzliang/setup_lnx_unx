@@ -128,8 +128,15 @@ credentials are stored under `/var/lib/setup-proxmox/vm-setup/` in
 `ha-password` (Home Assistant user `admin`) and `omv-credentials.txt`.
 This directory is private to root. The first-boot job starts HA and OMV
 while keeping the catalog's host autostart policy for subsequent reboots.
-It provisions fresh guest filesystems and leaves physical passthrough
-for separate configuration.
+
+The ISO includes the recorded PCI and USB mappings for the selected
+profiles from the private `vm-hardware.json` file. Use
+`--vm-hardware-file` to supply mappings for a different host. On a
+stopped guest, the job applies a saved mapping when the PCI address
+has an IOMMU group or the USB selector matches one connected device.
+It also checks the direct assignments of running VMs on the node.
+Existing slot settings are preserved. Missing mappings, unavailable
+devices, and rejected settings are logged. OMV gets a fresh data disk.
 
 Check the guest setup service from the node.
 

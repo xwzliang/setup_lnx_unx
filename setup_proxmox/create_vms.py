@@ -20,6 +20,7 @@ HARDWARE = Path.home() / ".config/setup-proxmox/vm-hardware.json"
 CACHE = Path.home() / ".cache/setup-proxmox/vm-media"
 IMAGE_ROOTS = (Path("/Volumes/DeepLearn/OS"), Path("/Volumes/omv/OS"))
 STANDARD_SETTINGS = {"sockets": 1, "numa": 0, "ostype": "l26", "scsihw": "virtio-scsi-single", "onboot": 0}
+PCI_USB_SLOT = re.compile(r"(?:hostpci|usb)[0-9]+")
 
 
 class CreateError(Exception):
@@ -119,15 +120,23 @@ def display_plan(catalog, plan, args):
             print(f"  Physical devices ({description}): {', '.join(vm['passthrough'])}")
 
 
-def private_settings(plan, args):
-    if not any(vm.get("private_args") or (args.with_passthrough and vm.get("passthrough")) for vm in plan):
-        return {}
-    path = args.hardware_file
+def read_hardware(path):
     if path.is_symlink() or not path.is_file() or path.stat().st_mode & 0o077:
         raise CreateError(f"Provide the private hardware file at {path} with mode 0600.")
     data = json.loads(path.read_text())
     if not isinstance(data, dict):
         raise CreateError("The private hardware file must contain per-profile objects.")
+    return data
+
+
+def private_settings(plan, args, *, optional_passthrough=False):
+    needs_args = any(vm.get("private_args") for vm in plan)
+    if not needs_args and not (args.with_passthrough and any(vm.get("passthrough") for vm in plan)):
+        return {}
+    path = args.hardware_file
+    if optional_passthrough and not needs_args and not (path.exists() or path.is_symlink()):
+        return {}
+    data = read_hardware(path)
     selected = {}
     for vm in plan:
         key = vm["profile"]
@@ -139,6 +148,8 @@ def private_settings(plan, args):
         if fields and not isinstance(saved, dict):
             raise CreateError(f"The private hardware file needs an object for {key}.")
         for field in fields:
+            if optional_passthrough and field != "args" and field not in saved:
+                continue
             value = saved.get(field)
             if not isinstance(value, str) or not value or any(char in value for char in "\r\n\0"):
                 raise CreateError(f"The private hardware file needs {key}.{field}.")
