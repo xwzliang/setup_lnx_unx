@@ -2,3 +2,4 @@
 *.iso.sha256
 profile*.json
 !profile.example.json
+vm-hardware*.json

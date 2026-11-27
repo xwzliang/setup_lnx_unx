@@ -76,3 +76,63 @@ pvesm status
 Proxmox documents the [ISO and checksum](https://download.proxmox.com/iso/),
 [automated installation](https://pve.proxmox.com/wiki/Automated_Installation),
 and [package repositories](https://pve.proxmox.com/wiki/Package_Repositories).
+
+## Create the existing VM profiles on a new node
+
+After Proxmox is running, use `create_vms.py` from macOS or Linux with
+Python 3.9+, OpenSSH, curl, and root SSH access to the target node. The
+defaults in [vm_profiles.json](vm_profiles.json) reproduce the names and
+virtual hardware of the existing VMs.
+
+| VM ID | Name | Boot or installation media |
+| --- | --- | --- |
+| 100 | `ubuntu` | Ubuntu 20.04.3 desktop ISO |
+| 101 | `windows` | Windows 10 22H2 and VirtIO 0.1.240 ISOs |
+| 102 | `omv` | OpenMediaVault 7.4.17 ISO |
+| 103 | `mac` | macOS Sonoma 14.1.1 and OpenCore v21 images |
+| 104 | `daily-ubuntu` | Ubuntu 20.04.3 desktop ISO |
+| 105 | `ha` | HAOS 18.4 preinstalled boot disk |
+
+Preview all six profiles, or pass names to select specific guests. Use
+`--apply` to create them.
+
+```sh
+python3 setup_proxmox/create_vms.py
+python3 setup_proxmox/create_vms.py --proxmox new-pve --apply
+python3 setup_proxmox/create_vms.py ha --vmid 106 --name ha-new --apply
+```
+
+A VM ID or name already in use aborts the request before media transfers.
+The script leaves new VMs stopped and preserves their configured host
+autostart policy. Use `--no-onboot` to disable autostart. When selecting one
+profile, `--vmid`, `--name`, `--cores`, `--memory` (MiB) and `--disk-gb`
+override its defaults. The storage and bridge defaults are `local-lvm`,
+`local` for ISOs, and `vmbr0`. Change them with `--storage`,
+`--iso-storage` and `--bridge` on nodes with a different layout. Size the
+target node for the selected profiles, especially `ubuntu` and `windows`.
+
+The script verifies every image against its pinned SHA-256. It reuses
+matching ISOs already on Proxmox, searches `--image-dir` (repeatable) and
+the `/Volumes/DeepLearn/OS` and `/Volumes/omv/OS` trees, then downloads
+available exact releases into `~/.cache/setup-proxmox/vm-media`. Supply
+your matching Windows, VirtIO, macOS and OpenCore images if the target and
+the local image directories lack them. An ISO already present with
+different contents stops the creation. This workflow provisions new disks
+and attaches the installer media, or imports the clean HAOS image. For
+unattended guest configuration, see the
+[Home Assistant](../setup_homeassistant/README.md) and
+[OpenMediaVault 8](../setup_openmediavault/README.md) installers.
+
+Proxmox generates new MAC addresses, SMBIOS UUIDs and VM generation IDs
+for the new guests. Keep the private `vm-hardware.json` file at
+`~/.config/setup-proxmox/vm-hardware.json`, with mode 0600, and copy it
+privately to another workstation when needed. Use `--hardware-file` to
+specify another path. The `mac` profile loads its recorded QEMU arguments
+from `mac.args`. The optional `--with-passthrough` flag loads the original
+`hostpci*`, `usb*`, and `omv.sata1` values from the per-profile objects.
+Review those host-specific addresses on the new node before using them.
+The OMV data partition must be unmounted on the host and unattached to
+other guests.
+
+If Proxmox rejects an option after creating a guest, inspect that VM ID on
+the node. Successful guests from the batch are retained for use.
