@@ -130,7 +130,7 @@ Package availability depends on the OS release and configured repositories.
 | [locale](../packages/locale/package.json) | — | 1 configure/workflow script(s) | Locale |
 | [lux](../packages/lux/package.json) | ubuntu: go, debian: go, macos: go | — | Fast and simple video download library and CLI tool written in Go |
 | [mac-server](../packages/mac-server/package.json) | — | 3 configure/workflow script(s) | Mac server |
-| [macos-settings](../packages/macos-settings/package.json) | — | 1 configure/workflow script(s) | Macos settings |
+| [macos-settings](../packages/macos-settings/package.json) | — | 2 configure/workflow script(s) | Macos settings |
 | [matplotlib](../packages/matplotlib/package.json) | ubuntu: pip, debian: pip, macos: pip | — | a comprehensive library for creating static, animated, and interactive visualizations in Python |
 | [maven](../packages/maven/package.json) | ubuntu: apt, macos: brew, debian: apt | — | Apache Maven is a software project management and comprehension tool for Java projects |
 | [metals](../packages/metals/package.json) | 1 install script(s) | — | Metals |

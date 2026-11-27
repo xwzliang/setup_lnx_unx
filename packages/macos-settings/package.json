@@ -9,6 +9,13 @@
         "macos"
       ],
       "note": "Package configuration; may overwrite files, download plugins, or change system settings. Inspect source and preview before applying."
+    },
+    {
+      "path": "packages/macos-settings/scripts/disable_update_notifications.sh",
+      "os": [
+        "macos"
+      ],
+      "note": "Suppresses macOS update notification banners via user SoftwareUpdate defaults and clears the System Settings update attention badge; pass --with-sudo to also disable system-wide automatic update checks."
     }
   ],
   "recipes": {
@@ -23,6 +30,25 @@
       "effects": "Applies the package-specific settings in this script; may write user/system files, fetch plugins, or restart services.",
       "requires": [],
       "parameters": {}
+    },
+    "disable-update-notifications": {
+      "action": "run",
+      "os": [
+        "macos"
+      ],
+      "script": "packages/macos-settings/scripts/disable_update_notifications.sh",
+      "interpreter": "bash",
+      "description": "Disable macOS update popup notifications",
+      "effects": "Defers UserNotificationDate and MajorOSUserNotificationDate in com.apple.SoftwareUpdate, removes Software Update attention badges from System Settings, optionally disables system-wide automatic update checks when elevated, and restarts notification/Dock services.",
+      "requires": [
+        "defaults"
+      ],
+      "parameters": {
+        "DEFER_UNTIL": {
+          "description": "Timestamp passed to UserNotificationDate and MajorOSUserNotificationDate",
+          "default": "2099-01-01 00:00:00 +0000"
+        }
+      }
     }
   },
   "defaults": {
