@@ -5,12 +5,17 @@ from pathlib import Path
 import subprocess
 import tarfile
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import create_vms
 import first_boot_vms as first_boot
 import install
+
+
+PARTITION = "/dev/disk/by-partuuid/12345678-1234-1234-1234-123456789abc"
+DATA_MAPPING = f"{PARTITION},size=1024M"
 
 
 class FirstBootVmTests(unittest.TestCase):
@@ -21,15 +26,15 @@ class FirstBootVmTests(unittest.TestCase):
         self.catalog = json.loads(create_vms.CATALOG.read_text())
         self.job = {**install.load_vm_setup({"profiles": ["daily-ubuntu", "omv", "ha"]}), "tag": "setup-vms-test"}
 
-    def test_payload_contains_only_selected_pci_usb_and_mac_arguments(self):
+    def test_payload_contains_only_selected_physical_mappings_and_mac_arguments(self):
         with self.assertRaisesRegex(ValueError, "vm_setup.media_url"):
             install.load_vm_setup({})
         settings = install.load_vm_setup({"media_url": "http://media.example.test/OS"})
         hardware = self.directory / "hardware.json"
         hardware.write_text(json.dumps({
-            "mac": {"args": "-smbios type=2"}, "omv": {"sata1": "private-disk"},
+            "mac": {"args": "-smbios type=2"}, "omv": {"sata1": DATA_MAPPING},
             "windows": {"hostpci0": "0000:81:00,pcie=1", "usb0": "host=1-1.1,usb3=1"},
-            "ha": {"usb0": "host=1234:5678", "usb1": "host=1234:5679"},
+            "ha": {"usb0": "host=1234:5678", "usb1": "host=1234:5679", "sata1": DATA_MAPPING},
         }))
         hardware.chmod(0o600)
         script = install.first_boot_script({"repository": "enterprise", "upgrade": False, "vm_setup": settings},
@@ -42,12 +47,102 @@ class FirstBootVmTests(unittest.TestCase):
                 self.assertEqual(bundle.extractfile(name).read(), (install.HERE.parent / name).read_bytes())
             self.assertEqual(json.load(bundle.extractfile("vm-hardware.json")), {
                 "mac": {"args": "-smbios type=2"},
+                "omv": {"sata1": DATA_MAPPING},
                 "windows": {"hostpci0": "0000:81:00,pcie=1", "usb0": "host=1-1.1,usb3=1"},
                 "ha": {"usb0": "host=1234:5678"},
             })
             job = json.load(bundle.extractfile("vm-job.json"))
             self.assertEqual(job["profiles"], list(self.catalog["vms"]))
             self.assertEqual(job["media_url"], "http://media.example.test/OS/")
+
+    def test_omv_reuses_saved_data_before_boot_and_resumes_with_the_same_overlay(self):
+        hardware = self.directory / "vm-hardware.json"
+        hardware.write_text(json.dumps({"omv": {"sata1": DATA_MAPPING}}))
+        hardware.chmod(0o600)
+        job = {**self.job, "profiles": ["omv"]}
+        overlay = self.directory / "omv-data-vm-102.qcow2"
+        config = {}
+        running = False
+        target = Mock()
+        target.json.side_effect = lambda command, *_: (
+            ([{"vmid": 102, "name": "omv", "type": "qemu"}] if config else [])
+            if command == "pvesh" else
+            {"format": "qcow2", "backing-filename": PARTITION, "backing-filename-format": "raw"}
+        )
+
+        def qemu(*command):
+            nonlocal running
+            if command[0] == "python3":
+                self.assertEqual(command, ("python3", "-c", create_vms.RAW_DISK_CHECK, PARTITION))
+            elif command[0] == "qemu-img":
+                self.assertEqual(command[:-1], ("qemu-img", "create", "-f", "qcow2", "-F", "raw", "-b", PARTITION))
+                command[-1].touch()
+            elif command[1] == "config":
+                return "\n".join(f"{key}: {value}" for key, value in config.items())
+            elif command[1] == "status":
+                return "status: running" if running else "status: stopped"
+            elif command[1] == "set":
+                slot, value = command[3:]
+                if slot == "--sata1":
+                    self.assertFalse(running)
+                    self.assertEqual(value, f"{overlay},format=qcow2,backup=0,replicate=0")
+                config[slot.removeprefix("--")] = value
+            elif command[1] == "start":
+                self.assertTrue(config["sata1"].startswith(f"{overlay},"))
+                self.assertNotIn(PARTITION, config["sata1"])
+                self.assertEqual(config["onboot"], "0")
+                running = True
+            else:
+                raise AssertionError(command)
+
+        def guest_setup(*command):
+            if command[2] == "install":
+                self.assertIn("--provision-only", command)
+                self.assertEqual(command[command.index("--data-gb") + 1], "0")
+                config.update(tags=f"setup-omv;{job['tag']}", sata0="boot", ide2="seed",
+                              boot="order=sata0;ide2;net0", onboot="0")
+            else:
+                self.assertTrue(running)
+                if setup.call_count == 2:
+                    raise subprocess.CalledProcessError(1, command)
+
+        target.run.side_effect = qemu
+        with patch.object(first_boot, "run", side_effect=guest_setup) as setup:
+            with self.assertRaises(subprocess.CalledProcessError):
+                first_boot.provision(self.directory, target, self.catalog, job)
+            self.assertFalse((self.directory / "vm-102-complete").exists())
+            first_boot.provision(self.directory, target, self.catalog, job)
+        self.assertEqual([entry.args[2] for entry in setup.call_args_list], ["install", "configure", "configure"])
+        self.assertEqual(target.run.call_args_list.count(call("qm", "start", 102)), 1)
+        updates = [entry.args for entry in target.run.call_args_list if entry.args[:2] == ("qm", "set")]
+        self.assertEqual([entry[3] for entry in updates], ["--sata1", "--onboot"])
+        self.assertTrue((self.directory / "vm-102-complete").exists())
+
+    def test_omv_uses_a_fresh_disk_when_the_saved_partition_is_unavailable(self):
+        vm = {"vmid": 102, "name": "omv", "disk": {"slot": "sata0", "size": 32}, "boot": "sata0",
+              "nic": "virtio,bridge=vmbr0", "settings": {"cores": 4, "memory": 16384, "onboot": 1}}
+        args = SimpleNamespace(storage="local-lvm", iso_storage="local", bridge="vmbr0")
+        target = Mock()
+        target.run.side_effect = create_vms.CreateError("Partition busy")
+        with patch.object(first_boot, "run") as setup:
+            first_boot.configure_omv(target, vm, None, self.job, self.directory, args, DATA_MAPPING)
+        command = setup.call_args.args
+        self.assertEqual(command[2], "install")
+        self.assertEqual(command[command.index("--data-gb") + 1], "32")
+        self.assertNotIn("--provision-only", command)
+        target.run.assert_called_once_with("python3", "-c", create_vms.RAW_DISK_CHECK, PARTITION)
+
+    def test_omv_preserves_a_disk_already_pending_on_sata1(self):
+        overlay = self.directory / "omv-data-vm-102.qcow2"
+        overlay.touch()
+        target = Mock()
+        target.json.return_value = {"format": "qcow2", "backing-filename": PARTITION, "backing-filename-format": "raw"}
+        target.run.side_effect = ["", "sata1: local-lvm:vm-102-disk-1"]
+        with self.assertRaisesRegex(create_vms.CreateError, "sata1 already has a different disk"):
+            first_boot.attach_omv_overlay(target, {}, DATA_MAPPING, overlay)
+        self.assertEqual(target.run.call_args_list, [
+            call("python3", "-c", create_vms.RAW_DISK_CHECK, PARTITION), call("qm", "config", 102),
+        ])
 
     def test_available_passthrough_preserves_options_and_skips_busy_or_ambiguous_devices(self):
         sysfs = self.directory / "sys"

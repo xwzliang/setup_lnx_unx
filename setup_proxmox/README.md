@@ -116,11 +116,20 @@ requires the private QEMU settings file described below. Use
   browser. Set `"xiaomi_home": false` to skip the app and
   `"trusted_web_login": false` to keep the Home Assistant LAN login prompt.
 - `omv` uses the fresh OpenMediaVault 8 installer with the original VM
-  hardware settings and SATA boot order. It provisions the system disk
-  on `sata0` and places a new data disk on `sata1`. It creates the mergerfs
-  pool and authenticated SMB share and applies the Samba large-copy
-  memory fix. Set `"omv_data_gb"` to change the default 32 GiB data disk
-  or use `0` to omit it.
+  hardware settings and puts the system disk on `sata0`. For VM 102,
+  first boot checks `omv.sata1` in the private hardware file for a
+  partition identified by `/dev/disk/by-partuuid/…`. When that partition is
+  available, `sata1` uses it as the read-only backing for a QCOW2 overlay.
+  The original filesystem is left intact. OMV setup skips formatting,
+  mounting, and share creation for that disk. Guest writes go into
+  `/var/lib/setup-proxmox/vm-setup/omv-data-vm-102.qcow2` and persist there
+  across reboots. The overlay grows on the Proxmox host as the guest writes.
+  Keep the backing partition and overlay available to boot the VM.
+  If the mapping is missing or the partition is unavailable
+  during initial provisioning, OMV uses a fresh disk on `sata1` for its
+  mergerfs pool and authenticated SMB share, with the Samba large-copy
+  memory fix. Set `"omv_data_gb"` to change the default 32 GiB fresh
+  disk size or use `0` to omit the fresh disk.
 
 Both appliance installers use the build workstation's public key or the
 key passed with `--ssh-public-key`. On the Proxmox node, their generated
@@ -136,7 +145,7 @@ stopped guest, the job applies a saved mapping when the PCI address
 has an IOMMU group or the USB selector matches one connected device.
 It also checks the direct assignments of running VMs on the node.
 Existing slot settings are preserved. Missing mappings, unavailable
-devices, and rejected settings are logged. OMV gets a fresh data disk.
+devices, and rejected settings are logged.
 
 Check the guest setup service from the node.
 

@@ -194,7 +194,8 @@ def vm_setup_payload(options, key, hardware_file):
     plan = []
     for name in options['profiles']:
         vm = catalog[name]
-        slots = [slot for slot in vm.get('passthrough', ()) if PCI_USB_SLOT.fullmatch(slot)]
+        slots = [slot for slot in vm.get('passthrough', ()) if PCI_USB_SLOT.fullmatch(slot)
+                 or (name == 'omv' and vm['vmid'] == 102 and slot == 'sata1')]
         plan.append({'profile': name, 'private_args': vm.get('private_args'), 'passthrough': slots})
     args = SimpleNamespace(hardware_file=hardware_file, with_passthrough=True)
     try:

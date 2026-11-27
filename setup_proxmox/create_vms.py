@@ -268,13 +268,18 @@ for config in Path("/etc/pve/nodes").glob("*/qemu-server/*.conf"):
 """
 
 
+def check_omv_partition(target, mapping):
+    path = mapping.split(",", 1)[0]
+    if not re.fullmatch(r"/dev/disk/by-partuuid/[A-Fa-f0-9-]+", path):
+        raise CreateError("The OMV data disk must use its exact /dev/disk/by-partuuid symlink.")
+    target.run("python3", "-c", RAW_DISK_CHECK, path)
+    return path
+
+
 def check_physical_disk(target, private):
     for settings in private.values():
         if "sata1" in settings:
-            path = settings["sata1"].split(",", 1)[0]
-            if not re.fullmatch(r"/dev/disk/by-partuuid/[A-Fa-f0-9-]+", path):
-                raise CreateError("The OMV data disk must use its exact /dev/disk/by-partuuid symlink.")
-            target.run("python3", "-c", RAW_DISK_CHECK, path)
+            check_omv_partition(target, settings["sata1"])
 
 
 def create_vm(target, vm, media, imported, private, args):

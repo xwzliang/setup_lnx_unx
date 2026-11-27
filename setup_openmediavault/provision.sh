@@ -3,8 +3,8 @@
 set -euo pipefail
 vmid=$1 name=$2 storage=$3 iso_storage=$4 bridge=$5 memory=$6 cores=$7 boot_gb=$8 data_gb=$9 onboot=${10}
 provision_tag=${11:-}
-boot_slot=${12} boot_order=${13} disk_options=${14} nic=${15}
-shift 15
+boot_slot=${12} boot_order=${13} disk_options=${14} nic=${15} provision_only=${16}
+shift 16
 
 if [[ $(id -u) != 0 || $(uname -m) != x86_64 ]]; then
     echo 'Run as root on an x86-64 Proxmox node.' >&2
@@ -75,5 +75,7 @@ if (( data_gb > 0 )); then
     qm set "$vmid" "--${boot_slot%0}1" "$storage:$data_gb,serial=omvdata$vmid,$data_options"
 fi
 qm set "$vmid" --boot "order=$boot_order"
-qm start "$vmid"
-qm set "$vmid" --onboot "$onboot"
+if [[ $provision_only == 0 ]]; then
+    qm start "$vmid"
+    qm set "$vmid" --onboot "$onboot"
+fi

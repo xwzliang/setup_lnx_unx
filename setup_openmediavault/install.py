@@ -214,7 +214,8 @@ def provision(args):
                           args.storage, args.iso_storage, args.bridge, str(args.memory), str(args.cores),
                           str(args.boot_gb), str(args.data_gb), "0" if args.no_onboot else "1",
                           getattr(args, "provision_tag", None) or "", hardware["boot_slot"],
-                          hardware["boot_order"], hardware["disk_options"], hardware["nic"], *qm_options)
+                          hardware["boot_order"], hardware["disk_options"], hardware["nic"],
+                          "1" if args.provision_only else "0", *qm_options)
     print("Transferring the verified image and cloud-init seed to Proxmox.", flush=True)
     with subprocess.Popen(command, stdin=subprocess.PIPE) as process:
         try:
@@ -348,6 +349,7 @@ def arguments():
             command.add_argument("--timezone", default="Asia/Singapore")
             command.add_argument("--ssh-public-key", type=Path)
             command.add_argument("--no-onboot", action="store_true")
+            command.add_argument("--provision-only", action="store_true", help="leave the VM stopped and autostart disabled")
             command.add_argument("--provision-tag", help="add a VM ownership tag")
             command.add_argument("--vm-hardware", help="JSON virtual hardware from the Proxmox VM profile")
     args = parser.parse_args()
@@ -379,6 +381,8 @@ def main():
     try:
         if args.operation == "install":
             provision(args)
+            if args.provision_only:
+                return
         configure(args)
     except (InstallError, OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
         if isinstance(error, subprocess.CalledProcessError):

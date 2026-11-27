@@ -61,8 +61,9 @@ def node_runtime(directory):
     return cached
 
 
-def read_config(target, vmid):
-    return dict(line.split(": ", 1) for line in target.run("qm", "config", vmid, "--current").splitlines()
+def read_config(target, vmid, *, current=True):
+    options = ("--current",) if current else ()
+    return dict(line.split(": ", 1) for line in target.run("qm", "config", vmid, *options).splitlines()
                 if ": " in line)
 
 
@@ -221,11 +222,63 @@ def configure_ha(target, vm, config, job, directory):
     run(*command)
 
 
-def configure_omv(target, vm, config, job, directory, args):
+def prepare_omv_overlay(target, directory, mapping, config):
+    overlay = directory / "omv-data-vm-102.qcow2"
+    if overlay.is_symlink():
+        raise create_vms.CreateError("The OMV data overlay must be a regular file.")
+    if overlay.exists():
+        return overlay
+    if config is not None or mapping is None:
+        return None
+    try:
+        path = create_vms.check_omv_partition(target, mapping)
+    except create_vms.CreateError:
+        print("Skipped VM 102 sata1 reuse because the saved partition is unavailable or in use.")
+        return None
+    with TemporaryDirectory(prefix=".omv-data-", dir=directory) as temporary:
+        pending = Path(temporary) / overlay.name
+        target.run("qemu-img", "create", "-f", "qcow2", "-F", "raw", "-b", path, pending)
+        pending.replace(overlay)
+    return overlay
+
+
+def attach_omv_overlay(target, config, mapping, overlay):
+    if mapping is None or not overlay.is_file():
+        raise create_vms.CreateError("VM 102 needs the saved OMV partition mapping and data overlay.")
+    path = create_vms.check_omv_partition(target, mapping)
+    # Read the image header even when resuming a guest already booted by this job.
+    image = target.json("qemu-img", "info", "--force-share", "--output=json", "-f", "qcow2", overlay)
+    if (image.get("format") != "qcow2" or image.get("backing-filename") != path
+            or image.get("backing-filename-format") != "raw"):
+        raise create_vms.CreateError("VM 102's data overlay does not back onto the saved partition.")
+
+    def matches(value):
+        volume, *options = value.split(",")
+        return volume.removeprefix("file=").removeprefix("volume=") == str(overlay) and "format=qcow2" in options
+
+    next_config = read_config(target, 102, current=False)
+    slots = [state["sata1"] for state in (config, next_config) if "sata1" in state]
+    if any(not matches(slot) for slot in slots):
+        raise create_vms.CreateError("VM 102 sata1 already has a different disk. Inspect its config.")
+    if "sata1" not in config and target.run("qm", "status", 102) != "status: stopped":
+        raise create_vms.CreateError("Stop VM 102 before attaching its data disk.")
+    if not slots:
+        # Only the overlay goes in the VM config. QEMU opens its backing partition read-only.
+        target.run("qm", "set", 102, "--sata1", f"{overlay},format=qcow2,backup=0,replicate=0")
+        next_config = read_config(target, 102, current=False)
+    if not matches(next_config.get("sata1", "")):
+        raise create_vms.CreateError("VM 102's next boot does not use the protected sata1 data disk.")
+    print("VM 102 sata1 uses the existing data partition through a copy-on-write overlay.")
+
+
+def configure_omv(target, vm, config, job, directory, args, saved_disk=None):
     settings = vm["settings"]
     disk = vm["disk"]
-    pm_args = ["--local-proxmox", "--vmid", str(vm["vmid"]), "--credentials-file", directory / "omv-credentials.txt"]
+    vmid = vm["vmid"]
+    pm_args = ["--local-proxmox", "--vmid", str(vmid), "--credentials-file", directory / "omv-credentials.txt"]
     command = [sys.executable, directory / "setup_openmediavault/install.py"]
+    overlay = prepare_omv_overlay(target, directory, saved_disk, config) if vmid == 102 else None
+    data_gb = 0 if overlay is not None else job["omv_data_gb"]
     if config is None:
         hardware = {
             "settings": {name: value for name, value in settings.items() if name not in {"cores", "memory", "onboot"}},
@@ -233,20 +286,27 @@ def configure_omv(target, vm, config, job, directory, args):
             "nic": vm["nic"].split(",", 1)[0],
         }
         more = [] if settings["onboot"] else ["--no-onboot"]
+        if overlay is not None:
+            more.append("--provision-only")
         run(*command, "install", *pm_args, "--name", vm["name"], "--storage", args.storage,
             "--iso-storage", args.iso_storage, "--bridge", args.bridge, "--cores", str(settings["cores"]),
             "--memory", str(settings["memory"]), "--boot-gb", str(disk["size"]),
-            "--data-gb", str(job["omv_data_gb"]), "--ssh-public-key", directory / "ssh.pub",
+            "--data-gb", str(data_gb), "--ssh-public-key", directory / "ssh.pub",
             "--provision-tag", job["tag"], "--vm-hardware", json.dumps(hardware), *more)
-        return
+        if overlay is None:
+            return
+        config = read_config(target, vmid)
     data_slot = disk["slot"].removesuffix("0") + "1"
-    if "setup-omv" not in re.split(r"[;,]", config.get("tags", "")) or (job["omv_data_gb"] and data_slot not in config):
-        raise create_vms.CreateError(f"VM {vm['vmid']} has incomplete OpenMediaVault provisioning. Inspect its config.")
+    tags = set(re.split(r"[;,]", config.get("tags", "")))
+    if not {"setup-omv", job["tag"]} <= tags or (data_gb and data_slot not in config):
+        raise create_vms.CreateError(f"VM {vmid} has incomplete OpenMediaVault provisioning. Inspect its config.")
     ensure_boot_order(target, vm, config)
+    if overlay is not None:
+        attach_omv_overlay(target, config, saved_disk, overlay)
+    ensure_started(target, vmid)
     onboot = str(settings["onboot"])
     if config.get("onboot", "0") != onboot:
-        target.run("qm", "set", vm["vmid"], "--onboot", onboot)
-    ensure_started(target, vm["vmid"])
+        target.run("qm", "set", vmid, "--onboot", onboot)
     run(*command, "configure", *pm_args)
 
 
@@ -282,7 +342,7 @@ def provision(directory, target, catalog, job):
         if name == "ha":
             configure_ha(target, vm, config, job, directory)
         elif name == "omv":
-            configure_omv(target, vm, config, job, directory, args)
+            configure_omv(target, vm, config, job, directory, args, hardware.get(name, {}).get("sata1"))
         else:
             ensure_boot_order(target, vm, config)
         receipts[vmid].touch()
