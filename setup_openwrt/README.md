@@ -1,5 +1,8 @@
 # OpenClash persistent kill switch (legacy fw3 / TUN)
 
+For a clean x86-64 ImmortalWrt installation on a Proxmox VM or a bootable USB
+drive, see [Install ImmortalWrt from scratch](IMMORTALWRT_INSTALL.md).
+
 `openclash-killswitch.sh` runs **on the router as root**. It is deliberately
 limited to OpenClash `fake-ip-tun`, the `utun` interface, policy table 354, and
 OpenWrt/ImmortalWrt **fw3/iptables**. It refuses other configurations rather than
