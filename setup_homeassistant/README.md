@@ -95,6 +95,54 @@ node setup_homeassistant/install.mjs configure --resume \
 Run the installer tests with `node --test tests/test_homeassistant_install.mjs`.
 They use fixtures for Proxmox and Home Assistant.
 
+## Manage live automations from Git
+
+Use [manage_automations.py](manage_automations.py) to edit and deploy the
+automation definitions on the `ha` SSH host. The encrypted
+[`automation-config.age`](automations/automation-config.age) is the source
+of truth. It includes `automations.yaml` and the Xiaomi Home auto-refresh
+package. Plaintext YAML is editable in `automations/worktree/`, which Git
+ignores. Keep edits to managed definitions here and use the Home Assistant
+UI to view automations, run them, or change their runtime enabled state.
+
+The workstation needs Python 3.9+, OpenSSH, and [age](https://age-encryption.org/).
+The HAOS SSH login needs Python with PyYAML, passwordless `sudo`, and the
+existing Supervisor token environment. The default local age identity is
+`~/.local/share/homeassistant-automations/identity.txt`. Back up that file
+privately. On a new workstation, restore the identity or pass its path with
+`--identity`. The corresponding public recipient is in Git.
+
+```sh
+python3 setup_homeassistant/manage_automations.py checkout
+# Edit setup_homeassistant/automations/worktree/automations.yaml
+python3 setup_homeassistant/manage_automations.py diff
+python3 setup_homeassistant/manage_automations.py seal
+python3 setup_homeassistant/manage_automations.py deploy
+git add setup_homeassistant/automations/automation-config.age
+git commit -m 'chore(homeassistant): update automation definitions'
+```
+
+`diff` prints the private working changes. `seal` encrypts them for Git.
+`deploy` applies that encrypted version to `ha`. It backs up any replaced
+YAML under `/config/.automation-deploy-backups/`, runs `ha core check`, and
+reloads automations. For Xiaomi package edits it also reloads shell commands.
+A validation or reload error triggers rollback. Identical files require no
+reload. Use `status` to compare the encrypted version with `ha`, and `check`
+to validate the current Home Assistant configuration.
+
+After pulling a changed bundle, use `checkout --replace` to refresh your
+working copy once you have set aside any edits. Use `capture --replace` only
+when you intend to adopt live definitions as the new Git version, such as
+after recovering a change made in the UI. Keep existing automation IDs when
+editing definitions so Home Assistant can associate them with the same
+entities and traces.
+
+The Xiaomi package uses the existing auto-refresh helper and administrator
+token on `ha`. Set that helper up on replacement installs using its
+[package instructions](../packages/xiaomi-home-auto-refresh/README.md).
+Scripts, scenes, integrations, and automation runtime state are covered by
+the full Supervisor backup workflow below.
+
 ## Migrate an existing installation
 
 Use `migrate.py` on your Mac or a Linux workstation with Python 3.9 or newer.
