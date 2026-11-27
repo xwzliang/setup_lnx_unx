@@ -125,8 +125,8 @@ requires the private QEMU settings file described below. Use
   and reapplies Samba shares on existing directories, preserving the data
   and filesystem permissions. The default share uses `omv/`. Set
   `vm_setup.omv_shares` to restore your saved names and paths. The
-  [OpenMediaVault guide](../setup_openmediavault/README.md#reuse-the-filesystem-on-sata1)
-  describes the layout and standalone command.
+  [OpenMediaVault exporter](../setup_openmediavault/README.md#export-the-existing-samba-layout)
+  can populate the layout from the existing VM before you build the ISO.
   If the mapping is missing or the partition is unavailable
   during initial provisioning, OMV uses a fresh disk on `sata1` for its
   mergerfs pool and authenticated SMB share, with the Samba large-copy

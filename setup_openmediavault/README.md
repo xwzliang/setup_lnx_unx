@@ -79,6 +79,33 @@ the saved physical partition. Set `vm_setup.omv_shares` in the private
 Proxmox machine profile to include the same layout in the installer ISO.
 Missing directories and conflicting mounts or shares cause setup to stop.
 
+## Export the existing Samba layout
+
+Run the exporter on your workstation while the original OMV VM is
+available. The defaults use the `omv` SSH alias and look up VM 102's
+`sata1` filesystem through the root SSH alias `pve`. The OMV SSH user
+needs passwordless sudo for the metadata reads. Use `--omv`,
+`--proxmox`, and `--vmid` to select other sources, or pass
+`--filesystem-uuid` to skip the Proxmox lookup.
+
+```sh
+python3 setup_openmediavault/export_samba_shares.py
+python3 setup_openmediavault/export_samba_shares.py --profile "$HOME/proxmox-profile.json"
+```
+
+The first command prints a JSON fragment. The second updates only
+`vm_setup.omv_shares` in the existing local profile. The exporter uses
+read-only commands on the old hosts. Build the fresh Proxmox ISO with the
+updated profile. The saved layout then works with the disk attached to the
+new VM while the old VM is offline.
+
+The export includes enabled OMV-managed share names, paths relative to
+the disk, and the read-only and browseable settings. Shares on another
+filesystem are reported separately. For a mergerfs share, the exporter
+maps a single branch on the disk to its underlying directory and refuses
+an ambiguous pool. The fresh installer uses its own SMB account and
+settings for access policies and extra Samba options.
+
 ## Access and reruns
 
 The installer prints the DHCP address and saves the generated web and SMB
