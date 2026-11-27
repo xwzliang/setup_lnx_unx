@@ -77,6 +77,73 @@ Proxmox documents the [ISO and checksum](https://download.proxmox.com/iso/),
 [automated installation](https://pve.proxmox.com/wiki/Automated_Installation),
 and [package repositories](https://pve.proxmox.com/wiki/Package_Repositories).
 
+## Provision and configure guests during first boot
+
+Add a `vm_setup` object to the private machine profile before building
+the unattended ISO. This example enables all six recorded profiles.
+
+```json
+{
+  "vm_setup": {
+    "media_url": "http://media-host.home.arpa:8000/"
+  }
+}
+```
+
+Build and boot the ISO as above. The first-boot hook installs a persistent
+systemd job containing the setup scripts and VM catalog. It runs on the
+new node once networking and Proxmox are ready. Choose specific profiles
+with `"profiles": ["ha", "omv"]` to omit the other guests.
+
+The `media_url` root serves files at the relative paths in
+[`vm_profiles.json`](vm_profiles.json). For example, it can serve the
+mounted OS media directory on the build workstation or an independent
+LAN media server. Windows, VirtIO, macOS, and OpenCore media need this
+source for a fresh node. Ubuntu and HAOS can also download their pinned
+releases directly. Every transferred image is verified. The `ha` and
+`omv` subset works without a separate media server. Selecting `mac` also
+requires the private QEMU settings file described below. Use
+`--vm-hardware-file` to specify another file during the build.
+
+- Ubuntu, Windows, macOS, and daily Ubuntu are created with their original
+  virtual hardware and media. The job leaves them stopped for OS setup.
+- `ha` imports HAOS 18.4 and starts it. The Home Assistant installer
+  completes onboarding, sets the regional defaults, configures SSH and
+  the apps, and enables the MCP server. The job installs Xiaomi Home by
+  default. Its external account authorization still takes place in a
+  browser. Set `"xiaomi_home": false` to skip the app and
+  `"trusted_web_login": false` to keep the Home Assistant LAN login prompt.
+- `omv` uses the fresh OpenMediaVault 8 installer with the original VM
+  ID, name, CPU count, memory, boot size, and autostart policy. It creates
+  the mergerfs pool and authenticated SMB share on a new data disk and
+  applies the Samba large-copy memory fix. Set `"omv_data_gb"` to change
+  the default 32 GiB data disk or use `0` to omit it.
+
+Both appliance installers use the build workstation's public key or the
+key passed with `--ssh-public-key`. On the Proxmox node, their generated
+credentials are stored under `/var/lib/setup-proxmox/vm-setup/` in
+`ha-password` (Home Assistant user `admin`) and `omv-credentials.txt`.
+This directory is private to root. The first-boot job starts HA and OMV
+while keeping the catalog's host autostart policy for subsequent reboots.
+It provisions fresh guest filesystems and leaves physical passthrough
+for separate configuration.
+
+Check the guest setup service from the node.
+
+```sh
+journalctl -u setup-proxmox-vms.service -b
+systemctl status setup-proxmox-vms.service
+```
+
+The job records completed guests individually and resumes its own
+incomplete guests. It stops if a selected VM ID or name belongs to an
+unrelated guest. After fixing a missing image or package download,
+restart it with `systemctl restart setup-proxmox-vms.service`. If OMV's
+guest bootstrap failed, use the retry procedure in the
+[OpenMediaVault guide](../setup_openmediavault/README.md#access-and-reruns)
+before restarting the job. The `vms-complete` marker records completion.
+Machine profiles without a `vm_setup` object keep the host-only workflow.
+
 ## Create the existing VM profiles on a new node
 
 After Proxmox is running, use `create_vms.py` from macOS or Linux with

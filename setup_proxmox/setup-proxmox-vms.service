@@ -1,0 +1,15 @@
+[Unit]
+Description=Provision the recorded Proxmox VMs and configure their appliances
+Wants=network-online.target
+Requires=pve-cluster.service pvedaemon.service
+After=network-online.target pve-cluster.service pvedaemon.service pve-guests.service
+ConditionPathExists=!/var/lib/setup-proxmox/vm-setup/vms-complete
+
+[Service]
+Type=oneshot
+UMask=0077
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /var/lib/setup-proxmox/vm-setup/setup_proxmox/first_boot_vms.py
+
+[Install]
+WantedBy=multi-user.target

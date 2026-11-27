@@ -25,11 +25,12 @@ const HELP = `Install Home Assistant OS from scratch on Proxmox or configure a f
 
   install.mjs install --vmid ID [Proxmox options] [Home Assistant options]
   install.mjs provision --vmid ID [Proxmox options]
-  install.mjs configure --target URL [--vmid ID] [Home Assistant options]
+  install.mjs configure (--target URL | --vmid ID) [Home Assistant options]
   install.mjs mcp --target URL [MCP options]
 
 Proxmox options
   --proxmox ALIAS     SSH host (default pve)
+  --local-proxmox     Run Proxmox commands directly on the current node
   --storage ID       Disk storage (default local-lvm)
   --bridge NAME      Network bridge (default vmbr0)
   --name NAME        VM name (default haos)
@@ -50,6 +51,7 @@ Home Assistant options
   --xiaomi-home          Install Xiaomi Home and acknowledge the Marketplace notice
   --xiaomi-browser PATH  Open Xiaomi authorization in this Chrome/Chromium executable
   --resume               Sign in to continue a previously started configure run
+  --resume-if-needed     Sign in if onboarding already created the owner
   --mcp-codex            Register the new server in local Codex and start OAuth
 
 MCP options
@@ -113,6 +115,7 @@ function run(command, args, { input, capture = false } = {}) {
 }
 
 function proxmox(remote, command, options) {
+  if (remote === null) return run(command[0], command.slice(1), options);
   return run('ssh', ['-T', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', '-o',
     'ServerAliveInterval=15', '-o', 'StrictHostKeyChecking=yes', '--', remote, command.join(' ')], options);
 }
@@ -142,18 +145,28 @@ async function request(origin, path, { method = 'GET', data, form, token, status
   return text ? JSON.parse(text) : null;
 }
 
-export async function welcomeOrigin(address) {
+export async function welcomeOrigin(address, allowConfigured = false) {
   // New HAOS installs use port 80 and redirect port 8123. Older installs can
   // still serve port 8123 directly. Probe the same guest IP without following redirects.
   return Promise.any([`http://${address}`, `http://${address}:8123`].map(async (origin) => {
-    const info = await request(origin, `${ONBOARDING}/installation_type`, { timeout: 5000 });
-    if (info?.installation_type !== 'Home Assistant OS') throw new Error('Home Assistant OS is not ready.');
+    const probes = [request(origin, `${ONBOARDING}/installation_type`, { timeout: 5000 }).then((info) => {
+      if (info?.installation_type !== 'Home Assistant OS') throw new Error('Home Assistant OS is not ready.');
+    })];
+    if (allowConfigured) {
+      probes.push(request(origin, '/auth/providers', { timeout: 5000 }).then((providers) => {
+        if (!Array.isArray(providers) || !providers.some(({ type }) => type === 'homeassistant')) {
+          throw new Error('Home Assistant sign-in is not ready.');
+        }
+      }));
+    }
+    await Promise.any(probes);
     return origin;
   })).catch(() => undefined);
 }
 
 function proxmoxRemote(options) {
-  return identifier(options.proxmox, '--proxmox', /^(?:[a-zA-Z0-9_][a-zA-Z0-9_.-]*@)?[a-zA-Z0-9][a-zA-Z0-9_.-]*$/);
+  return options['local-proxmox'] ? null :
+    identifier(options.proxmox ?? 'pve', '--proxmox', /^(?:[a-zA-Z0-9_][a-zA-Z0-9_.-]*@)?[a-zA-Z0-9][a-zA-Z0-9_.-]*$/);
 }
 
 async function primaryMac(remote, vmid) {
@@ -179,16 +192,20 @@ async function provision(options) {
   }
   const input = await readFile(new URL('./provision-proxmox.sh', import.meta.url));
   await proxmox(remote, ['/bin/bash', '-s', '--', ...settings], { input });
+  return waitForGuest(remote, vmid, options.timeout);
+}
+
+async function waitForGuest(remote, vmid, timeout, allowConfigured = false) {
   const mac = await primaryMac(remote, vmid);
-  console.error(`Waiting for VM ${vmid} to reach the Home Assistant welcome screen.`);
-  const deadline = Date.now() + options.timeout;
+  console.error(`Waiting for Home Assistant on VM ${vmid}.`);
+  const deadline = Date.now() + timeout;
   let address;
   while (Date.now() < deadline) {
     try {
       const currentAddress = (await primaryIPv4(remote, vmid, mac))?.['ip-address'];
       if (currentAddress) {
         address = currentAddress;
-        const origin = await welcomeOrigin(address);
+        const origin = await welcomeOrigin(address, allowConfigured);
         if (origin) return origin;
       }
     } catch {
@@ -196,7 +213,7 @@ async function provision(options) {
     }
     await sleep(5000);
   }
-  throw new Error(`VM ${vmid} was created but Home Assistant did not reach its welcome screen in time. ${
+  throw new Error(`Home Assistant on VM ${vmid} did not become ready in time. ${
     address ? `Last reported IP: ${address}.` : 'Check its Proxmox console for the assigned IP.'}`);
 }
 
@@ -424,8 +441,10 @@ async function acquireSession(origin, options, password) {
 
 export async function configure(origin, options, password, settings, guest) {
   const steps = await request(origin, ONBOARDING, { statuses: [401, 404] });
+  const pending = (step) => Array.isArray(steps) && steps.some((entry) => entry.step === step && entry.done === false);
+  if (options['resume-if-needed'] && !pending('user')) options = { ...options, resume: true };
   if (!options.resume) {
-    if (!Array.isArray(steps) || !steps.some(({ step, done }) => step === 'user' && done === false)) {
+    if (!pending('user')) {
       throw new Error('The target must be at the welcome screen. Use --resume only on the intended new installation.');
     }
     const type = await request(origin, `${ONBOARDING}/installation_type`);
@@ -435,7 +454,6 @@ export async function configure(origin, options, password, settings, guest) {
   const token = session.access_token;
   if (!token || !session.refresh_token) throw new Error('Home Assistant did not return a usable owner session.');
   const post = (path, data) => request(origin, path, { method: 'POST', data, token });
-  const pending = (step) => steps?.some((entry) => entry.step === step && entry.done === false);
   let owner;
   let needsXiaomiAuthorization = false;
   try {
@@ -483,10 +501,11 @@ function argumentsFor(argv) {
   const string = (value) => ({ type: 'string', default: value });
   const { values, positionals } = parseArgs({ args: argv, allowPositionals: true, options: {
     help: { type: 'boolean', short: 'h' }, vmid: { type: 'string' }, target: { type: 'string' },
-    proxmox: string('pve'), storage: string('local-lvm'), bridge: string('vmbr0'), name: string('haos'),
+    proxmox: { type: 'string' }, 'local-proxmox': { type: 'boolean' },
+    storage: string('local-lvm'), bridge: string('vmbr0'), name: string('haos'),
     memory: string('4096'), cores: string('2'), 'disk-gb': string('32'), 'haos-version': { type: 'string' },
     'owner-name': string('Home Administrator'), username: string('admin'), 'password-file': { type: 'string' },
-    'settings-file': { type: 'string' }, resume: { type: 'boolean' }, timeout: string('1200'),
+    'settings-file': { type: 'string' }, resume: { type: 'boolean' }, 'resume-if-needed': { type: 'boolean' }, timeout: string('1200'),
     'ssh-public-key': { type: 'string' }, 'ssh-user': { type: 'string' }, 'xiaomi-home': { type: 'boolean' },
     'xiaomi-browser': { type: 'string' }, 'no-ssh': { type: 'boolean' }, 'no-trusted-web-login': { type: 'boolean' },
     'mcp-codex': { type: 'boolean' }, 'mcp-name': { type: 'string' },
@@ -499,12 +518,16 @@ async function main(argv) {
   const { options, command, extra } = argumentsFor(argv);
   if (options.help || !command) { console.log(HELP); return; }
   if (extra.length || !['install', 'provision', 'configure', 'mcp'].includes(command)) throw new Error('Use install, provision, configure, or mcp. See --help.');
-  if (options.resume && command !== 'configure') throw new Error('--resume applies only to configure.');
+  if ((options.resume || options['resume-if-needed']) && command !== 'configure') {
+    throw new Error('Resume options apply only to configure.');
+  }
+  if (options.resume && options['resume-if-needed']) throw new Error('Use one resume option.');
+  if (options.proxmox && options['local-proxmox']) throw new Error('Choose either --proxmox or --local-proxmox.');
   if (options.target && !['configure', 'mcp'].includes(command)) throw new Error('--target applies only to configure or mcp.');
   if (options['no-ssh'] && (options['ssh-public-key'] || options['ssh-user'])) throw new Error('--no-ssh cannot be combined with SSH options.');
   if (options['xiaomi-browser'] && !options['xiaomi-home']) throw new Error('--xiaomi-browser requires --xiaomi-home.');
   if (command === 'provision' && (options['ssh-public-key'] || options['xiaomi-home'])) throw new Error('Use install or configure to set up SSH or Xiaomi Home.');
-  if (command === 'configure' && !options.target) throw new Error('Configure requires --target and uses an existing VM.');
+  if (command === 'configure' && !options.target && !options.vmid) throw new Error('Configure requires --target or --vmid.');
   if (options['mcp-codex'] && !['install', 'configure'].includes(command)) {
     throw new Error('--mcp-codex applies only to install or configure. Use mcp for an existing server.');
   }
@@ -551,7 +574,9 @@ async function main(argv) {
     }
     password = await passwordFor(options);
   }
-  const origin = target ?? await provision(options);
+  const origin = target ?? (command === 'configure'
+    ? await waitForGuest(proxmoxRemote(options), options.vmid, options.timeout, options.resume || options['resume-if-needed'])
+    : await provision(options));
   console.log(origin);
   if (command !== 'provision') {
     try {

@@ -10,6 +10,7 @@ import shlex
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+from urllib.parse import quote, urljoin
 
 from install import checksum
 
@@ -30,10 +31,12 @@ class Target:
         self.host = host
 
     def invoke(self, *command, source=None):
+        argv = list(map(str, command))
+        if self.host is not None:
+            argv = ["ssh", "-T", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o",
+                    "ConnectTimeout=8", "-o", "ServerAliveInterval=15", "--", self.host, shlex.join(argv)]
         return subprocess.run(
-            ["ssh", "-T", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o",
-             "ConnectTimeout=8", "-o", "ServerAliveInterval=15", "--", self.host,
-             shlex.join([str(arg) for arg in command])],
+            argv,
             stdin=source if source is not None else subprocess.DEVNULL, text=True, capture_output=True,
         )
 
@@ -44,7 +47,7 @@ class Target:
             if "--args" in command:
                 raise CreateError(f"{label} failed. Inspect the private QEMU settings on Proxmox.")
             detail = (result.stderr.strip() or result.stdout.strip())[-1600:]
-            raise CreateError(f"{label} failed on {self.host}. {detail}".rstrip())
+            raise CreateError(f"{label} failed on {self.host or 'this node'}. {detail}".rstrip())
         return result.stdout.strip()
 
     def json(self, *command):
@@ -144,29 +147,32 @@ def private_settings(plan, args):
     return selected
 
 
-def find_media(asset, roots, cache):
+def find_media(asset, roots, cache, media_url=None):
     relative = Path(asset["path"])
     paths = dict.fromkeys([*(root / item for root in roots for item in (relative, Path(relative.name))),
                           cache / relative.name])
     for file in paths:
         if file.is_file() and checksum(file) == asset["sha256"]:
             return file
-    if not asset.get("url"):
+    sources = [urljoin(media_url, quote(relative.as_posix()))] if media_url else []
+    if asset.get("url"):
+        sources.append(asset["url"])
+    if not sources:
         raise CreateError(f"Provide the exact verified image {relative} with --image-dir.")
     cache.mkdir(parents=True, mode=0o700, exist_ok=True)
     with TemporaryDirectory(prefix=".vm-media-", dir=cache) as directory:
         pending = Path(directory) / relative.name
         print(f"Downloading {relative.name}.", flush=True)
-        subprocess.run(
-            ["curl", "-fsSL", "--proto", "=https", "--proto-redir", "=https", "--retry", "2",
-             "--connect-timeout", "20", "--max-time", "3600", "-o", str(pending), asset["url"]],
-            check=True,
-        )
-        if checksum(pending) != asset["sha256"]:
-            raise CreateError(f"Downloaded {relative.name} failed SHA-256 verification.")
-        destination = cache / relative.name
-        pending.replace(destination)
-        return destination
+        for source in sources:
+            transfer = subprocess.run(
+                ["curl", "-fsSL", "--proto", "=http,https", "--proto-redir", "=https", "--retry", "2",
+                 "--connect-timeout", "20", "--max-time", "3600", "-o", str(pending), source],
+            )
+            if transfer.returncode == 0 and checksum(pending) == asset["sha256"]:
+                destination = cache / relative.name
+                pending.replace(destination)
+                return destination
+    raise CreateError(f"Could not download and verify {relative.name}.")
 
 
 def ensure_iso(target, asset, args):
@@ -177,7 +183,7 @@ def ensure_iso(target, asset, args):
         print(f"Verifying {volume} on Proxmox.", flush=True)
         target.verify(destination, asset["sha256"])
         return volume
-    source = find_media(asset, [*args.image_dir, *IMAGE_ROOTS], args.cache_dir)
+    source = find_media(asset, [*args.image_dir, *IMAGE_ROOTS], args.cache_dir, getattr(args, "media_url", None))
     print(f"Uploading {filename} to {args.iso_storage}.", flush=True)
     target.run("mkdir", "-p", "--", str(Path(destination).parent))
     pending = target.run("mktemp", destination + ".upload.XXXXXXXX")
@@ -194,7 +200,7 @@ def ensure_iso(target, asset, args):
 
 
 def prepare_disk(target, asset, stage, args):
-    source = find_media(asset, [*args.image_dir, *IMAGE_ROOTS], args.cache_dir)
+    source = find_media(asset, [*args.image_dir, *IMAGE_ROOTS], args.cache_dir, getattr(args, "media_url", None))
     archive = f"{stage}/{Path(asset['path']).name}"
     print(f"Uploading {source.name} for disk import.", flush=True)
     target.upload(source, archive)
@@ -264,6 +270,8 @@ def create_vm(target, vm, media, imported, private, args):
     vmid = vm["vmid"]
     disk = vm["disk"]
     settings = {**vm["settings"], "net0": vm["nic"], "name": vm["name"], **private.get(vm["profile"], {})}
+    if provision_tag := getattr(args, "provision_tag", None):
+        settings["tags"] = provision_tag
     if vm.get("efi"):
         settings["efidisk0"] = f"{args.storage}:0,efitype=4m,pre-enrolled-keys=0"
     for slot, drive in vm["media"].items():
@@ -359,9 +367,7 @@ def main():
             apply(catalog, plan, args)
         else:
             print("Preview. Run with --apply to create these VMs.")
-    except (CreateError, OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
-        if isinstance(error, subprocess.CalledProcessError):
-            sys.exit(f"Error: Download failed with status {error.returncode}.")
+    except (CreateError, OSError, ValueError, KeyError) as error:
         sys.exit(f"Error: {error}")
 
 

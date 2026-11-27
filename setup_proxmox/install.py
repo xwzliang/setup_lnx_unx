@@ -2,18 +2,24 @@
 """Build a machine-specific, unattended Proxmox VE installer ISO."""
 
 import argparse
+import base64
 import getpass
 import hashlib
 import ipaddress
+from io import BytesIO
 import json
 import os
 from pathlib import Path
 import re
+import secrets
 import shlex
 import shutil
 import subprocess
 import sys
+import tarfile
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
+from urllib.parse import urlsplit
 
 HERE = Path(__file__).resolve().parent
 ISO_NAME = 'proxmox-ve_9.3-1.iso'
@@ -21,6 +27,16 @@ ISO_URL = f'https://download.proxmox.com/iso/{ISO_NAME}'
 ISO_SHA256 = 'cc4fc97b9ac3a5712ad5b665195753571923a18e11f5c2ebb113fdc29a50bd36'
 ASSISTANT = 'proxmox-auto-install-assistant'
 DISK_PROPERTIES = {'ID_SERIAL', 'ID_SERIAL_SHORT', 'ID_WWN', 'ID_WWN_WITH_EXTENSION'}
+VM_HARDWARE = Path.home() / '.config/setup-proxmox/vm-hardware.json'
+VM_SETUP_FILES = (
+    'setup_proxmox/install.py', 'setup_proxmox/create_vms.py', 'setup_proxmox/vm_profiles.json',
+    'setup_proxmox/first_boot_vms.py', 'setup_proxmox/setup-proxmox-vms.service',
+    'setup_homeassistant/install.mjs', 'setup_homeassistant/install-extras.mjs',
+    'setup_homeassistant/trusted-web-login.py', 'setup_homeassistant/provision-proxmox.sh',
+    'setup_openmediavault/install.py', 'setup_openmediavault/provision.sh',
+    'setup_openmediavault/bootstrap.sh', 'setup_openmediavault/configure_guest.py',
+    'packages/samba/scripts/linux/setup_omv_smb_aio.py',
+)
 
 
 def run(*args, **kwargs):
@@ -39,9 +55,45 @@ def match(value, pattern, name):
     return value
 
 
+def load_vm_setup(value):
+    if value is None:
+        return None
+    options = read_object(value, 'vm_setup', {
+        'profiles', 'media_url', 'omv_data_gb', 'xiaomi_home', 'trusted_web_login',
+    })
+    catalog = json.loads((HERE / 'vm_profiles.json').read_text())
+    profiles = options.get('profiles', list(catalog['vms']))
+    if (not isinstance(profiles, list) or not profiles
+            or not all(isinstance(name, str) and name in catalog['vms'] for name in profiles)
+            or len(profiles) != len(set(profiles))):
+        raise ValueError('Select a nonempty list of distinct VM profile names')
+    media_url = options.get('media_url')
+    if media_url is not None:
+        if not isinstance(media_url, str):
+            raise ValueError('Use an HTTP(S) base URL for vm_setup.media_url')
+        url = urlsplit(media_url)
+        if (url.scheme not in ('http', 'https') or not url.hostname or url.username is not None
+                or url.query or url.fragment):
+            raise ValueError('Use an HTTP(S) base URL without credentials for vm_setup.media_url')
+        media_url = media_url.rstrip('/') + '/'
+    for name in profiles:
+        if name == 'omv':
+            continue
+        for drive in catalog['vms'][name]['media'].values():
+            if 'image' in drive and 'url' not in catalog['media'][drive['image']] and media_url is None:
+                raise ValueError(f'vm_setup.media_url is required to supply the {name} installer media')
+    size = options.get('omv_data_gb', 32)
+    if type(size) is not int or not (size == 0 or 8 <= size <= 65536):
+        raise ValueError('Use omv_data_gb = 0 or a size from 8 to 65536 GiB')
+    booleans = {key: options.get(key, True) for key in ('xiaomi_home', 'trusted_web_login')}
+    if not all(isinstance(value, bool) for value in booleans.values()):
+        raise ValueError('Use boolean Xiaomi Home and trusted web login settings')
+    return {'profiles': profiles, 'media_url': media_url, 'omv_data_gb': size, **booleans}
+
+
 def load_profile(path):
     profile = read_object(json.loads(path.read_text()), 'profile', {
-        'fqdn', 'email', 'country', 'keyboard', 'timezone', 'network', 'disk', 'repository', 'upgrade',
+        'fqdn', 'email', 'country', 'keyboard', 'timezone', 'network', 'disk', 'repository', 'upgrade', 'vm_setup',
     })
     label = r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?'
     fqdn = match(profile.get('fqdn'), rf'{label}(?:\.{label})+', 'fqdn').lower()
@@ -76,6 +128,7 @@ def load_profile(path):
         'fqdn': fqdn, 'email': email, 'country': country, 'keyboard': keyboard, 'timezone': timezone,
         'cidr': str(cidr), 'gateway': str(gateway), 'dns': str(dns), 'mac': mac,
         'disk_property': property_name, 'disk_id': identifier, 'repository': repository, 'upgrade': upgrade,
+        'vm_setup': load_vm_setup(profile.get('vm_setup')),
     }
 
 
@@ -127,11 +180,51 @@ def answer_file(profile, hashed, key):
     return '\n'.join(lines)
 
 
-def first_boot_script(profile):
+def vm_setup_payload(options, key, hardware_file):
+    from create_vms import CreateError, private_settings
+
+    if {'ha', 'omv'}.intersection(options['profiles']) and key is None:
+        raise ValueError('VM setup needs an OpenSSH public key. Use --ssh-public-key.')
+    files = {name: (HERE.parent / name).read_bytes() for name in VM_SETUP_FILES}
+    job = {**options, 'tag': f'setup-vms-{secrets.token_hex(8)}'}
+    files['vm-job.json'] = json.dumps(job).encode()
+    if key:
+        files['ssh.pub'] = (key + '\n').encode()
+    if 'mac' in options['profiles']:
+        args = SimpleNamespace(hardware_file=hardware_file, with_passthrough=False)
+        try:
+            read = private_settings([{'profile': 'mac', 'private_args': True}], args)
+        except CreateError as error:
+            raise ValueError(str(error)) from None
+        files['vm-hardware.json'] = json.dumps(read).encode()
+    with BytesIO() as output:
+        with tarfile.open(fileobj=output, mode='w:gz') as archive:
+            for name, data in files.items():
+                item = tarfile.TarInfo(name)
+                item.mode = 0o600
+                item.size = len(data)
+                archive.addfile(item, BytesIO(data))
+        return base64.encodebytes(output.getvalue()).decode()
+
+
+def first_boot_script(profile, key=None, hardware_file=VM_HARDWARE):
     source = (HERE / 'first_boot.sh').read_text()
     shebang, body = source.split('\n', 1)
     options = shlex.join([profile['repository'], str(profile['upgrade']).lower()])
-    return f'{shebang}\nset -- {options}\n{body}'
+    hook = ''
+    if profile.get('vm_setup') is not None:
+        payload = vm_setup_payload(profile['vm_setup'], key, hardware_file)
+        hook = f"""queue_vm_setup() {{
+    local job=/var/lib/setup-proxmox/vm-setup
+    install -d -m 0700 "$job"
+    base64 -d <<'SETUP_VM_PAYLOAD' | tar -xzf - -C "$job"
+{payload}SETUP_VM_PAYLOAD
+    install -m 0644 "$job/setup_proxmox/setup-proxmox-vms.service" /etc/systemd/system/setup-proxmox-vms.service
+    systemctl daemon-reload
+    systemctl enable --now --no-block setup-proxmox-vms.service
+}}
+"""
+    return f'{shebang}\nset -- {options}\n{hook}{body}'
 
 
 def checksum(path):
@@ -189,6 +282,8 @@ def main():
     parser.add_argument('--cache-dir', type=Path, default=Path.home() / '.cache' / 'proxmox-iso')
     parser.add_argument('--password-file', type=Path, help='read the root password from a private file')
     parser.add_argument('--ssh-public-key', type=Path, help='override the public key discovered in ~/.ssh')
+    parser.add_argument('--vm-hardware-file', type=Path, default=VM_HARDWARE,
+                        help='private QEMU settings for the Mac profile, when selected')
     parser.add_argument('--native', action='store_true', help='use an installed Proxmox assistant instead of Docker')
     args = parser.parse_args()
     output = args.output.resolve()
@@ -202,13 +297,14 @@ def main():
 
     profile = load_profile(args.profile)
     key = ssh_key(args.ssh_public_key)
+    hook_text = first_boot_script(profile, key, args.vm_hardware_file)
     hashed = password_hash(args.password_file)
     stock = stock_iso(args.stock_iso, args.cache_dir)
     with TemporaryDirectory(prefix='.proxmox-iso-', dir=output.parent) as temporary:
         stage = Path(temporary)
         (stage / 'answer.toml').write_text(answer_file(profile, hashed, key))
         hook = stage / 'first-boot.sh'
-        hook.write_text(first_boot_script(profile))
+        hook.write_text(hook_text)
         hook.chmod(0o700)
         build_iso(stock, stage, args.native)
         installer = stage / 'installer.iso'

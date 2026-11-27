@@ -38,6 +38,8 @@ class InstallError(Exception):
 
 
 def ssh_command(host, *command):
+    if host is None:
+        return list(command)
     return ["ssh", "-T", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o",
             "ConnectTimeout=8", "-o", "ServerAliveInterval=15", "--", host, shlex.join(command)]
 
@@ -175,7 +177,8 @@ def provision(args):
     script = (HERE / "provision.sh").read_text()
     command = ssh_command(args.proxmox, "bash", "-c", script, "setup-omv", str(args.vmid), args.name,
                           args.storage, args.iso_storage, args.bridge, str(args.memory), str(args.cores),
-                          str(args.boot_gb), str(args.data_gb), "0" if args.no_onboot else "1")
+                          str(args.boot_gb), str(args.data_gb), "0" if args.no_onboot else "1",
+                          getattr(args, "provision_tag", None) or "")
     print("Transferring the verified image and cloud-init seed to Proxmox.", flush=True)
     with subprocess.Popen(command, stdin=subprocess.PIPE) as process:
         try:
@@ -233,7 +236,7 @@ def wait_for_packages(args):
 
 def credentials_path(args):
     return args.credentials_file or (
-        Path.home() / ".local/state/setup-openmediavault" / f"{args.proxmox}-{args.vmid}.txt"
+        Path.home() / ".local/state/setup-openmediavault" / f"{args.proxmox or 'local'}-{args.vmid}.txt"
     )
 
 
@@ -290,7 +293,9 @@ def arguments():
     for operation in ("install", "configure"):
         command = commands.add_parser(operation)
         command.add_argument("--vmid", type=between(100, 999999999), required=True)
-        command.add_argument("--proxmox", default="pve", help="root SSH target (default pve)")
+        transport = command.add_mutually_exclusive_group()
+        transport.add_argument("--proxmox", default="pve", help="root SSH target (default pve)")
+        transport.add_argument("--local-proxmox", action="store_true", help="run on the Proxmox node as root")
         command.add_argument("--timeout", type=between(10, 7200), default=1800, help="first boot wait in seconds")
         command.add_argument("--credentials-file", type=Path, help="new private file for generated passwords")
         if operation == "install":
@@ -307,8 +312,11 @@ def arguments():
             command.add_argument("--timezone", default="Asia/Singapore")
             command.add_argument("--ssh-public-key", type=Path)
             command.add_argument("--no-onboot", action="store_true")
+            command.add_argument("--provision-tag", help="add a VM ownership tag")
     args = parser.parse_args()
-    if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]*(?:@[a-zA-Z0-9][a-zA-Z0-9._-]*)?", args.proxmox):
+    if args.local_proxmox:
+        args.proxmox = None
+    elif not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]*(?:@[a-zA-Z0-9][a-zA-Z0-9._-]*)?", args.proxmox):
         parser.error("Invalid Proxmox SSH target.")
     if args.operation == "install":
         if not re.fullmatch(r"[a-z][a-z0-9-]{0,14}", args.name) or args.name.endswith("-"):
@@ -320,6 +328,8 @@ def arguments():
                 parser.error(f"Invalid {label.replace('_', ' ')}.")
         if 0 < args.data_gb < 8:
             parser.error("The mergerfs data disk must be at least 8 GiB, or 0 to skip it.")
+        if args.provision_tag is not None and not re.fullmatch(r"[a-z0-9][a-z0-9-]*", args.provision_tag):
+            parser.error("Invalid --provision-tag.")
         try:
             ZoneInfo(args.timezone)
         except (ZoneInfoNotFoundError, ValueError):

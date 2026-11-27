@@ -158,6 +158,20 @@ test('onboarding uses the live port on the assigned guest without following redi
   assert.equal(fetch.mock.callCount(), 6);
 });
 
+test('VM discovery accepts a configured guest only when a resume option allows it', async (t) => {
+  t.mock.method(globalThis, 'fetch', async (url, request) => {
+    assert.equal(request.redirect, 'error');
+    const address = new URL(url);
+    assert.equal(address.hostname, '192.0.2.10');
+    if (address.origin === target && address.pathname === '/auth/providers') {
+      return Response.json([{ type: 'homeassistant', id: null }]);
+    }
+    return new Response(null, { status: 404 });
+  });
+  assert.equal(await welcomeOrigin('192.0.2.10'), undefined);
+  assert.equal(await welcomeOrigin('192.0.2.10', true), target);
+});
+
 test('Proxmox provisioning imports only a verified image and stops on conflicts', (t) => {
   const folder = mkdtempSync(join(tmpdir(), 'ha-provision-test-'));
   t.after(() => rmSync(folder, { force: true, recursive: true }));
@@ -300,7 +314,7 @@ test('fresh setup creates the owner and sends the expected Supervisor requests',
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'WebSocket');
   Object.defineProperty(globalThis, 'WebSocket', { configurable: true, value: FakeSocket });
   t.after(() => Object.defineProperty(globalThis, 'WebSocket', descriptor));
-  await configure(target, { ...options, 'xiaomi-home': true }, 'sentinel-secret');
+  await configure(target, { ...options, 'xiaomi-home': true, 'resume-if-needed': true }, 'sentinel-secret');
   assert.deepEqual([...installed], addons);
   const coreUpdate = {
     id: 1, type: 'config/core/update',
@@ -332,5 +346,10 @@ test('fresh setup creates the owner and sends the expected Supervisor requests',
     requests.length = 0;
     await configure(target, resume, 'sentinel-secret', { time_zone: 'Asia/Singapore' });
     assert.deepEqual(requests[0], { id: 1, type: 'config/core/update', time_zone: 'Asia/Singapore' });
+  });
+  await t.test('automatic resume signs in with the configured owner', async () => {
+    mutations.length = 0;
+    await configure(target, { ...options, 'resume-if-needed': true }, 'sentinel-secret');
+    assert.deepEqual(mutations, ['/auth/login_flow', '/auth/login_flow/owner-flow', '/auth/token', '/auth/revoke']);
   });
 });

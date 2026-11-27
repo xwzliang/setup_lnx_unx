@@ -72,6 +72,9 @@ for attempt in {1..60}; do
         pvesm status
         install -d -m 0700 /var/lib/setup-proxmox
         date -u +%FT%TZ > /var/lib/setup-proxmox/first-boot-complete
+        if declare -F queue_vm_setup >/dev/null; then
+            queue_vm_setup
+        fi
         exit 0
     fi
     sleep 1

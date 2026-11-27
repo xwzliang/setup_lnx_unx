@@ -2,6 +2,7 @@
 # Run on the Proxmox node. Standard input contains a tar archive from install.py.
 set -euo pipefail
 vmid=$1 name=$2 storage=$3 iso_storage=$4 bridge=$5 memory=$6 cores=$7 boot_gb=$8 data_gb=$9 onboot=${10}
+provision_tag=${11:-}
 
 if [[ $(id -u) != 0 || $(uname -m) != x86_64 ]]; then
     echo 'Run as root on an x86-64 Proxmox node.' >&2
@@ -55,7 +56,7 @@ seed_path=$(pvesm path "$seed")
 mkdir -p -- "$(dirname "$seed_path")"
 genisoimage -quiet -volid cidata -joliet -rock -output "$work/seed.iso" "$work/user-data" "$work/meta-data"
 # The atomic create fails if the VMID was claimed while the image downloaded.
-qm create "$vmid" --name "$name" --description "Created by setup_openmediavault" --tags setup-omv \
+qm create "$vmid" --name "$name" --description "Created by setup_openmediavault" --tags "setup-omv${provision_tag:+;$provision_tag}" \
     --memory "$memory" --cores "$cores" --cpu x86-64-v2-AES --ostype l26 \
     --agent enabled=1 --scsihw virtio-scsi-single --net0 "virtio,bridge=$bridge,firewall=1" \
     --onboot 0 --startup order=1
