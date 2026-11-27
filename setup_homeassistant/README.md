@@ -19,7 +19,11 @@ prints its Home Assistant URL. It prompts privately for the new owner password
 before provisioning. Use `--owner-name` and `--username` to customize the owner,
 or `--password-file` to run unattended with an owner password in a private file.
 Run `--help` for storage, bridge, resource, release, and timeout overrides.
-Use a trusted LAN for first boot and account creation over HTTP.
+Use a trusted LAN for first boot and account creation over HTTP. On a Proxmox
+install, Home Assistant skips the browser login screen for clients on the
+VM's primary private IPv4 subnet. Those clients open the dashboard as the
+owner. Home Assistant offers its password provider to clients outside that
+subnet. Use `--no-trusted-web-login` to skip this configuration.
 
 The clean profile completes normal Home Assistant onboarding, adds the MCP
 Server integration, and installs Terminal & SSH, Advanced SSH & Web Terminal,
@@ -55,10 +59,12 @@ node setup_homeassistant/install.mjs configure --target http://192.168.1.50
 
 ### Add SSH access and Xiaomi Home
 
-Pass your `.pub` file to `--ssh-public-key` to configure and start Advanced SSH.
-The installer adds the key alongside any existing keys, sets the app to start
-on boot, and retains its existing SSH port if one is set. `--ssh-user` selects
-the login name for a fresh app. Keep the matching private key on your workstation.
+The installer configures and starts Advanced SSH using a public key from the
+machine running it. It checks `~/.ssh/id_ed25519.pub`, `id_ecdsa.pub`, and
+`id_rsa.pub` in that order, or uses the sole `.pub` file in `~/.ssh` when none
+of those exist. Override the choice with `--ssh-public-key` or skip SSH setup
+with `--no-ssh`. `--ssh-user` sets the login name for a fresh app. The installer
+adds the public key alongside any existing keys and enables the app on boot.
 
 Pass `--xiaomi-home` to acknowledge the Marketplace's first-use notice and
 install Xiaomi's official integration. Set `--xiaomi-browser` to a local Chrome
@@ -69,13 +75,14 @@ lets a second Home Assistant instance keep using `homeassistant.local` on the
 LAN. Review Xiaomi's terms, authorize the account, and choose the homes to
 import in that browser window. See [Xiaomi Home's setup guide](https://github.com/XiaoMi/ha_xiaomi_home).
 
-Both options work with `install`. For a VM you already set up, use `configure
---resume` with its own address and owner account.
+Both options work with `install`. For an existing VM, use `configure --resume`
+with its address and owner account. Pass its VM ID to also configure LAN login.
+The installer verifies that the address belongs to that VM and restarts its
+Home Assistant Core after validating the change.
 
 ```sh
 node setup_homeassistant/install.mjs configure --resume \
-  --target http://192.168.1.50 --ssh-public-key "$HOME/.ssh/id_ed25519.pub" \
-  --ssh-user myuser --xiaomi-home \
+  --vmid 106 --target http://192.168.1.50 --xiaomi-home \
   --xiaomi-browser '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 ```
 

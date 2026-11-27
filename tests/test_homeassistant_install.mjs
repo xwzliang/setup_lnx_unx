@@ -6,11 +6,24 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { configure, guestAddress, targetOrigin, welcomeOrigin } from '../setup_homeassistant/install.mjs';
-import { configureSsh, installXiaomiHome, parsePublicKey, xiaomiBrowserArgs } from '../setup_homeassistant/install-extras.mjs';
+import { configureSsh, installXiaomiHome, localPublicKey, parsePublicKey, xiaomiBrowserArgs } from '../setup_homeassistant/install-extras.mjs';
 
 const target = 'http://192.0.2.10:8123';
 const addons = ['core_ssh', 'a0d7b954_ssh', 'a0d7b954_nodered'];
 const options = { username: 'new-owner', 'owner-name': 'New Owner', timeout: 1000 };
+
+test('selects a public key from the machine running the installer', async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'ha-local-ssh-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const key = (type) => `${type} ${Buffer.concat([Buffer.from([0, 0, 0, type.length]), Buffer.from(type), Buffer.alloc(40, 1)]).toString('base64')}`;
+  assert.equal(await localPublicKey(undefined, directory), undefined);
+  const rsa = join(directory, 'id_rsa.pub');
+  writeFileSync(rsa, key('ssh-rsa'));
+  assert.equal(await localPublicKey(undefined, directory), key('ssh-rsa'));
+  writeFileSync(join(directory, 'id_ed25519.pub'), key('ssh-ed25519'));
+  assert.equal(await localPublicKey(undefined, directory), key('ssh-ed25519'));
+  assert.equal(await localPublicKey(rsa, directory), key('ssh-rsa'));
+});
 
 test('Advanced SSH adds a public key once and starts only the selected add-on', async () => {
   const encoded = Buffer.concat([Buffer.from([0, 0, 0, 11]), Buffer.from('ssh-ed25519'),

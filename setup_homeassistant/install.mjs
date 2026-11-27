@@ -7,7 +7,7 @@ import { createInterface } from 'node:readline/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 import { pathToFileURL } from 'node:url';
-import { configureSsh, installXiaomiHome, openXiaomiBrowser, parsePublicKey } from './install-extras.mjs';
+import { configureSsh, installXiaomiHome, localPublicKey, openXiaomiBrowser } from './install-extras.mjs';
 
 const APPS = ['core_ssh', 'a0d7b954_ssh', 'a0d7b954_nodered'];
 const NODE_RED = 'a0d7b954_nodered';
@@ -18,7 +18,7 @@ const HELP = `Install Home Assistant OS from scratch on Proxmox or configure a f
 
   install.mjs install --vmid ID [Proxmox options] [Home Assistant options]
   install.mjs provision --vmid ID [Proxmox options]
-  install.mjs configure --target URL [Home Assistant options]
+  install.mjs configure --target URL [--vmid ID] [Home Assistant options]
 
 Proxmox options
   --proxmox ALIAS     SSH host (default pve)
@@ -35,8 +35,10 @@ Home Assistant options
   --username NAME        Home Assistant owner username (default admin)
   --password-file PATH   Local file holding only the owner password
   --settings-file PATH   Optional JSON with Home Assistant general settings
-  --ssh-public-key PATH  Enable Advanced SSH with this OpenSSH public key
+  --ssh-public-key PATH  Override the OpenSSH public key discovered on this machine
   --ssh-user NAME        Advanced SSH login name (default: its configured user)
+  --no-ssh               Skip Advanced SSH configuration
+  --no-trusted-web-login Skip LAN passwordless web login configuration for a Proxmox VM
   --xiaomi-home          Install Xiaomi Home and acknowledge the Marketplace notice
   --xiaomi-browser PATH  Open Xiaomi authorization in this Chrome/Chromium executable
   --resume               Sign in to continue a previously started configure run
@@ -92,10 +94,14 @@ function proxmox(remote, command, options) {
 }
 
 export function guestAddress(interfaces, mac) {
+  return guestIPv4(interfaces, mac)?.['ip-address'];
+}
+
+function guestIPv4(interfaces, mac) {
   const guest = interfaces.find((item) => item['hardware-address']?.toLowerCase() === mac.toLowerCase());
   return guest?.['ip-addresses']?.find(({ 'ip-address': ip }) => (
     isIPv4(ip) && !/^(0\.|127\.|169\.254\.)/.test(ip)
-  ))?.['ip-address'];
+  ));
 }
 
 async function request(origin, path, { method = 'GET', data, form, token, statuses = [], timeout = 30000 } = {}) {
@@ -122,8 +128,24 @@ export async function welcomeOrigin(address) {
   })).catch(() => undefined);
 }
 
+function proxmoxRemote(options) {
+  return identifier(options.proxmox, '--proxmox', /^(?:[a-zA-Z0-9_][a-zA-Z0-9_.-]*@)?[a-zA-Z0-9][a-zA-Z0-9_.-]*$/);
+}
+
+async function primaryMac(remote, vmid) {
+  const config = await proxmox(remote, ['qm', 'config', vmid], { capture: true });
+  const mac = /^net0: virtio=([a-f\d:]{17})(?:,|$)/im.exec(config)?.[1];
+  if (!mac) throw new Error(`Could not identify VM ${vmid}'s MAC address.`);
+  return mac;
+}
+
+async function primaryIPv4(remote, vmid, mac) {
+  const interfaces = await proxmox(remote, ['qm', 'guest', 'cmd', vmid, 'network-get-interfaces'], { capture: true });
+  return guestIPv4(JSON.parse(interfaces), mac);
+}
+
 async function provision(options) {
-  const remote = identifier(options.proxmox, '--proxmox', /^(?:[a-zA-Z0-9_][a-zA-Z0-9_.-]*@)?[a-zA-Z0-9][a-zA-Z0-9_.-]*$/);
+  const remote = proxmoxRemote(options);
   const { vmid } = options;
   const settings = [vmid, identifier(options.name, '--name'), identifier(options.storage, '--storage'),
     identifier(options.bridge, '--bridge'), integer(options.memory, '--memory', 2048, 1048576),
@@ -133,16 +155,13 @@ async function provision(options) {
   }
   const input = await readFile(new URL('./provision-proxmox.sh', import.meta.url));
   await proxmox(remote, ['/bin/bash', '-s', '--', ...settings], { input });
-  const config = await proxmox(remote, ['qm', 'config', vmid], { capture: true });
-  const mac = /^net0: virtio=([a-f\d:]{17})(?:,|$)/im.exec(config)?.[1];
-  if (!mac) throw new Error(`Could not identify VM ${vmid}'s MAC address.`);
+  const mac = await primaryMac(remote, vmid);
   console.error(`Waiting for VM ${vmid} to reach the Home Assistant welcome screen.`);
   const deadline = Date.now() + options.timeout;
   let address;
   while (Date.now() < deadline) {
     try {
-      const interfaces = await proxmox(remote, ['qm', 'guest', 'cmd', vmid, 'network-get-interfaces'], { capture: true });
-      const currentAddress = guestAddress(JSON.parse(interfaces), mac);
+      const currentAddress = (await primaryIPv4(remote, vmid, mac))?.['ip-address'];
       if (currentAddress) {
         address = currentAddress;
         const origin = await welcomeOrigin(address);
@@ -155,6 +174,50 @@ async function provision(options) {
   }
   throw new Error(`VM ${vmid} was created but Home Assistant did not reach its welcome screen in time. ${
     address ? `Last reported IP: ${address}.` : 'Check its Proxmox console for the assigned IP.'}`);
+}
+
+async function verifiedGuest(origin, options) {
+  const remote = proxmoxRemote(options);
+  const { vmid } = options;
+  const primary = await primaryIPv4(remote, vmid, await primaryMac(remote, vmid));
+  const ip = primary?.['ip-address'];
+  if (ip !== new URL(origin).hostname || !Number.isInteger(primary.prefix) || primary.prefix < 1 || primary.prefix > 32) {
+    throw new Error(`Use the primary IPv4 URL of VM ${vmid} to configure its LAN web login.`);
+  }
+  return { remote, vmid, address: `${ip}/${primary.prefix}` };
+}
+
+async function guestCommand(guest, command, input) {
+  const args = ['qm', 'guest', 'exec', guest.vmid, '--timeout', '120'];
+  if (input) args.push('--pass-stdin', '1');
+  const reply = JSON.parse(await proxmox(guest.remote, [...args, '--', ...command], { input, capture: true }));
+  if (reply.exited !== 1 || reply.exitcode !== 0) {
+    throw new Error(reply['err-data']?.trim() || `Guest command failed on VM ${guest.vmid}.`);
+  }
+  return reply['out-data']?.trim();
+}
+
+async function configureWebLogin(origin, guest, owner) {
+  if (!owner?.is_owner) throw new Error('LAN web login requires the Home Assistant owner account.');
+  const ownerId = identifier(owner.id, 'Home Assistant owner ID', /^[a-f0-9]{32}$/);
+  const script = await readFile(new URL('./trusted-web-login.py', import.meta.url));
+  const output = await guestCommand(guest, ['/usr/bin/docker', 'exec', '-i', 'homeassistant', 'python3', '-', guest.address, ownerId], script);
+  const [status, network] = output?.split(' ') ?? [];
+  if (!['changed', 'unchanged'].includes(status) || !network) throw new Error('The guest did not report its trusted web login configuration.');
+  if (status === 'changed') {
+    console.error(`Restarting Home Assistant Core on VM ${guest.vmid} to enable passwordless LAN login.`);
+    await guestCommand(guest, ['/usr/bin/ha', '--no-progress', 'core', 'restart']);
+    for (let attempt = 0; attempt < 30; attempt++) {
+      try {
+        await request(origin, '/auth/providers', { timeout: 4000 });
+        break;
+      } catch (error) {
+        if (attempt === 29) throw new Error('Home Assistant did not respond after restarting Core.', { cause: error });
+      }
+      await sleep(2000);
+    }
+  }
+  console.error(`Home Assistant web login is passwordless for ${network}.`);
 }
 
 async function passwordFor(options) {
@@ -301,7 +364,7 @@ async function acquireSession(origin, options, password) {
   }) });
 }
 
-export async function configure(origin, options, password, settings) {
+export async function configure(origin, options, password, settings, guest) {
   const steps = await request(origin, ONBOARDING, { statuses: [401, 404] });
   if (!options.resume) {
     if (!Array.isArray(steps) || !steps.some(({ step, done }) => step === 'user' && done === false)) {
@@ -315,10 +378,13 @@ export async function configure(origin, options, password, settings) {
   if (!token || !session.refresh_token) throw new Error('Home Assistant did not return a usable owner session.');
   const post = (path, data) => request(origin, path, { method: 'POST', data, token });
   const pending = (step) => steps?.some((entry) => entry.step === step && entry.done === false);
+  let owner;
+  let needsXiaomiAuthorization = false;
   try {
     const info = await request(origin, '/api/config', { token });
     if (!info.components?.includes('hassio')) throw new Error('Supervisor is unavailable on the target.');
     await withSocket(origin, token, options.timeout, async (call) => {
+      if (guest) owner = await call({ type: 'auth/current_user' });
       if (settings) await call({ ...settings, type: 'config/core/update' });
       if (pending('core_config')) await post(`${ONBOARDING}/core_config`);
       if (pending('analytics')) await post(`${ONBOARDING}/analytics`);
@@ -340,11 +406,15 @@ export async function configure(origin, options, password, settings) {
         if (xiaomiEntries.length === 0) {
           const handlers = await request(origin, '/api/config/config_entries/flow_handlers', { token });
           if (!handlers.includes('xiaomi_home')) throw new Error('Xiaomi Home is installed but its setup flow is unavailable. Check Home Assistant Repairs.');
-          if (options['xiaomi-browser']) await openXiaomiBrowser(origin, options['xiaomi-browser']);
-          else console.error(`Finish Xiaomi authorization at ${origin}/config/integrations/add?domain=xiaomi_home. Use --xiaomi-browser to route the callback to this instance.`);
+          needsXiaomiAuthorization = true;
         }
       }
     });
+    if (guest) await configureWebLogin(origin, guest, owner);
+    if (needsXiaomiAuthorization) {
+      if (options['xiaomi-browser']) await openXiaomiBrowser(origin, options['xiaomi-browser']);
+      else console.error(`Finish Xiaomi authorization at ${origin}/config/integrations/add?domain=xiaomi_home. Use --xiaomi-browser to route the callback to this instance.`);
+    }
     console.error('Home Assistant is set up. Connect cloud accounts and pair the mobile app in the web UI.');
   } finally {
     try {
@@ -364,7 +434,7 @@ function argumentsFor(argv) {
     'owner-name': string('Home Administrator'), username: string('admin'), 'password-file': { type: 'string' },
     'settings-file': { type: 'string' }, resume: { type: 'boolean' }, timeout: string('1200'),
     'ssh-public-key': { type: 'string' }, 'ssh-user': { type: 'string' }, 'xiaomi-home': { type: 'boolean' },
-    'xiaomi-browser': { type: 'string' },
+    'xiaomi-browser': { type: 'string' }, 'no-ssh': { type: 'boolean' }, 'no-trusted-web-login': { type: 'boolean' },
   } });
   return { options: values, command: positionals[0], extra: positionals.slice(1) };
 }
@@ -375,20 +445,23 @@ async function main(argv) {
   if (extra.length || !['install', 'provision', 'configure'].includes(command)) throw new Error('Use install, provision, or configure. See --help.');
   if (options.resume && command !== 'configure') throw new Error('--resume applies only to configure.');
   if (options.target && command !== 'configure') throw new Error('--target applies only to configure.');
-  if (options['ssh-user'] && !options['ssh-public-key']) throw new Error('--ssh-user requires --ssh-public-key.');
+  if (options['no-ssh'] && (options['ssh-public-key'] || options['ssh-user'])) throw new Error('--no-ssh cannot be combined with SSH options.');
   if (options['xiaomi-browser'] && !options['xiaomi-home']) throw new Error('--xiaomi-browser requires --xiaomi-home.');
   if (command === 'provision' && (options['ssh-public-key'] || options['xiaomi-home'])) throw new Error('Use install or configure to set up SSH or Xiaomi Home.');
-  if (command === 'configure' && (!options.target || options.vmid)) throw new Error('Configure requires --target and uses an existing VM.');
+  if (command === 'configure' && !options.target) throw new Error('Configure requires --target and uses an existing VM.');
   options.timeout = Number(integer(options.timeout, '--timeout', 10, 7200)) * 1000;
   const target = options.target && targetOrigin(options.target);
-  if (!target) options.vmid = integer(options.vmid, '--vmid', 100, 999999999);
+  if (!target || options.vmid) options.vmid = integer(options.vmid, '--vmid', 100, 999999999);
   let password;
   let settings;
   if (command !== 'provision') {
     if (typeof WebSocket !== 'function') throw new Error('Configuration requires Node.js 22.4 or newer.');
     identifier(options.username, '--username', /^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/);
     if (options['ssh-user']) identifier(options['ssh-user'], '--ssh-user', /^[a-z_][a-z0-9_-]{0,31}$/);
-    if (options['ssh-public-key']) options.sshKey = parsePublicKey(await readFile(options['ssh-public-key'], 'utf8'));
+    if (!options['no-ssh']) {
+      options.sshKey = await localPublicKey(options['ssh-public-key']);
+      if (!options.sshKey) console.error('No local SSH public key was found. Use --ssh-public-key to enable Advanced SSH.');
+    }
     if (options['settings-file']) {
       settings = JSON.parse(await readFile(options['settings-file'], 'utf8'));
       if (!settings || typeof settings !== 'object' || Array.isArray(settings) || 'id' in settings || 'type' in settings) {
@@ -401,7 +474,8 @@ async function main(argv) {
   console.log(origin);
   if (command !== 'provision') {
     try {
-      await configure(origin, options, password, settings);
+      const guest = options.vmid && !options['no-trusted-web-login'] ? await verifiedGuest(origin, options) : undefined;
+      await configure(origin, options, password, settings, guest);
     } catch (error) {
       throw new Error(`${error.message} For an interrupted setup, use configure --target ${origin} --resume with the same username.`);
     }

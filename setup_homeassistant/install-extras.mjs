@@ -1,12 +1,13 @@
 import { spawn } from 'node:child_process';
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir } from 'node:fs/promises';
 import { isIPv4 } from 'node:net';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 const SSH = '/addons/a0d7b954_ssh';
 const XIAOMI_REPOSITORY = 'xiaomi/ha_xiaomi_home';
+const DEFAULT_PUBLIC_KEYS = ['id_ed25519.pub', 'id_ecdsa.pub', 'id_rsa.pub'];
 
 export function parsePublicKey(value) {
   const match = /^([\w@.-]+)[ \t]+([A-Za-z0-9+/]+={0,2})(?:[ \t]+[^\r\n]*)?$/.exec(value.trim());
@@ -22,6 +23,22 @@ export function parsePublicKey(value) {
     }
   }
   throw new Error('Expected one OpenSSH public key. Pass your .pub file.');
+}
+
+export async function localPublicKey(path, directory = join(homedir(), '.ssh')) {
+  if (path) return parsePublicKey(await readFile(path, 'utf8'));
+  let entries;
+  try {
+    entries = await readdir(directory);
+  } catch (error) {
+    if (error.code === 'ENOENT') return undefined;
+    throw error;
+  }
+  const customKeys = entries.filter((name) => name.endsWith('.pub'));
+  const selected = DEFAULT_PUBLIC_KEYS.find((name) => entries.includes(name)) ??
+    (customKeys.length === 1 ? customKeys[0] : undefined);
+  if (!selected && customKeys.length > 1) throw new Error('Several local public keys were found. Select one with --ssh-public-key or use --no-ssh.');
+  if (selected) return parsePublicKey(await readFile(join(directory, selected), 'utf8'));
 }
 
 export async function configureSsh(supervisor, key, username) {
