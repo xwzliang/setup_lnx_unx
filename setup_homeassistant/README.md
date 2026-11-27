@@ -159,6 +159,21 @@ verification, provision a trusted
 Scripts, scenes, integrations, and automation runtime state are covered by
 the full Supervisor backup workflow below.
 
+## Check the Home Assistant MCP connection
+
+Copy the endpoint from Settings → System → AI and use an existing Home
+Assistant access token valid for that endpoint. See the
+[Home Assistant MCP integration guide](https://www.home-assistant.io/integrations/mcp_server/).
+
+```sh
+python3 setup_homeassistant/check_mcp.py http://homeassistant.local:8123/api/mcp
+```
+
+The script reads `HA_TOKEN` or prompts for it. For a noninteractive check,
+use `--token-stdin` to read an existing token from a private file or secret
+store. It negotiates an MCP session and lists the available tools without
+invoking them.
+
 ## Migrate an existing installation
 
 Use `migrate.py` on your Mac or a Linux workstation with Python 3.9 or newer.
