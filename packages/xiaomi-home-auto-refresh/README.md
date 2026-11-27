@@ -5,7 +5,9 @@ It listens for additions to the selected Xiaomi Home account. It previews the
 same Options flow as **Configure → Update device list** and confirms it only when
 there are additions and **zero removals**. Existing homes, control mode, and other
 configuration options are preserved. Offline-only notifications do not trigger a
-refresh. A notice proposing removals remains available for manual review.
+refresh. The automation dismisses the triggering Xiaomi notice after a confirmed
+import. It leaves the notice visible when the refresh is skipped, finds no new
+devices, or fails. A newer notice queued during the import gets checked on its own.
 
 This recipe is designed for Home Assistant OS on the same host as Xiaomi Home.
 It uses Home Assistant's administrator-only options API at `127.0.0.1:8123`,

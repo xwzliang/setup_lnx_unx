@@ -15,6 +15,7 @@ import stat
 import sys
 import tempfile
 import time
+from typing import NamedTuple
 
 NAME = "xiaomi_home_auto_refresh"
 TOKEN_PATH = Path(".home-assistant") / "token"
@@ -29,6 +30,11 @@ OPTION_KEYS = {
 
 class RefreshError(Exception):
     pass
+
+
+class RefreshResult(NamedTuple):
+    message: str
+    imported: int = 0
 
 
 def read_json(path):
@@ -158,11 +164,13 @@ def refresh(config, api, *, apply):
         added = change_count(summary, "devices_add")
         removed = change_count(summary, "devices_remove")
         if removed:
-            return f"Skipped: Xiaomi proposes {added} additions and {removed} removals. Review the device list manually."
+            return RefreshResult(
+                f"Skipped: Xiaomi proposes {added} additions and {removed} removals. Review the device list manually."
+            )
         if not added:
-            return "No new devices to import."
+            return RefreshResult("No new devices to import.")
         if not apply:
-            return f"Preview: would import {added} devices with zero removals."
+            return RefreshResult(f"Preview: would import {added} devices with zero removals.")
         if active_entry(config) != entry or cache_members(config, entry) != existing:
             raise RefreshError("Xiaomi Home changed during the preview. Device sync was skipped.")
         # A commit timeout may still mean the integration accepted the change.
@@ -174,7 +182,7 @@ def refresh(config, api, *, apply):
         if result.get("type") != "create_entry":
             submitting = False
             raise RefreshError("Home Assistant did not confirm the device-list refresh.")
-        return f"Xiaomi Home accepted the import of {added} devices with zero removals."
+        return RefreshResult(f"Xiaomi Home accepted the import of {added} devices with zero removals.", added)
     finally:
         if not submitting:
             with suppress(RefreshError, OSError, http.client.HTTPException, ValueError):
@@ -196,12 +204,12 @@ def automation_yaml(config):
     ident = f"xiaomi_home-{data['uid']}-{data['cloud_server']}-dev_list_changed"
     return f"""# Installed by xiaomi_home_auto_refresh.py. Keep this file in Home Assistant packages.
 shell_command:
-  xiaomi_home_auto_refresh_devices: 'python3 /config/{NAME}/refresh.py run --apply'
+  xiaomi_home_auto_refresh_devices: 'python3 /config/{NAME}/refresh.py run --apply --json'
 
 automation:
   - id: xiaomi_home_refresh_added_devices
     alias: Xiaomi Home · Import newly discovered devices
-    mode: single
+    mode: queued
     max_exceeded: silent
     variables:
       addition_pattern: {pattern}
@@ -211,10 +219,11 @@ automation:
         update_type:
           - added
           - updated
-    conditions:
-      - condition: template
-        value_template: "{{{{ trigger.notification.message | regex_search(addition_pattern) }}}}"
     actions:
+      - condition: template
+        value_template: >-
+          {{{{ trigger is defined and trigger.platform == 'persistent_notification'
+              and trigger.notification.message | regex_search(addition_pattern) }}}}
       - action: shell_command.xiaomi_home_auto_refresh_devices
         response_variable: refresh_result
       - if:
@@ -226,6 +235,14 @@ automation:
               level: warning
               logger: xiaomi_home_auto_refresh
               message: "{{{{ refresh_result.stderr | trim }}}}"
+        else:
+          - condition: template
+            value_template: >-
+              {{{{ (refresh_result.stdout | from_json({{}})).get('imported', 0) > 0
+                  and state_attr(this.entity_id, 'current') == 1 }}}}
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: {json.dumps(ident)}
 """
 
 
@@ -297,12 +314,14 @@ def main():
     setup.add_argument("--token-stdin", action="store_true", help="Read the token from stdin instead of prompting")
     run = group.add_parser("run", help="Preview or apply an additions-only refresh")
     run.add_argument("--apply", action="store_true", help="Confirm the flow when it lists zero removals")
+    run.add_argument("--json", action="store_true", help="Report the confirmed import count as JSON")
     args = parser.parse_args()
     config = args.config_dir.resolve()
     try:
         if args.command == "run":
             with one_at_a_time(config / NAME / "refresh.lock"):
-                print(refresh(config, HA(read_token(config / TOKEN_PATH)), apply=args.apply))
+                result = refresh(config, HA(read_token(config / TOKEN_PATH)), apply=args.apply)
+                print(json.dumps(result._asdict()) if args.json else result.message)
         else:
             install(config, getattr(args, "token_stdin", False))
     except RefreshError as exc:

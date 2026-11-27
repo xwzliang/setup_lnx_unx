@@ -69,7 +69,9 @@ class XiaomiRefreshTests(unittest.TestCase):
 
     def test_only_additions_are_confirmed_and_defaults_are_preserved(self):
         api = self.api()
-        self.assertIn("accepted the import of 2", refresh.refresh(self.path, api, apply=True))
+        result = refresh.refresh(self.path, api, apply=True)
+        self.assertEqual(result.imported, 2)
+        self.assertIn("accepted the import of 2", result.message)
         self.assertEqual(api.calls[0], ("POST", refresh.FLOW, {"handler": "xiaomi-entry"}))
         self.assertEqual(api.calls[1][2], {**self.options, "update_devices": True})
         self.assertEqual(api.calls[2][2], self.home_options)
@@ -79,7 +81,8 @@ class XiaomiRefreshTests(unittest.TestCase):
         for added, removed, apply in [(2, 0, False), (0, 0, True), (2, 1, True), (0, 1, True)]:
             with self.subTest(added=added, removed=removed, apply=apply):
                 api = self.api(added, removed)
-                refresh.refresh(self.path, api, apply=apply)
+                result = refresh.refresh(self.path, api, apply=apply)
+                self.assertEqual(result.imported, 0)
                 self.assertTrue(all(call[2] != {"confirm": True} for call in api.calls))
                 self.assertEqual(api.calls[-1][0], "DELETE")
 
