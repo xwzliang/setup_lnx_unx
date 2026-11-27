@@ -166,6 +166,12 @@ Provision and configure a clean Home Assistant OS VM on Proxmox, or move an
 existing installation with an encrypted backup. See the
 [Home Assistant setup guide](setup_homeassistant/README.md).
 
+## Set up OpenMediaVault
+
+Provision a fresh OpenMediaVault VM on Proxmox with an optional mergerfs
+data disk, authenticated Samba, and the large-copy memory fix. See the
+[OpenMediaVault setup guide](setup_openmediavault/README.md).
+
 ## Antigravity CLI and Linux app
 
 ```sh
