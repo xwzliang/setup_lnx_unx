@@ -13,9 +13,9 @@ refresh = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(refresh)
 
 
-def form(step, values, counts=None):
+def form(step, values, counts=None, *, errors=None):
     return {
-        "type": "form", "flow_id": "options-test", "step_id": step, "errors": {},
+        "type": "form", "flow_id": "options-test", "step_id": step, "errors": errors or {},
         "data_schema": [
             {"name": name, "default": value, "required": True} for name, value in values.items()
         ],
@@ -58,10 +58,11 @@ class XiaomiRefreshTests(unittest.TestCase):
     def write_entry(self):
         self.registry.write_text(json.dumps({"data": {"entries": [self.entry]}}))
 
-    def api(self, additions=2, removals=0, *, home_options=None, options=None):
+    def api(self, additions=2, removals=0, *, home_options=None, options=None, home_error=""):
         return FakeHA([
             form("config_options", self.options if options is None else options),
-            form("homes_select", self.home_options if home_options is None else home_options),
+            form("homes_select", self.home_options if home_options is None else home_options,
+                 errors={"base": home_error}),
             form("config_confirm", {"confirm": False}, {"devices_add": str(additions), "devices_remove": removals}),
             {"type": "create_entry"},
         ])
@@ -89,6 +90,12 @@ class XiaomiRefreshTests(unittest.TestCase):
             with self.assertRaises(refresh.RefreshError):
                 refresh.refresh(self.path, api, apply=True)
             self.assertEqual(api.calls[-1][0], "DELETE")
+
+    def test_home_selection_error_aborts_before_confirming(self):
+        api = self.api(home_error="no_devices")
+        with self.assertRaisesRegex(refresh.RefreshError, "homes_select"):
+            refresh.refresh(self.path, api, apply=True)
+        self.assertEqual([call[0] for call in api.calls], ["POST", "POST", "DELETE"])
 
     def test_custom_filters_fail_before_making_a_request(self):
         self.entry["data"]["devices_filter"] = {"exclude": ["device"]}

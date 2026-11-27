@@ -95,7 +95,11 @@ class HA:
 
 
 def fields(result, step, required, optional=()):
-    if result.get("type") != "form" or result.get("step_id") != step or result.get("errors"):
+    errors = result.get("errors")
+    # Xiaomi Home v0.4.7 reports a blank base error on the initial home selection.
+    if step == "homes_select" and errors == {"base": ""}:
+        errors = {}
+    if result.get("type") != "form" or result.get("step_id") != step or errors:
         raise RefreshError(f"Expected the Xiaomi Home {step} form. Review the options flow manually.")
     schema = result.get("data_schema")
     if not isinstance(schema, list) or any(not isinstance(f, dict) or "name" not in f for f in schema):
