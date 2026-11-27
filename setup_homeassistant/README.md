@@ -49,10 +49,11 @@ Use `configure` for an already booted, fresh Home Assistant OS instance.
 After an interrupted configuration, rerun with `--resume` and the same owner
 username and password. It skips installed apps and completed onboarding steps.
 If the guest agent cannot report its address, get the IP from the Proxmox VM
-console and use the same `configure` command.
+console and use the same `configure` command with the URL shown there. New HAOS
+installations can use port 80, while older ones can use port 8123.
 
 ```sh
-node setup_homeassistant/install.mjs configure --target http://192.168.1.50:8123
+node setup_homeassistant/install.mjs configure --target http://192.168.1.50
 ```
 
 Run the installer tests with `node --test tests/test_homeassistant_install.mjs`.
@@ -94,12 +95,13 @@ its local Home Assistant backup list.
 2. Take a final backup if the source changed. Shut down the old VM before
    starting the restore, or isolate the replacement from devices and services
    so two copies of your automations cannot control the same home.
-3. Pass the printed archive path and the new machine's URL. Use a trusted LAN
-   for the default HTTP welcome screen, or HTTPS with a trusted certificate.
+3. Pass the printed archive path and the new machine's welcome-screen URL.
+   Use a trusted LAN for the default HTTP welcome screen, or HTTPS with a
+   trusted certificate.
 
    ```sh
    python3 setup_homeassistant/migrate.py restore \
-     /path/to/home-assistant.tar --target http://192.168.1.50:8123
+     /path/to/home-assistant.tar --target http://192.168.1.50
    ```
 
    The script reads the key beside its own archives. When the key is stored

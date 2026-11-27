@@ -93,18 +93,28 @@ export function guestAddress(interfaces, mac) {
   ))?.['ip-address'];
 }
 
-async function request(origin, path, { method = 'GET', data, form, token, statuses = [] } = {}) {
+async function request(origin, path, { method = 'GET', data, form, token, statuses = [], timeout = 30000 } = {}) {
   const headers = {};
   if (token) headers.Authorization = `Bearer ${token}`;
   if (data !== undefined) headers['Content-Type'] = 'application/json';
   const response = await fetch(`${origin}${path}`, {
     method, headers, body: form ?? (data === undefined ? undefined : JSON.stringify(data)),
-    redirect: 'error', signal: AbortSignal.timeout(30000),
+    redirect: 'error', signal: AbortSignal.timeout(timeout),
   });
   if (statuses.includes(response.status)) return null;
   if (!response.ok) throw new Error(`${method} ${path} returned HTTP ${response.status}.`);
   const text = await response.text();
   return text ? JSON.parse(text) : null;
+}
+
+export async function welcomeOrigin(address) {
+  // New HAOS installs use port 80 and redirect port 8123. Older installs can
+  // still serve port 8123 directly. Probe the same guest IP without following redirects.
+  return Promise.any([`http://${address}`, `http://${address}:8123`].map(async (origin) => {
+    const info = await request(origin, `${ONBOARDING}/installation_type`, { timeout: 5000 });
+    if (info?.installation_type !== 'Home Assistant OS') throw new Error('Home Assistant OS is not ready.');
+    return origin;
+  })).catch(() => undefined);
 }
 
 async function provision(options) {
@@ -123,15 +133,15 @@ async function provision(options) {
   if (!mac) throw new Error(`Could not identify VM ${vmid}'s MAC address.`);
   console.error(`Waiting for VM ${vmid} to reach the Home Assistant welcome screen.`);
   const deadline = Date.now() + options.timeout;
-  let origin;
+  let address;
   while (Date.now() < deadline) {
     try {
       const interfaces = await proxmox(remote, ['qm', 'guest', 'cmd', vmid, 'network-get-interfaces'], { capture: true });
-      const address = guestAddress(JSON.parse(interfaces), mac);
-      if (address) {
-        origin = `http://${address}:8123`;
-        const info = await request(origin, `${ONBOARDING}/installation_type`);
-        if (info?.installation_type === 'Home Assistant OS') return origin;
+      const currentAddress = guestAddress(JSON.parse(interfaces), mac);
+      if (currentAddress) {
+        address = currentAddress;
+        const origin = await welcomeOrigin(address);
+        if (origin) return origin;
       }
     } catch {
       // The guest agent and Core start independently on first boot.
@@ -139,7 +149,7 @@ async function provision(options) {
     await sleep(5000);
   }
   throw new Error(`VM ${vmid} was created but Home Assistant did not reach its welcome screen in time. ${
-    origin ? `Last URL: ${origin}.` : 'Check its Proxmox console for the assigned IP.'}`);
+    address ? `Last reported IP: ${address}.` : 'Check its Proxmox console for the assigned IP.'}`);
 }
 
 async function passwordFor(options) {

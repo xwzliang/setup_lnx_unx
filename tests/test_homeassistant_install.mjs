@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { configure, guestAddress, targetOrigin } from '../setup_homeassistant/install.mjs';
+import { configure, guestAddress, targetOrigin, welcomeOrigin } from '../setup_homeassistant/install.mjs';
 
 const target = 'http://192.0.2.10:8123';
 const addons = ['core_ssh', 'a0d7b954_ssh', 'a0d7b954_nodered'];
@@ -21,6 +21,25 @@ test('guest IP belongs to the configured primary NIC', () => {
   assert.equal(guestAddress(interfaces, '02:00:00:AB:00:02'), '192.0.2.10');
   assert.equal(guestAddress(interfaces, '02:00:00:00:00:03'), undefined);
   assert.throws(() => targetOrigin(`${target}/api`), /base URL/);
+});
+
+test('onboarding uses the live port on the assigned guest without following redirects', async (t) => {
+  const responses = new Map();
+  const fetch = t.mock.method(globalThis, 'fetch', async (url, request) => {
+    assert.equal(request.redirect, 'error');
+    assert.equal(new URL(url).hostname, '192.0.2.10');
+    return responses.get(new URL(url).origin);
+  });
+  const modern = 'http://192.0.2.10';
+  responses.set(modern, Response.json({ installation_type: 'Home Assistant OS' }));
+  responses.set(target, Response.redirect('http://192.0.2.13'));
+  assert.equal(await welcomeOrigin('192.0.2.10'), modern);
+  responses.set(modern, new Response(null, { status: 503 }));
+  responses.set(target, Response.json({ installation_type: 'Home Assistant OS' }));
+  assert.equal(await welcomeOrigin('192.0.2.10'), target);
+  responses.set(target, Response.redirect('http://192.0.2.13'));
+  assert.equal(await welcomeOrigin('192.0.2.10'), undefined);
+  assert.equal(fetch.mock.callCount(), 6);
 });
 
 test('Proxmox provisioning imports only a verified image and stops on conflicts', (t) => {
