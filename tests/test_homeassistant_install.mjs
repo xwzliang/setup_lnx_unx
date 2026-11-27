@@ -12,6 +12,55 @@ const target = 'http://192.0.2.10:8123';
 const addons = ['core_ssh', 'a0d7b954_ssh', 'a0d7b954_nodered'];
 const options = { username: 'new-owner', 'owner-name': 'New Owner', timeout: 1000 };
 
+test('MCP setup registers Codex once and preserves existing server names', (t) => {
+  const folder = mkdtempSync(join(tmpdir(), 'ha-mcp-test-'));
+  t.after(() => rmSync(folder, { recursive: true, force: true }));
+  const registry = join(folder, 'servers.json');
+  const actions = join(folder, 'actions.log');
+  writeFileSync(registry, '[]');
+  writeFileSync(actions, '');
+  writeFileSync(join(folder, 'codex'), `#!${process.execPath}
+const { appendFileSync, readFileSync, writeFileSync } = require('node:fs');
+const [group, action, name, flag, url] = process.argv.slice(2);
+if (group !== 'mcp') process.exit(2);
+const entries = JSON.parse(readFileSync(process.env.HA_MCP_TEST_REGISTRY));
+if (action === 'list' && name === '--json') {
+  console.log(JSON.stringify(entries));
+} else if (action === 'add' && flag === '--url') {
+  entries.push({ name, enabled: true, transport: { type: 'streamable_http', url } });
+  writeFileSync(process.env.HA_MCP_TEST_REGISTRY, JSON.stringify(entries));
+  appendFileSync(process.env.HA_MCP_TEST_ACTIONS, \`add \${name} \${url}\\n\`);
+} else if (action === 'login') {
+  appendFileSync(process.env.HA_MCP_TEST_ACTIONS, \`login \${name}\\n\`);
+} else {
+  process.exit(3);
+}
+`, { mode: 0o700 });
+  const installer = fileURLToPath(new URL('../setup_homeassistant/install.mjs', import.meta.url));
+  const run = (address, ...args) => spawnSync(process.execPath, [installer, 'mcp', '--target', address, ...args], {
+    encoding: 'utf8', env: {
+      ...process.env, PATH: `${folder}:${process.env.PATH}`,
+      HA_MCP_TEST_REGISTRY: registry, HA_MCP_TEST_ACTIONS: actions,
+    },
+  });
+
+  const added = run(target);
+  assert.equal(added.status, 0, added.stderr);
+  const repeated = run(`${target}/api/mcp`);
+  assert.equal(repeated.status, 0, repeated.stderr);
+  const conflict = run('http://192.0.2.11:8123');
+  assert.equal(conflict.status, 1);
+  assert.match(conflict.stderr, /already has a different MCP server/);
+  const login = run(target, '--mcp-login');
+  assert.equal(login.status, 0, login.stderr);
+  const additional = run(`${target}/api/mcp/assist`, '--mcp-name', 'ha-assist');
+  assert.equal(additional.status, 0, additional.stderr);
+  assert.equal(readFileSync(actions, 'utf8'), [
+    `add homeassistant ${target}/api/mcp`, 'login homeassistant',
+    `add ha-assist ${target}/api/mcp/assist`, '',
+  ].join('\n'));
+});
+
 test('selects a public key from the machine running the installer', async (t) => {
   const directory = mkdtempSync(join(tmpdir(), 'ha-local-ssh-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));

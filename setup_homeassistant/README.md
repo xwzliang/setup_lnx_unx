@@ -159,6 +159,36 @@ verification, provision a trusted
 Scripts, scenes, integrations, and automation runtime state are covered by
 the full Supervisor backup workflow below.
 
+## Set up Home Assistant MCP for Codex
+
+`install` and `configure` enable the MCP Server integration. Add
+`--mcp-codex` to either command to also register the new server in Codex
+on the workstation running the installer.
+
+```sh
+node setup_homeassistant/install.mjs install --vmid 106 --mcp-codex --mcp-name homeassistant-new
+```
+
+For an existing instance, run the `mcp` command with its base URL or the
+specific MCP URL from Settings → System → AI.
+
+```sh
+node setup_homeassistant/install.mjs mcp --target http://homeassistant.local:8123
+```
+
+Have the Codex CLI on your PATH and complete the Home Assistant OAuth
+authorization in the browser. The command preserves an existing matching
+entry. Use `--mcp-login` to retry OAuth for that entry and `--mcp-name` to
+register a second Home Assistant instance under a distinct name. Start a
+new Codex session after authorization to load the tools. See the
+[Codex instructions in the Home Assistant MCP guide](https://www.home-assistant.io/integrations/mcp_server/#example-codex).
+
+To install the MCP Server integration on an existing instance in the
+same run, pass `--mcp-token-file /path/to/private/admin-token` with an
+existing Home Assistant administrator access token. The installer uses
+that token for the Home Assistant config flow and Codex authenticates
+separately with OAuth.
+
 ## Check the Home Assistant MCP connection
 
 Copy the endpoint from Settings → System → AI and use an existing Home

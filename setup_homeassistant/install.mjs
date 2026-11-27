@@ -26,6 +26,7 @@ const HELP = `Install Home Assistant OS from scratch on Proxmox or configure a f
   install.mjs install --vmid ID [Proxmox options] [Home Assistant options]
   install.mjs provision --vmid ID [Proxmox options]
   install.mjs configure --target URL [--vmid ID] [Home Assistant options]
+  install.mjs mcp --target URL [MCP options]
 
 Proxmox options
   --proxmox ALIAS     SSH host (default pve)
@@ -49,6 +50,12 @@ Home Assistant options
   --xiaomi-home          Install Xiaomi Home and acknowledge the Marketplace notice
   --xiaomi-browser PATH  Open Xiaomi authorization in this Chrome/Chromium executable
   --resume               Sign in to continue a previously started configure run
+  --mcp-codex            Register the new server in local Codex and start OAuth
+
+MCP options
+  --mcp-name NAME        Codex server name (default homeassistant)
+  --mcp-login            Start browser authorization for an existing entry (mcp command)
+  --mcp-token-file PATH  Use an existing HA admin token to install the server integration (mcp command)
 
   --timeout SECONDS   Time allowed for first boot or an app operation (default 1200)
 `;
@@ -72,6 +79,16 @@ export function targetOrigin(value) {
     throw new Error('Use a Home Assistant base URL such as http://192.168.1.50:8123.');
   }
   return url.origin;
+}
+
+function mcpEndpoint(value) {
+  if (!value) throw new Error('MCP setup requires --target with a Home Assistant URL.');
+  const url = new URL(value);
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password ||
+      url.search || url.hash || !(url.pathname === '/' || /^\/api\/mcp(?:\/[^/]+)?\/?$/.test(url.pathname))) {
+    throw new Error('Use a Home Assistant base URL or MCP endpoint URL for --target.');
+  }
+  return url.pathname === '/' ? `${url.origin}/api/mcp` : url.href.replace(/\/$/, '');
 }
 
 function run(command, args, { input, capture = false } = {}) {
@@ -302,10 +319,44 @@ async function withSocket(origin, token, timeout, configure) {
       if (!reply.success) throw new Error(`${message.endpoint ?? message.type} failed (${reply.error?.code ?? 'unknown error'}).`);
       return reply.result;
     };
-    await configure(call);
+    return await configure(call);
   } finally {
     socket.close();
   }
+}
+
+async function configureMcpServer(call, post) {
+  const entries = await call({ type: 'config_entries/get', domain: 'mcp_server' });
+  if (entries.length) return entries.some(({ disabled_by: disabledBy }) => !disabledBy);
+  const flow = await post(FLOW, { handler: 'mcp_server' });
+  if (flow.type === 'create_entry' || (flow.type === 'abort' && flow.reason === 'already_configured')) return true;
+  identifier(flow.flow_id, 'MCP Server setup flow ID');
+  const result = await post(`${FLOW}/${flow.flow_id}`, {});
+  if (result.type !== 'create_entry' && !(result.type === 'abort' && result.reason === 'already_configured')) {
+    throw new Error('Home Assistant did not finish the MCP Server integration setup.');
+  }
+  return true;
+}
+
+async function configureCodexMcp(endpoint, name, login = false) {
+  const codex = (args, options) => run('codex', ['mcp', ...args], options).catch((error) => {
+    if (error.code === 'ENOENT') throw new Error('Install Codex CLI and make codex available on PATH.');
+    throw error;
+  });
+  const entries = JSON.parse(await codex(['list', '--json'], { capture: true }));
+  if (!Array.isArray(entries)) throw new Error('Codex did not return a list of MCP servers.');
+  const entry = entries.find((candidate) => candidate.name === name);
+  if (!entry) {
+    await codex(['add', name, '--url', endpoint]);
+    console.log(`Registered ${name} in Codex. Finish authorization if Codex opens a browser.`);
+    return;
+  }
+  if (entry.transport?.type !== 'streamable_http' || entry.transport.url !== endpoint) {
+    throw new Error(`Codex already has a different MCP server named ${name}. Use --mcp-name to choose another name.`);
+  }
+  if (entry.enabled === false) throw new Error(`The ${name} MCP server is disabled in Codex.`);
+  if (login) await codex(['login', name]);
+  else console.log(`${name} is already registered in Codex. Use --mcp-login to start OAuth again if needed.`);
 }
 
 function supervisorApi(call) {
@@ -400,13 +451,7 @@ export async function configure(origin, options, password, settings, guest) {
       if (pending('integration')) {
         await post(`${ONBOARDING}/integration`, { client_id: `${origin}/`, redirect_uri: `${origin}/` });
       }
-      const entries = await call({ type: 'config_entries/get', domain: 'mcp_server' });
-      if (!entries.length) {
-        const flow = await post(FLOW, { handler: 'mcp_server' });
-        identifier(flow.flow_id, 'MCP Server setup flow ID');
-        const result = await post(`${FLOW}/${flow.flow_id}`, {});
-        if (result.type !== 'create_entry') throw new Error('Home Assistant did not finish the MCP Server integration setup.');
-      }
+      await configureMcpServer(call, post);
       await configureApps(call);
       if (options.sshKey) await configureSsh(supervisorApi(call), options.sshKey, options['ssh-user']);
       if (options['xiaomi-home']) {
@@ -444,6 +489,8 @@ function argumentsFor(argv) {
     'settings-file': { type: 'string' }, resume: { type: 'boolean' }, timeout: string('1200'),
     'ssh-public-key': { type: 'string' }, 'ssh-user': { type: 'string' }, 'xiaomi-home': { type: 'boolean' },
     'xiaomi-browser': { type: 'string' }, 'no-ssh': { type: 'boolean' }, 'no-trusted-web-login': { type: 'boolean' },
+    'mcp-codex': { type: 'boolean' }, 'mcp-name': { type: 'string' },
+    'mcp-login': { type: 'boolean' }, 'mcp-token-file': { type: 'string' },
   } });
   return { options: values, command: positionals[0], extra: positionals.slice(1) };
 }
@@ -451,14 +498,39 @@ function argumentsFor(argv) {
 async function main(argv) {
   const { options, command, extra } = argumentsFor(argv);
   if (options.help || !command) { console.log(HELP); return; }
-  if (extra.length || !['install', 'provision', 'configure'].includes(command)) throw new Error('Use install, provision, or configure. See --help.');
+  if (extra.length || !['install', 'provision', 'configure', 'mcp'].includes(command)) throw new Error('Use install, provision, configure, or mcp. See --help.');
   if (options.resume && command !== 'configure') throw new Error('--resume applies only to configure.');
-  if (options.target && command !== 'configure') throw new Error('--target applies only to configure.');
+  if (options.target && !['configure', 'mcp'].includes(command)) throw new Error('--target applies only to configure or mcp.');
   if (options['no-ssh'] && (options['ssh-public-key'] || options['ssh-user'])) throw new Error('--no-ssh cannot be combined with SSH options.');
   if (options['xiaomi-browser'] && !options['xiaomi-home']) throw new Error('--xiaomi-browser requires --xiaomi-home.');
   if (command === 'provision' && (options['ssh-public-key'] || options['xiaomi-home'])) throw new Error('Use install or configure to set up SSH or Xiaomi Home.');
   if (command === 'configure' && !options.target) throw new Error('Configure requires --target and uses an existing VM.');
+  if (options['mcp-codex'] && !['install', 'configure'].includes(command)) {
+    throw new Error('--mcp-codex applies only to install or configure. Use mcp for an existing server.');
+  }
+  if (command !== 'mcp' && (options['mcp-login'] || options['mcp-token-file'])) {
+    throw new Error('--mcp-login and --mcp-token-file apply only to the mcp command.');
+  }
+  if (options['mcp-name'] !== undefined && command !== 'mcp' && !options['mcp-codex']) {
+    throw new Error('--mcp-name requires the mcp command or --mcp-codex.');
+  }
+  const mcpName = identifier(options['mcp-name'] ?? 'homeassistant', '--mcp-name', /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/);
   options.timeout = Number(integer(options.timeout, '--timeout', 10, 7200)) * 1000;
+  if (command === 'mcp') {
+    const endpoint = mcpEndpoint(options.target);
+    if (options['mcp-token-file'] !== undefined) {
+      if (typeof WebSocket !== 'function') throw new Error('MCP server setup requires Node.js 22.4 or newer.');
+      const token = (await readFile(options['mcp-token-file'], 'utf8')).trim();
+      if (!token || /[^\x21-\x7e]/.test(token)) throw new Error('The MCP token file must contain a single Home Assistant admin access token.');
+      const origin = new URL(endpoint).origin;
+      const enabled = await withSocket(origin, token, options.timeout, (call) => configureMcpServer(call,
+        (path, data) => request(origin, path, { method: 'POST', data, token })));
+      if (!enabled) throw new Error('The existing MCP Server integration is disabled in Home Assistant.');
+      console.log('Home Assistant MCP Server integration is configured.');
+    }
+    await configureCodexMcp(endpoint, mcpName, options['mcp-login']);
+    return;
+  }
   const target = options.target && targetOrigin(options.target);
   if (!target || options.vmid) options.vmid = integer(options.vmid, '--vmid', 100, 999999999);
   let password;
@@ -488,6 +560,7 @@ async function main(argv) {
     } catch (error) {
       throw new Error(`${error.message} For an interrupted setup, use configure --target ${origin} --resume with the same username.`);
     }
+    if (options['mcp-codex']) await configureCodexMcp(mcpEndpoint(origin), mcpName);
   }
 }
 
