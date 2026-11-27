@@ -119,12 +119,11 @@ requires the private QEMU settings file described below. Use
   hardware settings and puts the system disk on `sata0`. For VM 102,
   first boot checks `omv.sata1` in the private hardware file for a
   partition identified by `/dev/disk/by-partuuid/…`. When that partition is
-  available, `sata1` uses it as the read-only backing for a QCOW2 overlay.
-  The original filesystem is left intact. OMV setup skips formatting,
-  mounting, and share creation for that disk. Guest writes go into
-  `/var/lib/setup-proxmox/vm-setup/omv-data-vm-102.qcow2` and persist there
-  across reboots. The overlay grows on the Proxmox host as the guest writes.
-  Keep the backing partition and overlay available to boot the VM.
+  available, the job installs and configures OMV with only its system
+  disk, then shuts down the guest, attaches the partition directly to
+  `sata1`, and starts it again. This leaves the filesystem and data
+  intact during setup. OMV has normal read and write access to the
+  partition, which can be mounted as an existing filesystem after setup.
   If the mapping is missing or the partition is unavailable
   during initial provisioning, OMV uses a fresh disk on `sata1` for its
   mergerfs pool and authenticated SMB share, with the Samba large-copy

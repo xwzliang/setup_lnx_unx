@@ -55,28 +55,27 @@ class FirstBootVmTests(unittest.TestCase):
             self.assertEqual(job["profiles"], list(self.catalog["vms"]))
             self.assertEqual(job["media_url"], "http://media.example.test/OS/")
 
-    def test_omv_reuses_saved_data_before_boot_and_resumes_with_the_same_overlay(self):
+    def test_omv_attaches_the_writable_partition_after_guest_setup_and_resumes(self):
         hardware = self.directory / "vm-hardware.json"
         hardware.write_text(json.dumps({"omv": {"sata1": DATA_MAPPING}}))
         hardware.chmod(0o600)
         job = {**self.job, "profiles": ["omv"]}
-        overlay = self.directory / "omv-data-vm-102.qcow2"
         config = {}
         running = False
+        configured = False
+        start_attempts = 0
         target = Mock()
-        target.json.side_effect = lambda command, *_: (
-            ([{"vmid": 102, "name": "omv", "type": "qemu"}] if config else [])
-            if command == "pvesh" else
-            {"format": "qcow2", "backing-filename": PARTITION, "backing-filename-format": "raw"}
+        target.json.side_effect = lambda *_: (
+            [{"vmid": 102, "name": "omv", "type": "qemu"}] if config else []
         )
 
         def qemu(*command):
-            nonlocal running
+            nonlocal running, start_attempts
             if command[0] == "python3":
-                self.assertEqual(command, ("python3", "-c", create_vms.RAW_DISK_CHECK, PARTITION))
-            elif command[0] == "qemu-img":
-                self.assertEqual(command[:-1], ("qemu-img", "create", "-f", "qcow2", "-F", "raw", "-b", PARTITION))
-                command[-1].touch()
+                owner = (102,) if "sata1" in config else ()
+                self.assertEqual(command, ("python3", "-c", create_vms.RAW_DISK_CHECK, PARTITION, *owner))
+            elif command[0] != "qm":
+                raise AssertionError(command)
             elif command[1] == "config":
                 return "\n".join(f"{key}: {value}" for key, value in config.items())
             elif command[1] == "status":
@@ -85,17 +84,25 @@ class FirstBootVmTests(unittest.TestCase):
                 slot, value = command[3:]
                 if slot == "--sata1":
                     self.assertFalse(running)
-                    self.assertEqual(value, f"{overlay},format=qcow2,backup=0,replicate=0")
+                    self.assertTrue(configured)
+                    self.assertEqual(value, f"{PARTITION},format=raw,backup=0,replicate=0")
                 config[slot.removeprefix("--")] = value
+            elif command[1] == "shutdown":
+                self.assertTrue(configured)
+                self.assertNotIn("sata1", config)
+                running = False
             elif command[1] == "start":
-                self.assertTrue(config["sata1"].startswith(f"{overlay},"))
-                self.assertNotIn(PARTITION, config["sata1"])
                 self.assertEqual(config["onboot"], "0")
+                self.assertEqual("sata1" in config, configured)
+                start_attempts += 1
+                if start_attempts == 2:
+                    raise create_vms.CreateError("Simulated failure restarting with the disk")
                 running = True
             else:
                 raise AssertionError(command)
 
         def guest_setup(*command):
+            nonlocal configured
             if command[2] == "install":
                 self.assertIn("--provision-only", command)
                 self.assertEqual(command[command.index("--data-gb") + 1], "0")
@@ -103,17 +110,18 @@ class FirstBootVmTests(unittest.TestCase):
                               boot="order=sata0;ide2;net0", onboot="0")
             else:
                 self.assertTrue(running)
-                if setup.call_count == 2:
-                    raise subprocess.CalledProcessError(1, command)
+                self.assertNotIn("sata1", config)
+                configured = True
 
         target.run.side_effect = qemu
         with patch.object(first_boot, "run", side_effect=guest_setup) as setup:
-            with self.assertRaises(subprocess.CalledProcessError):
+            with self.assertRaisesRegex(create_vms.CreateError, "Simulated failure"):
                 first_boot.provision(self.directory, target, self.catalog, job)
             self.assertFalse((self.directory / "vm-102-complete").exists())
             first_boot.provision(self.directory, target, self.catalog, job)
-        self.assertEqual([entry.args[2] for entry in setup.call_args_list], ["install", "configure", "configure"])
-        self.assertEqual(target.run.call_args_list.count(call("qm", "start", 102)), 1)
+        self.assertEqual([entry.args[2] for entry in setup.call_args_list], ["install", "configure"])
+        self.assertEqual(target.run.call_args_list.count(call("qm", "start", 102)), 3)
+        self.assertEqual(target.run.call_args_list.count(call("qm", "shutdown", 102, "--timeout", "120")), 1)
         updates = [entry.args for entry in target.run.call_args_list if entry.args[:2] == ("qm", "set")]
         self.assertEqual([entry[3] for entry in updates], ["--sata1", "--onboot"])
         self.assertTrue((self.directory / "vm-102-complete").exists())
@@ -133,16 +141,13 @@ class FirstBootVmTests(unittest.TestCase):
         target.run.assert_called_once_with("python3", "-c", create_vms.RAW_DISK_CHECK, PARTITION)
 
     def test_omv_preserves_a_disk_already_pending_on_sata1(self):
-        overlay = self.directory / "omv-data-vm-102.qcow2"
-        overlay.touch()
         target = Mock()
-        target.json.return_value = {"format": "qcow2", "backing-filename": PARTITION, "backing-filename-format": "raw"}
         target.run.side_effect = ["", "sata1: local-lvm:vm-102-disk-1"]
-        with self.assertRaisesRegex(create_vms.CreateError, "sata1 already has a different disk"):
-            first_boot.attach_omv_overlay(target, {}, DATA_MAPPING, overlay)
-        self.assertEqual(target.run.call_args_list, [
-            call("python3", "-c", create_vms.RAW_DISK_CHECK, PARTITION), call("qm", "config", 102),
-        ])
+        with patch.object(first_boot, "run") as setup:
+            with self.assertRaisesRegex(create_vms.CreateError, "sata1 already has a different disk"):
+                first_boot.configure_omv_data_disk(target, PARTITION, [])
+        setup.assert_not_called()
+        self.assertEqual(target.run.call_args_list, [call("qm", "config", 102, "--current"), call("qm", "config", 102)])
 
     def test_available_passthrough_preserves_options_and_skips_busy_or_ambiguous_devices(self):
         sysfs = self.directory / "sys"

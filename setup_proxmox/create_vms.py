@@ -251,28 +251,37 @@ from pathlib import Path
 import json, os, re, subprocess, sys
 
 device = Path(sys.argv[1])
+attached_vmid = sys.argv[2] if len(sys.argv) > 2 else None
 if not device.is_block_device():
     sys.exit("The physical OMV partition could not be found.")
 number = device.stat().st_rdev
 mounts = json.loads(subprocess.check_output(
-    ["lsblk", "-J", "-o", "TYPE,MOUNTPOINTS", str(device)], text=True))["blockdevices"]
+    ["lsblk", "-J", "-o", "TYPE,MOUNTPOINTS,PKNAME", str(device)], text=True))["blockdevices"]
 holders = Path(f"/sys/dev/block/{os.major(number)}:{os.minor(number)}/holders")
 if (len(mounts) != 1 or mounts[0]["type"] != "part" or mounts[0].get("children")
         or any(mounts[0]["mountpoints"] or []) or any(holders.iterdir())):
     sys.exit("The physical OMV partition is already in use on the Proxmox host.")
+disk_numbers = {number}
+if parent := mounts[0]["pkname"]:
+    disk_numbers.add((Path("/dev") / parent).stat().st_rdev)
 for config in Path("/etc/pve/nodes").glob("*/qemu-server/*.conf"):
-    for value in re.findall(r"^(?:sata|scsi|virtio|ide|unused)\d+: (?:file=)?(/dev/[^,\n]+)", config.read_text(), re.M):
+    for slot, value in re.findall(
+            r"^((?:sata|scsi|virtio|ide|unused)\d+): (?:(?:file|volume)=)?(/dev/[^,\n]+)",
+            config.read_text(), re.M):
+        if config.stem == attached_vmid and slot == "sata1" and value == str(device):
+            continue
         other = Path(value)
-        if value == str(device) or (other.is_block_device() and other.stat().st_rdev == number):
+        if value == str(device) or (other.is_block_device() and other.stat().st_rdev in disk_numbers):
             sys.exit(f"The physical OMV partition is already attached to VM {config.stem}.")
 """
 
 
-def check_omv_partition(target, mapping):
+def check_omv_partition(target, mapping, *, attached_vmid=None):
     path = mapping.split(",", 1)[0]
     if not re.fullmatch(r"/dev/disk/by-partuuid/[A-Fa-f0-9-]+", path):
         raise CreateError("The OMV data disk must use its exact /dev/disk/by-partuuid symlink.")
-    target.run("python3", "-c", RAW_DISK_CHECK, path)
+    attachment = (attached_vmid,) if attached_vmid is not None else ()
+    target.run("python3", "-c", RAW_DISK_CHECK, path, *attachment)
     return path
 
 

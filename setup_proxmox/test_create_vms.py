@@ -1,10 +1,12 @@
 import hashlib
 import json
+import os
 from pathlib import Path
+import sys
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import create_vms as vms
 
@@ -73,6 +75,41 @@ class VmProfileTests(unittest.TestCase):
                 vms.find_media(asset, [directory], directory / "cache")
             local.write_bytes(b"known iso")
             self.assertEqual(vms.find_media(asset, [directory], directory / "cache"), local)
+
+    def test_partition_check_allows_only_its_own_sata1_assignment(self):
+        partition = "/dev/disk/by-partuuid/12345678-01"
+        part_number = os.makedev(8, 1)
+        root = MagicMock()
+        parent = MagicMock()
+        parent.is_block_device.return_value = True
+        parent.stat.return_value.st_rdev = os.makedev(8, 0)
+        part = MagicMock()
+        part.__str__.return_value = partition
+        part.is_block_device.return_value = True
+        part.stat.return_value.st_rdev = part_number
+        root.__truediv__.return_value = parent
+        holders = Mock()
+        holders.iterdir.return_value = ()
+        cluster = Mock()
+        owner = Mock(stem="102")
+        owner.read_text.return_value = f"sata1: {partition},format=raw"
+        other = Mock(stem="103")
+        other.read_text.return_value = "scsi1: /dev/sda"
+        cluster.glob.return_value = [owner]
+        paths = {
+            partition: part, "/dev": root, "/dev/sda": parent, "/etc/pve/nodes": cluster,
+            f"/sys/dev/block/{os.major(part_number)}:{os.minor(part_number)}/holders": holders,
+        }
+        lsblk = json.dumps({"blockdevices": [{"type": "part", "mountpoints": [None], "pkname": "sda"}]})
+        with patch("pathlib.Path", side_effect=paths.__getitem__), patch("subprocess.check_output", return_value=lsblk):
+            with patch.object(sys, "argv", ["-c", partition]):
+                with self.assertRaisesRegex(SystemExit, "attached to VM 102"):
+                    exec(vms.RAW_DISK_CHECK, {})
+            with patch.object(sys, "argv", ["-c", partition, "102"]):
+                exec(vms.RAW_DISK_CHECK, {})
+                cluster.glob.return_value = [owner, other]
+                with self.assertRaisesRegex(SystemExit, "attached to VM 103"):
+                    exec(vms.RAW_DISK_CHECK, {})
 
 
 if __name__ == "__main__":
