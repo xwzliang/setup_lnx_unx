@@ -1,7 +1,7 @@
 """Regression checks for the installer-owned OMV data disk and Samba fix."""
 
 import base64
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 import hashlib
 from importlib.util import module_from_spec, spec_from_file_location
 from io import StringIO
@@ -26,6 +26,21 @@ def load(name):
 install = load("install")
 guest = load("configure_guest")
 FILESYSTEM = "12345678-1234-1234-1234-123456789abc"
+GPT = "abcdef01-2345-6789-abcd-ef0123456789"
+SYSTEM_FILESYSTEM = "01234567-89ab-cdef-0123-456789abcdef"
+
+
+def gpt_devices():
+    data = {"path": "/dev/sda1", "type": "part", "fstype": "ext4", "uuid": FILESYSTEM,
+            "mountpoints": [None], "maj:min": "8:1"}
+    system = {"path": "/dev/sdb1", "type": "part", "fstype": "ext4", "uuid": SYSTEM_FILESYSTEM,
+              "mountpoints": ["/"], "maj:min": "8:17"}
+    return [
+        {"path": "/dev/sda", "type": "disk", "pttype": "gpt", "ptuuid": GPT,
+         "fstype": None, "uuid": None, "children": [data]},
+        {"path": "/dev/sdb", "type": "disk", "pttype": "dos", "ptuuid": "deadbeef",
+         "fstype": None, "uuid": None, "children": [system]},
+    ]
 
 
 class OpenMediaVaultTests(unittest.TestCase):
@@ -96,15 +111,53 @@ class OpenMediaVaultTests(unittest.TestCase):
     def test_reuse_probes_only_the_active_raw_partition(self):
         partition = "/dev/disk/by-partuuid/12345678-01"
         with patch.object(install, "remote", return_value=SimpleNamespace(stdout=f"UUID={FILESYSTEM}\nTYPE=ext4\n")) as remote:
-            self.assertEqual(install.sata1_filesystem_uuid("pve", f"sata1: {partition},format=raw"), FILESYSTEM)
+            self.assertEqual(install.sata1_disk_identity("pve", f"sata1: {partition},format=raw"), {"uuid": FILESYSTEM})
             self.assertEqual(remote.call_args_list, [
                 call("pve", "test", "-b", partition),
-                call("pve", "blkid", "-p", "-s", "UUID", "-s", "TYPE", "-o", "export", "--", partition),
+                call("pve", "blkid", "-p", "-o", "export", "--", partition),
             ])
+            remote.return_value.stdout = f"PTTYPE=gpt\nPTUUID={GPT.upper()}\n"
+            self.assertEqual(install.sata1_disk_identity("pve", f"sata1: {partition}"), {"ptuuid": GPT})
             remote.reset_mock()
             with self.assertRaisesRegex(install.InstallError, "writable raw partition"):
-                install.sata1_filesystem_uuid("pve", "sata1: local-lvm:vm-102-disk-1")
+                install.sata1_disk_identity("pve", "sata1: local-lvm:vm-102-disk-1")
             remote.assert_not_called()
+
+    def test_configure_passes_the_gpt_identity_and_saved_shares_to_the_guest(self):
+        shares = [{"name": "omv", "path": "omv", "readonly": False, "browseable": True}]
+        args = SimpleNamespace(proxmox="pve", vmid=102, reuse_sata1=True, existing_shares=shares)
+        response = {"address": "192.0.2.100", "version": "8.0", "user": "omvadmin", "shares": ["omv"]}
+        with patch.object(install, "remote", return_value=SimpleNamespace(stdout="tags: setup-omv\n")), patch.object(
+                install, "sata1_disk_identity", return_value={"ptuuid": GPT}), patch.object(
+                install, "wait_for_packages"), patch.object(install, "save_credentials"), patch.object(
+                install, "guest", side_effect=[{"exitcode": 0, "out-data": json.dumps(response)},
+                                                {"exitcode": 0, "out-data": "credentials"}]) as command, redirect_stdout(StringIO()):
+            install.configure(args)
+        self.assertEqual(command.call_args_list[0].args[:4], (args, "/usr/bin/python3", "-", "102"))
+        self.assertEqual(json.loads(command.call_args_list[0].args[4]), {"ptuuid": GPT, "shares": shares})
+
+    def test_selects_the_existing_unpartitioned_ext4_disk(self):
+        disk = {"path": "/dev/sda", "type": "disk", "fstype": "ext4", "uuid": FILESYSTEM}
+        self.assertIs(guest.existing_data_device({"uuid": FILESYSTEM}, [disk]), disk)
+
+    def test_reuse_stops_before_mounting_an_ambiguous_gpt_disk(self):
+        for conflict, diagnostic in (("table", "exactly one guest disk"), ("partitions", "exactly one ext4"),
+                                     ("filesystem", "also present")):
+            with self.subTest(conflict=conflict):
+                disks = gpt_devices()
+                if conflict == "table":
+                    disks[1].update(pttype="gpt", ptuuid=GPT)
+                elif conflict == "partitions":
+                    disks[0]["children"].append({"type": "part", "fstype": "ext4", "uuid": SYSTEM_FILESYSTEM})
+                else:
+                    disks[1]["children"][0]["uuid"] = FILESYSTEM
+                with patch.object(guest, "run", side_effect=["", json.dumps({"blockdevices": disks})]) as run:
+                    with self.assertRaisesRegex(RuntimeError, diagnostic):
+                        guest.mount_existing_data({"ptuuid": GPT})
+                self.assertEqual(run.call_args_list, [
+                    call("udevadm", "settle", "--timeout=30"),
+                    call(*guest.LIST_DATA_DEVICES),
+                ])
 
     def test_reuse_checks_for_a_clean_ext4_filesystem_before_registering_mount(self):
         identifier = f"/dev/disk/by-uuid/{FILESYSTEM}"
@@ -113,23 +166,20 @@ class OpenMediaVaultTests(unittest.TestCase):
             root = Path(temporary)
             device, target = root / "data", root / "mount"
             device.touch()
-            dirs = {identifier: device, "/dev/sdb": device, directory: target}
-            devices = {"blockdevices": [{
-                "path": "/dev/sdb", "type": "disk", "uuid": FILESYSTEM, "fstype": "ext4",
-                "mountpoints": [None], "maj:min": "8:16",
-            }]}
+            dirs = {identifier: device, "/dev/sda1": device, directory: target}
+            devices = {"blockdevices": gpt_devices()}
             with patch.object(guest, "Path", side_effect=dirs.__getitem__), patch.object(
                     guest, "run", side_effect=["", json.dumps(devices), "Filesystem state: clean\nneeds_recovery"]) as run:
                 with self.assertRaisesRegex(RuntimeError, "must be clean"):
-                    guest.mount_existing_data(FILESYSTEM)
+                    guest.mount_existing_data({"ptuuid": GPT})
             self.assertEqual([entry.args[0] for entry in run.call_args_list], ["udevadm", "lsblk", "env"])
             with patch.object(guest, "Path", side_effect=dirs.__getitem__), patch.object(
                     guest, "run", side_effect=["", json.dumps(devices), "Filesystem state: clean",
-                                               "", "8:16 ext4 rw,noatime"]) as run, patch.object(
+                                               "", "8:1 ext4 rw,noatime"]) as run, patch.object(
                     guest, "by_field", return_value=None), patch.object(guest, "new_object_id", return_value="new"), patch.object(
                     guest, "rpc", return_value={"dir": directory, "type": "ext4", "opts": "defaults,nofail,noatime",
                                                "passno": 0, "hidden": False}) as rpc:
-                guest.mount_existing_data(FILESYSTEM)
+                guest.mount_existing_data({"ptuuid": GPT})
             rpc.assert_called_once_with("FsTab", "set", uuid="new", fsname=identifier, dir=directory, type="ext4",
                                         opts="defaults,nofail,noatime", freq=0, passno=0,
                                         usagewarnthreshold=85, comment="Existing OMV data disk")
@@ -157,7 +207,7 @@ class OpenMediaVaultTests(unittest.TestCase):
                     guest, "by_field", side_effect=lambda _model, _field, name: config.get(name)), patch.object(
                     guest, "update", side_effect=register), patch.object(guest, "ensure_smb_share", return_value=None) as smb, patch.object(
                     guest, "deploy_samba") as deploy, patch.object(guest, "run") as run:
-                guest.ensure_existing_shares(FILESYSTEM, layout, "omvadmin")
+                guest.ensure_existing_shares({"ptuuid": GPT}, layout, "omvadmin")
             self.assertEqual(config["omv"]["reldirpath"], "/")
             self.assertEqual(config["Media"]["reldirpath"], "docs/")
             self.assertEqual(config["Media"]["privileges"]["privilege"][0]["perms"], 5)
@@ -175,7 +225,7 @@ class OpenMediaVaultTests(unittest.TestCase):
                 guest, "update") as update:
             layout = guest.existing_share_layout([{"name": "omv", "path": "absent"}])
             with self.assertRaisesRegex(RuntimeError, "must already exist"):
-                guest.ensure_existing_shares(FILESYSTEM, layout, "omvadmin")
+                guest.ensure_existing_shares({"uuid": FILESYSTEM}, layout, "omvadmin")
             update.assert_not_called()
             self.assertFalse((Path(temporary) / "absent").exists())
 

@@ -304,7 +304,7 @@ def save_credentials(args, credentials):
     return destination
 
 
-def sata1_filesystem_uuid(host, config):
+def sata1_disk_identity(host, config):
     drive = re.search(r"^sata1: (.*)$", config, re.MULTILINE)
     if drive is None:
         raise InstallError("Attach the existing physical data partition to sata1 first.")
@@ -316,12 +316,16 @@ def sata1_filesystem_uuid(host, config):
             or options.get("ro", "0") not in ("0", "off") or options.get("snapshot", "0") not in ("0", "off")):
         raise InstallError("sata1 must be a writable raw partition attached by its PARTUUID.")
     remote(host, "test", "-b", path)
-    probe = remote(host, "blkid", "-p", "-s", "UUID", "-s", "TYPE", "-o", "export", "--", path).stdout
+    probe = remote(host, "blkid", "-p", "-o", "export", "--", path).stdout
     tags = dict(line.split("=", 1) for line in probe.splitlines() if "=" in line)
+    uuid_format = r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}"
     filesystem_uuid = tags.get("UUID", "").lower()
-    if tags.get("TYPE") != "ext4" or not re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", filesystem_uuid):
-        raise InstallError("sata1 must already contain an ext4 filesystem with a UUID.")
-    return filesystem_uuid
+    table_uuid = tags.get("PTUUID", "").lower()
+    if tags.get("TYPE") == "ext4" and not tags.get("PTTYPE") and re.fullmatch(uuid_format, filesystem_uuid):
+        return {"uuid": filesystem_uuid}
+    if tags.get("PTTYPE") == "gpt" and not tags.get("TYPE") and re.fullmatch(uuid_format, table_uuid):
+        return {"ptuuid": table_uuid}
+    raise InstallError("sata1 must contain an existing ext4 filesystem or an identifiable GPT partition table.")
 
 
 def configure(args):
@@ -332,7 +336,7 @@ def configure(args):
     command = ["/usr/bin/python3", "-", str(args.vmid)]
     if getattr(args, "reuse_sata1", False):
         layout = args.existing_shares if args.existing_shares is not None else DEFAULT_EXISTING_SHARES
-        command.append(json.dumps({"uuid": sata1_filesystem_uuid(args.proxmox, config), "shares": layout}))
+        command.append(json.dumps({**sata1_disk_identity(args.proxmox, config), "shares": layout}))
     wait_for_packages(args)
     code = (HERE / "configure_guest.py").read_text()
     result = guest(args, *command, timeout=300, data=code)
@@ -373,7 +377,7 @@ def arguments():
         command.add_argument("--timeout", type=between(10, 7200), default=1800, help="first boot wait in seconds")
         command.add_argument("--credentials-file", type=Path, help="new private file for generated passwords")
         if operation == "configure":
-            command.add_argument("--reuse-sata1", action="store_true", help="mount the existing ext4 data disk at sata1")
+            command.add_argument("--reuse-sata1", action="store_true", help="mount the existing ext4 filesystem on sata1")
             command.add_argument("--existing-shares", type=json.loads, help="JSON list of shares on the existing disk")
         if operation == "install":
             command.add_argument("--name", default="omv")

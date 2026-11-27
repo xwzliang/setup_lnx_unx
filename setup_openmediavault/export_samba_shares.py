@@ -12,10 +12,14 @@ from tempfile import TemporaryDirectory
 
 if __package__:
     from . import install as omv
-    from .configure_guest import FILESYSTEM_UUID, FOLDER, MOUNT, POOL, SHARE, existing_share_layout
+    from .configure_guest import (
+        FILESYSTEM_UUID, FOLDER, LIST_DATA_DEVICES, MOUNT, POOL, SHARE, existing_data_device, existing_share_layout,
+    )
 else:
     import install as omv
-    from configure_guest import FILESYSTEM_UUID, FOLDER, MOUNT, POOL, SHARE, existing_share_layout
+    from configure_guest import (
+        FILESYSTEM_UUID, FOLDER, LIST_DATA_DEVICES, MOUNT, POOL, SHARE, existing_data_device, existing_share_layout,
+    )
 
 MERGERFS_TYPES = {"mergerfs", "fuse.mergerfs"}
 
@@ -31,7 +35,11 @@ def source_filesystem(args):
     if args.filesystem_uuid is not None:
         return args.filesystem_uuid
     config = omv.remote(args.proxmox, "qm", "config", str(args.vmid), "--current").stdout
-    return omv.sata1_filesystem_uuid(args.proxmox, config)
+    identity = omv.sata1_disk_identity(args.proxmox, config)
+    if "uuid" in identity:
+        return identity["uuid"]
+    devices = json.loads(omv.remote(args.omv, *LIST_DATA_DEVICES).stdout)["blockdevices"]
+    return existing_data_device(identity, devices)["uuid"]
 
 
 def data_mount(host, mounts, filesystem_uuid):

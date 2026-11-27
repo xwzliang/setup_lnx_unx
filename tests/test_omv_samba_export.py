@@ -14,6 +14,7 @@ from setup_openmediavault import export_samba_shares as export
 
 
 UUID = "12345678-1234-1234-1234-123456789abc"
+PTUUID = "abcdef01-2345-6789-abcd-ef0123456789"
 SOURCE = f"/dev/disk/by-uuid/{UUID}"
 DIRECTORY = f"/srv/dev-disk-by-uuid-{UUID}"
 PARTITION = "/dev/disk/by-partuuid/12345678-01"
@@ -43,8 +44,14 @@ class SambaExportTests(unittest.TestCase):
             return SimpleNamespace(stdout=f"sata1: {PARTITION},size=1024M")
         if (host, command) == ("pve", ("test", "-b", PARTITION)):
             return SimpleNamespace(stdout="")
-        if (host, command) == ("pve", ("blkid", "-p", "-s", "UUID", "-s", "TYPE", "-o", "export", "--", PARTITION)):
-            return SimpleNamespace(stdout=f"UUID={UUID}\nTYPE=ext4\n")
+        if (host, command) == ("pve", ("blkid", "-p", "-o", "export", "--", PARTITION)):
+            return SimpleNamespace(stdout=f"PTTYPE=gpt\nPTUUID={PTUUID}\n")
+        if (host, command) == ("omv", export.LIST_DATA_DEVICES):
+            return SimpleNamespace(stdout=json.dumps({"blockdevices": [
+                {"type": "disk", "pttype": "gpt", "ptuuid": PTUUID, "uuid": None, "children": [
+                    {"type": "part", "fstype": "ext4", "uuid": UUID},
+                ]},
+            ]}))
         if host == "omv" and command[:4] == ("sudo", "-n", "omv-confdbadm", "read"):
             return SimpleNamespace(stdout=json.dumps(self.models[command[4]]))
         if (host, command) == ("omv", ("sudo", "-n", "findmnt", "--json", "--list", "--output", "TARGET,UUID,FSTYPE")):
@@ -75,7 +82,8 @@ class SambaExportTests(unittest.TestCase):
         self.assertEqual(remote.call_args_list, [
             call("pve", "qm", "config", "102", "--current"),
             call("pve", "test", "-b", PARTITION),
-            call("pve", "blkid", "-p", "-s", "UUID", "-s", "TYPE", "-o", "export", "--", PARTITION),
+            call("pve", "blkid", "-p", "-o", "export", "--", PARTITION),
+            call("omv", *export.LIST_DATA_DEVICES),
             call("omv", "sudo", "-n", "omv-confdbadm", "read", export.SHARE),
             call("omv", "sudo", "-n", "omv-confdbadm", "read", export.FOLDER),
             call("omv", "sudo", "-n", "omv-confdbadm", "read", export.MOUNT),

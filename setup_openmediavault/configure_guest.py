@@ -22,6 +22,9 @@ NAME = "omv"
 DISK_LABEL = "setup-omv-data"
 FILESYSTEM_UUID = r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}"
 EXISTING_MOUNT_OPTIONS = "defaults,nofail,noatime"
+LIST_DATA_DEVICES = (
+    "lsblk", "--json", "--tree", "--output", "NAME,PATH,TYPE,FSTYPE,UUID,PTTYPE,PTUUID,MOUNTPOINTS,MAJ:MIN",
+)
 
 
 def run(*command, data=None):
@@ -162,19 +165,41 @@ def existing_share_layout(shares):
     return layout
 
 
-def mount_existing_data(filesystem_uuid):
-    if not re.fullmatch(FILESYSTEM_UUID, filesystem_uuid):
-        raise RuntimeError("Expected the ext4 filesystem UUID of the physical SATA disk.")
+def block_devices(tree):
+    for device in tree:
+        yield device
+        yield from block_devices(device.get("children", []))
+
+
+def existing_data_device(identity, devices):
+    if set(identity) == {"uuid"} and re.fullmatch(FILESYSTEM_UUID, identity["uuid"]):
+        candidates = [device for device in devices if device["type"] == "disk"
+                      and device["fstype"] == "ext4" and device["uuid"] == identity["uuid"]]
+    elif set(identity) == {"ptuuid"} and re.fullmatch(FILESYSTEM_UUID, identity["ptuuid"]):
+        disks = [device for device in devices if device["type"] == "disk" and device.get("pttype") == "gpt"
+                 and (device.get("ptuuid") or "").lower() == identity["ptuuid"]]
+        if len(disks) != 1:
+            raise RuntimeError("Expected exactly one guest disk with the GPT identifier read from sata1.")
+        candidates = [part for part in disks[0].get("children", [])
+                      if part["type"] == "part" and part["fstype"] == "ext4"]
+    else:
+        raise RuntimeError("Expected one ext4 or GPT disk identifier for sata1.")
+    if len(candidates) != 1 or not re.fullmatch(FILESYSTEM_UUID, candidates[0]["uuid"] or ""):
+        raise RuntimeError("Expected exactly one ext4 filesystem with a UUID on the sata1 data disk.")
+    chosen = candidates[0]
+    if sum(device["uuid"] == chosen["uuid"] for device in block_devices(devices)) != 1:
+        raise RuntimeError("The sata1 ext4 filesystem UUID is also present on another guest device.")
+    return chosen
+
+
+def mount_existing_data(identity):
+    run("udevadm", "settle", "--timeout=30")
+    device = existing_data_device(identity, json.loads(run(*LIST_DATA_DEVICES))["blockdevices"])
+    filesystem_uuid = device["uuid"]
     identifier = f"/dev/disk/by-uuid/{filesystem_uuid}"
     directory = f"/srv/dev-disk-by-uuid-{filesystem_uuid}"
-    run("udevadm", "settle", "--timeout=30")
-    columns = "PATH,TYPE,FSTYPE,UUID,MOUNTPOINTS,MAJ:MIN"
-    devices = json.loads(run("lsblk", "-Jl", "-o", columns))["blockdevices"]
-    matching = [device for device in devices if device["uuid"] == filesystem_uuid]
-    if (len(matching) != 1 or matching[0]["type"] != "disk" or matching[0]["fstype"] != "ext4"
-            or set(filter(None, matching[0]["mountpoints"] or [])) - {directory}):
-        raise RuntimeError("Expected exactly one ext4 SATA data disk with the supplied UUID and no other mount.")
-    device = matching[0]
+    if set(filter(None, device["mountpoints"] or [])) - {directory}:
+        raise RuntimeError("The sata1 ext4 filesystem is already mounted elsewhere.")
     if Path(identifier).resolve(strict=True) != Path(device["path"]).resolve(strict=True):
         raise RuntimeError("The ext4 UUID symlink does not resolve to the expected data disk.")
     already_mounted = directory in (device["mountpoints"] or [])
@@ -206,8 +231,8 @@ def mount_existing_data(filesystem_uuid):
     return mount
 
 
-def ensure_existing_shares(filesystem_uuid, layout, user):
-    mount = mount_existing_data(filesystem_uuid)
+def ensure_existing_shares(identity, layout, user):
+    mount = mount_existing_data(identity)
     root = Path(mount["dir"]).resolve(strict=True)
     disk = root.stat().st_dev
     for share in layout:
@@ -315,7 +340,8 @@ def main():
                 password = passwords["SMB password"]
                 run("smbpasswd", "-s", "-a", user, data=f"{password}\n{password}\n")
                 smb_account.touch()
-            ensure_existing_shares(reuse["uuid"], layout, user)
+            disk_identity = {key: reuse[key] for key in ("uuid", "ptuuid") if key in reuse}
+            ensure_existing_shares(disk_identity, layout, user)
         result = verify(identity, passwords, shares)
         ready.touch()
         print(json.dumps(result))

@@ -56,12 +56,15 @@ started with the disk attached.
 python3 setup_openmediavault/install.py configure --vmid 102 --reuse-sata1
 ```
 
-The installer reads the UUID of the existing ext4 filesystem from the
-attached partition, checks that it is clean, and persists the mount in
-OMV. It registers existing directories as Samba shares while preserving
-their contents, ownership, modes, and ACLs. Each share uses the installer
-SMB account and retains the disk's existing Unix permissions. The SMB
-credentials are added to the installation file when needed.
+The installer identifies the filesystem by UUID. If `sata1` contains a
+GPT partition table, it matches that table's UUID inside the VM and
+selects its single ext4 partition. It checks that the filesystem is clean
+before persisting the mount in OMV. Ambiguous disks and partitions stop
+setup. The installer registers existing directories as Samba shares while
+preserving their contents, ownership, modes, and ACLs. Each share uses
+the installer SMB account and retains the disk's existing Unix
+permissions. The SMB credentials are added to the installation file
+when needed.
 
 By default, the share named `omv` uses the existing `omv` directory.
 Pass `--existing-shares` with the saved layout to use other share names
