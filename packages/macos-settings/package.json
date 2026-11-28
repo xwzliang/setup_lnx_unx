@@ -39,7 +39,7 @@
       "script": "packages/macos-settings/scripts/disable_update_notifications.sh",
       "interpreter": "bash",
       "description": "Disable macOS update popup notifications",
-      "effects": "Defers UserNotificationDate and MajorOSUserNotificationDate in com.apple.SoftwareUpdate, removes Software Update attention badges from System Settings, optionally disables system-wide automatic update checks when elevated, and restarts notification/Dock services.",
+      "effects": "Defers UserNotificationDate and MajorOSUserNotificationDate in com.apple.SoftwareUpdate, disables _SYSTEM_CENTER_:com.apple.SoftwareUpdateNotification in com.apple.ncprefs, disables SoftwareUpdateNotificationManager via launchctl, removes Software Update attention badges from System Settings, optionally disables system-wide automatic update checks when elevated, and restarts notification/Dock services.",
       "requires": [
         "defaults"
       ],
